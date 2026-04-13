@@ -166,6 +166,9 @@ export type Database = {
           created_at: string
           event_id: string | null
           id: string
+          location_lat: number | null
+          location_lng: number | null
+          location_name: string | null
           storage_path: string
           taken_at: string
           uploaded_by: string
@@ -176,6 +179,9 @@ export type Database = {
           created_at?: string
           event_id?: string | null
           id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          location_name?: string | null
           storage_path: string
           taken_at?: string
           uploaded_by: string
@@ -186,6 +192,9 @@ export type Database = {
           created_at?: string
           event_id?: string | null
           id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          location_name?: string | null
           storage_path?: string
           taken_at?: string
           uploaded_by?: string

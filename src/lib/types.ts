@@ -14,6 +14,9 @@ export interface Photo {
   caption?: string;
   eventId?: string;
   tags?: Tag[];
+  locationName?: string;
+  locationLat?: number;
+  locationLng?: number;
 }
 
 export interface Event {

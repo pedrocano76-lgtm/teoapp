@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { SlidersHorizontal, ArrowUpDown, MapPin } from 'lucide-react';
 import { Tag, Event } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -15,16 +15,20 @@ interface FilterDropdownProps {
   events: Event[];
   selectedEventId: string | null;
   onEventSelect: (id: string | null) => void;
+  locations: string[];
+  selectedLocation: string | null;
+  onLocationSelect: (loc: string | null) => void;
 }
 
 export function FilterDropdown({
   sortOrder, onSortChange,
   tags, selectedTagId, onTagSelect,
   events, selectedEventId, onEventSelect,
+  locations, selectedLocation, onLocationSelect,
 }: FilterDropdownProps) {
   const [open, setOpen] = useState(false);
   const uniqueEvents = Array.from(new Map(events.map(e => [e.name, e])).values());
-  const hasFilters = selectedTagId || selectedEventId || sortOrder === 'desc';
+  const hasFilters = selectedTagId || selectedEventId || selectedLocation || sortOrder === 'desc';
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -129,6 +133,39 @@ export function FilterDropdown({
           </div>
         )}
 
+        {/* Locations */}
+        {locations.length > 0 && (
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Lugar</Label>
+            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+              <button
+                onClick={() => onLocationSelect(null)}
+                className={cn(
+                  'px-2.5 py-1 rounded-full text-xs font-medium transition-all',
+                  !selectedLocation ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                )}
+              >
+                Todos
+              </button>
+              {locations.map(loc => (
+                <button
+                  key={loc}
+                  onClick={() => onLocationSelect(selectedLocation === loc ? null : loc)}
+                  className={cn(
+                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all',
+                    selectedLocation === loc
+                      ? 'bg-accent text-accent-foreground shadow-sm'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  )}
+                >
+                  <MapPin className="h-3 w-3" />
+                  {loc}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Clear all */}
         {hasFilters && (
           <Button
@@ -139,6 +176,7 @@ export function FilterDropdown({
               onSortChange('asc');
               onTagSelect(null);
               onEventSelect(null);
+              onLocationSelect(null);
             }}
           >
             Limpiar filtros

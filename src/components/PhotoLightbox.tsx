@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, MapPin } from 'lucide-react';
 import { Photo, Child } from '@/lib/types';
 import { getAgeLabel } from '@/lib/age-utils';
 
@@ -15,6 +15,7 @@ interface PhotoLightboxProps {
 
 export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChange }: PhotoLightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     if (open) setCurrentIndex(initialIndex);
@@ -39,6 +40,20 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
     return () => window.removeEventListener('keydown', handler);
   }, [open, goNext, goPrev, onOpenChange]);
 
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(delta) > 50) {
+      if (delta < 0) goNext();
+      else goPrev();
+    }
+  }, [goNext, goPrev]);
+
   if (!photos.length) return null;
   const photo = photos[currentIndex];
   if (!photo) return null;
@@ -54,7 +69,11 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-foreground/95 backdrop-blur-xl overflow-hidden [&>button]:hidden">
-        <div className="relative flex flex-col items-center justify-center h-[95vh]">
+        <div
+          className="relative flex flex-col items-center justify-center h-[95vh]"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           {/* Close */}
           <Button
             variant="ghost"
@@ -102,6 +121,11 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
                 {child && <p className="text-sm font-semibold">{child.name} · {getAgeLabel(child.birthDate, photo.date)}</p>}
                 {photo.caption && <p className="text-xs opacity-80 mt-0.5">{photo.caption}</p>}
                 <p className="text-xs opacity-60 mt-0.5">{fullDate}</p>
+                {photo.locationName && (
+                  <p className="text-xs opacity-60 mt-0.5 flex items-center gap-1">
+                    <MapPin className="h-3 w-3" /> {photo.locationName}
+                  </p>
+                )}
               </div>
               <p className="text-xs opacity-60">{currentIndex + 1} / {photos.length}</p>
             </div>

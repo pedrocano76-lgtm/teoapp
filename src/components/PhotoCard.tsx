@@ -1,6 +1,7 @@
 import { Photo, Child } from '@/lib/types';
 import { getAgeLabel } from '@/lib/age-utils';
 import { cn } from '@/lib/utils';
+import { MapPin } from 'lucide-react';
 
 interface PhotoCardProps {
   photo: Photo;
@@ -10,7 +11,7 @@ interface PhotoCardProps {
 
 export function PhotoCard({ photo, child, onClick }: PhotoCardProps) {
   const ageLabel = getAgeLabel(child.birthDate, photo.date);
-  const fullDate = photo.date.toLocaleDateString('en-US', {
+  const fullDate = photo.date.toLocaleDateString('es-ES', {
     weekday: 'short',
     day: 'numeric',
     month: 'long',
@@ -37,6 +38,11 @@ export function PhotoCard({ photo, child, onClick }: PhotoCardProps) {
           <p className="text-xs text-primary-foreground/80 mt-0.5">{photo.caption}</p>
         )}
         <p className="text-xs text-primary-foreground/60 mt-0.5">{fullDate}</p>
+        {photo.locationName && (
+          <p className="text-xs text-primary-foreground/60 mt-0.5 flex items-center gap-0.5">
+            <MapPin className="h-3 w-3" /> {photo.locationName}
+          </p>
+        )}
         {photo.tags && photo.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1">
             {photo.tags.map(tag => (
