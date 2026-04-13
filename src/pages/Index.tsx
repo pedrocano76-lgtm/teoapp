@@ -2,12 +2,13 @@ import { useState, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useChildren, usePhotos, useEvents, useTags } from '@/hooks/useData';
 import { ChildSelector } from '@/components/ChildSelector';
-import { EventFilter } from '@/components/EventFilter';
 import { Timeline } from '@/components/Timeline';
 import { AllChildrenTimeline } from '@/components/AllChildrenTimeline';
 import { ChildHeader } from '@/components/ChildHeader';
 import { PhotoUpload } from '@/components/PhotoUpload';
 import { AddChildDialog } from '@/components/AddChildDialog';
+import { ShareAlbumDialog } from '@/components/ShareAlbumDialog';
+import { FilterDropdown } from '@/components/FilterDropdown';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import heroPattern from '@/assets/hero-pattern.jpg';
@@ -98,7 +99,6 @@ const Index = () => {
         result = result.filter(p => p.eventId && matchingIds.includes(p.eventId));
       }
     }
-    // Tag filtering would need photo_tags data - for now we filter client-side by tag name
     return result.sort((a, b) =>
       sortOrder === 'asc' ? a.date.getTime() - b.date.getTime() : b.date.getTime() - a.date.getTime()
     );
@@ -116,11 +116,11 @@ const Index = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground">Little Moments</h1>
-              <p className="text-muted-foreground mt-1 text-lg">Every smile, every step — treasured forever ✨</p>
+              <p className="text-muted-foreground mt-1 text-lg">Cada sonrisa, cada paso — atesorados para siempre ✨</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground hidden sm:inline">{user?.email}</span>
-              <Button variant="outline" size="sm" onClick={signOut}>Sign Out</Button>
+              <Button variant="outline" size="sm" onClick={signOut}>Salir</Button>
             </div>
           </div>
         </div>
@@ -138,7 +138,7 @@ const Index = () => {
               />
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <AddChildDialog />
             {children.length > 0 && (
               <PhotoUpload
@@ -146,66 +146,41 @@ const Index = () => {
                 defaultChildId={selectedChildId ?? undefined}
               />
             )}
-            <button
-              onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')}
-              className="px-3 py-2 rounded-lg bg-muted text-muted-foreground text-sm font-medium hover:bg-muted/80 transition-colors"
-            >
-              {sortOrder === 'asc' ? '⬆️ Oldest' : '⬇️ Newest'}
-            </button>
+            {selectedChild && (
+              <ShareAlbumDialog childId={selectedChild.id} childName={selectedChild.name} />
+            )}
+            <FilterDropdown
+              sortOrder={sortOrder}
+              onSortChange={setSortOrder}
+              tags={tags}
+              selectedTagId={selectedTagId}
+              onTagSelect={setSelectedTagId}
+              events={filteredEvents}
+              selectedEventId={selectedEventId}
+              onEventSelect={setSelectedEventId}
+            />
           </div>
         </div>
-
-        {filteredEvents.length > 0 && (
-          <EventFilter events={filteredEvents} selectedEventId={selectedEventId} onSelect={setSelectedEventId} />
-        )}
-
-        {/* Tag filter */}
-        {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              onClick={() => setSelectedTagId(null)}
-              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
-                !selectedTagId ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              }`}
-            >
-              All Tags
-            </button>
-            {tags.map(tag => (
-              <button
-                key={tag.id}
-                onClick={() => setSelectedTagId(selectedTagId === tag.id ? null : tag.id)}
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
-                  selectedTagId === tag.id
-                    ? 'bg-accent text-accent-foreground shadow-sm'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                }`}
-              >
-                <span>{tag.icon}</span>
-                {tag.name}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Content */}
       <main className="container mx-auto px-4 pb-16">
         {childrenLoading ? (
           <div className="text-center py-20">
-            <p className="text-muted-foreground">Loading...</p>
+            <p className="text-muted-foreground">Cargando...</p>
           </div>
         ) : children.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-5xl mb-4">👶</p>
-            <h2 className="text-2xl font-heading font-bold text-foreground mb-2">Welcome to Little Moments!</h2>
-            <p className="text-muted-foreground mb-6">Start by adding your first child to begin your photo album.</p>
+            <h2 className="text-2xl font-heading font-bold text-foreground mb-2">¡Bienvenido a Little Moments!</h2>
+            <p className="text-muted-foreground mb-6">Empieza añadiendo a tu primer hijo para crear su álbum de fotos.</p>
             <AddChildDialog />
           </div>
         ) : filteredPhotos.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-4xl mb-4">📷</p>
-            <p className="text-muted-foreground text-lg">No photos yet</p>
-            <p className="text-muted-foreground text-sm mt-1 mb-4">Upload your first photos to start the timeline</p>
+            <p className="text-muted-foreground text-lg">Aún no hay fotos</p>
+            <p className="text-muted-foreground text-sm mt-1 mb-4">Sube tus primeras fotos para iniciar la línea de tiempo</p>
             <PhotoUpload
               children={children.map(c => ({ id: c.id, name: c.name }))}
               defaultChildId={selectedChildId ?? undefined}
@@ -227,7 +202,7 @@ const Index = () => {
 
       <footer className="border-t border-border py-6">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          Made with 💕 for growing families
+          Hecho con 💕 para familias que crecen
         </div>
       </footer>
     </div>
