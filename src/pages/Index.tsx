@@ -25,16 +25,10 @@ function mapChild(row: any): Child {
   };
 }
 
-function getSignedUrl(storagePath: string): string {
-  // We'll resolve signed URLs async, but for mapping we need a sync placeholder.
-  // Instead, we store the path and resolve in a separate step.
-  return storagePath;
-}
-
-function mapPhoto(row: any, signedUrls: Record<string, string>): Photo {
+function mapPhoto(row: any): Photo {
   return {
     id: row.id,
-    url: signedUrls[row.storage_path] || '',
+    url: row.signed_url || '',
     childId: row.child_id,
     date: new Date(row.taken_at),
     caption: row.caption ?? undefined,
