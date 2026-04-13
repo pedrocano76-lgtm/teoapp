@@ -46,6 +46,22 @@ export function usePhotos(childId?: string) {
       if (childId) query = query.eq('child_id', childId);
       const { data, error } = await query;
       if (error) throw error;
+
+      // Generate signed URLs for the private bucket
+      if (data && data.length > 0) {
+        const paths = data.map(p => p.storage_path);
+        const { data: signedData, error: signError } = await supabase.storage
+          .from('photos')
+          .createSignedUrls(paths, 3600);
+        if (!signError && signedData) {
+          const urlMap: Record<string, string> = {};
+          signedData.forEach(s => {
+            if (s.signedUrl) urlMap[s.path] = s.signedUrl;
+          });
+          return data.map(p => ({ ...p, signed_url: urlMap[p.storage_path] || '' }));
+        }
+      }
+
       return data;
     },
     enabled: !!user,

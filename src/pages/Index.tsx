@@ -25,15 +25,10 @@ function mapChild(row: any): Child {
   };
 }
 
-function getPhotoUrl(storagePath: string): string {
-  const { data } = supabase.storage.from('photos').getPublicUrl(storagePath);
-  return data.publicUrl;
-}
-
 function mapPhoto(row: any): Photo {
   return {
     id: row.id,
-    url: getPhotoUrl(row.storage_path),
+    url: row.signed_url || '',
     childId: row.child_id,
     date: new Date(row.taken_at),
     caption: row.caption ?? undefined,
