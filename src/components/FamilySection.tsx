@@ -10,13 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { UserPlus, Trash2, Crown, Eye } from 'lucide-react';
 
-const RELATIONSHIP_OPTIONS = [
+const PARENT_RELATIONSHIPS = ['Padre', 'Madre', 'Hermano/a', 'Otro'];
+
+const GUEST_RELATIONSHIPS = [
   'Abuelo/a',
   'Tío/a',
   'Primo/a',
   'Bisabuelo/a',
   'Padrino/Madrina',
-  'Hermano/a',
   'Otro',
 ];
 
@@ -127,9 +128,8 @@ function InviteDialog({ childId, role, label }: { childId: string; role: string;
 
   const addShare = useMutation({
     mutationFn: async () => {
-      const rel = role === 'guest'
-        ? (relationship === 'Otro' ? customRelationship : relationship) || null
-        : null;
+      const relOptions = role === 'parent' ? PARENT_RELATIONSHIPS : GUEST_RELATIONSHIPS;
+      const rel = (relationship === 'Otro' ? customRelationship : relationship) || null;
       const { error } = await supabase.from('family_shares').insert({
         child_id: childId,
         shared_by: user!.id,
