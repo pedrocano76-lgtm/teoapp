@@ -1,0 +1,150 @@
+import { useState } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { Tag, Event } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+interface FilterDropdownProps {
+  sortOrder: 'asc' | 'desc';
+  onSortChange: (order: 'asc' | 'desc') => void;
+  tags: Tag[];
+  selectedTagId: string | null;
+  onTagSelect: (id: string | null) => void;
+  events: Event[];
+  selectedEventId: string | null;
+  onEventSelect: (id: string | null) => void;
+}
+
+export function FilterDropdown({
+  sortOrder, onSortChange,
+  tags, selectedTagId, onTagSelect,
+  events, selectedEventId, onEventSelect,
+}: FilterDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const uniqueEvents = Array.from(new Map(events.map(e => [e.name, e])).values());
+  const hasFilters = selectedTagId || selectedEventId || sortOrder === 'desc';
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-1.5 relative">
+          <SlidersHorizontal className="h-4 w-4" />
+          Filtros
+          {hasFilters && (
+            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-accent" />
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-4 space-y-4" align="end">
+        {/* Sort order */}
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Orden</Label>
+          <div className="flex gap-2">
+            <Button
+              variant={sortOrder === 'asc' ? 'default' : 'outline'}
+              size="sm"
+              className="flex-1 gap-1"
+              onClick={() => onSortChange('asc')}
+            >
+              <ArrowUpDown className="h-3 w-3" />
+              Más antiguas
+            </Button>
+            <Button
+              variant={sortOrder === 'desc' ? 'default' : 'outline'}
+              size="sm"
+              className="flex-1 gap-1"
+              onClick={() => onSortChange('desc')}
+            >
+              <ArrowUpDown className="h-3 w-3 rotate-180" />
+              Más recientes
+            </Button>
+          </div>
+        </div>
+
+        {/* Events */}
+        {uniqueEvents.length > 0 && (
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Eventos</Label>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => onEventSelect(null)}
+                className={cn(
+                  'px-2.5 py-1 rounded-full text-xs font-medium transition-all',
+                  !selectedEventId ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                )}
+              >
+                Todos
+              </button>
+              {uniqueEvents.map(event => (
+                <button
+                  key={event.id}
+                  onClick={() => onEventSelect(selectedEventId === event.id ? null : event.id)}
+                  className={cn(
+                    'px-2.5 py-1 rounded-full text-xs font-medium transition-all inline-flex items-center gap-1',
+                    selectedEventId === event.id
+                      ? 'bg-accent text-accent-foreground shadow-sm'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  )}
+                >
+                  <span>{event.icon}</span>
+                  {event.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tags */}
+        {tags.length > 0 && (
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tags</Label>
+            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+              <button
+                onClick={() => onTagSelect(null)}
+                className={cn(
+                  'px-2.5 py-1 rounded-full text-xs font-medium transition-all',
+                  !selectedTagId ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                )}
+              >
+                Todos
+              </button>
+              {tags.map(tag => (
+                <button
+                  key={tag.id}
+                  onClick={() => onTagSelect(selectedTagId === tag.id ? null : tag.id)}
+                  className={cn(
+                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all',
+                    selectedTagId === tag.id
+                      ? 'bg-accent text-accent-foreground shadow-sm'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  )}
+                >
+                  <span>{tag.icon}</span>
+                  {tag.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Clear all */}
+        {hasFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-muted-foreground"
+            onClick={() => {
+              onSortChange('asc');
+              onTagSelect(null);
+              onEventSelect(null);
+            }}
+          >
+            Limpiar filtros
+          </Button>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
