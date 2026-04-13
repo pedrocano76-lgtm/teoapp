@@ -3,7 +3,7 @@ import { useAddChild } from '@/hooks/useData';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const colors = [
@@ -46,6 +46,7 @@ export function AddChildDialog() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="font-heading">Add a Child</DialogTitle>
+          <DialogDescription>Add your child’s name, birth date, and album color.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
