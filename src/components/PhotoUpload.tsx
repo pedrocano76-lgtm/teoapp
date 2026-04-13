@@ -152,6 +152,13 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
           {/* Tag selector */}
           <TagSelector selectedTagIds={selectedTagIds} onToggle={handleToggleTag} />
 
+          <div className="flex items-center gap-2">
+            <Switch id="is-shared" checked={isShared} onCheckedChange={setIsShared} />
+            <Label htmlFor="is-shared" className="text-sm">
+              {isShared ? 'Visible para invitados' : 'Solo padres'}
+            </Label>
+          </div>
+
           <Button
             onClick={handleUpload}
             disabled={!selectedChild || files.length === 0 || uploading}
