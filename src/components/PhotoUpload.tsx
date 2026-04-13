@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { TagSelector } from './TagSelector';
 
 interface PhotoUploadProps {
@@ -19,6 +21,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
+  const [isShared, setIsShared] = useState(true);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadPhoto = useUploadPhoto();
@@ -43,6 +46,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
           caption: caption || undefined,
           eventId: selectedEventId || undefined,
           tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+          isShared,
         });
       }
       toast({ title: 'Uploaded!', description: `${files.length} photo${files.length > 1 ? 's' : ''} added.` });
@@ -51,6 +55,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
       setCaption('');
       setSelectedEventId('');
       setSelectedTagIds([]);
+      setIsShared(true);
     } catch (error: any) {
       toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
     } finally {
