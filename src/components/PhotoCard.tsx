@@ -27,7 +27,7 @@ export function PhotoCard({ photo, child, onClick }: PhotoCardProps) {
         {/* Edit button */}
         <button
           onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}
-          className="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-background/70 backdrop-blur-sm text-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-background/90"
+          className="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-black/50 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
         >
           <Pencil className="h-3.5 w-3.5" />
         </button>
