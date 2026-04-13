@@ -126,6 +126,13 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
 
           <TagSelector selectedTagIds={selectedTagIds} onToggle={toggleTag} />
 
+          <div className="flex items-center gap-2">
+            <Switch id="edit-shared" checked={isShared} onCheckedChange={setIsShared} />
+            <Label htmlFor="edit-shared" className="text-sm">
+              {isShared ? 'Visible para invitados' : 'Solo padres'}
+            </Label>
+          </div>
+
           {photo.locationName && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4" />
