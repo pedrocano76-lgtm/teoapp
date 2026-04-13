@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { AddChildDialog } from './AddChildDialog';
 import { ChildrenManager } from './ChildrenManager';
 import { SettingsPanel } from './SettingsPanel';
+import { FamilySection } from './FamilySection';
 import { Child } from '@/lib/types';
 
 interface AppSidebarProps {
@@ -74,19 +75,23 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
           </SidebarGroup>
         </Collapsible>
 
-        {/* Family sharing */}
+        {/* Family */}
         {selectedChild && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5" /> Familia
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <div className="px-2">
-                <p className="text-xs text-muted-foreground mb-2">Comparte el álbum de {selectedChild.name}</p>
-                {/* ShareAlbumDialog is triggered from main area */}
-              </div>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          <Collapsible defaultOpen>
+            <SidebarGroup>
+              <CollapsibleTrigger asChild>
+                <SidebarGroupLabel className="cursor-pointer flex items-center justify-between">
+                  <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Familia</span>
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <FamilySection childId={selectedChild.id} childName={selectedChild.name} />
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
         )}
 
         {/* Settings */}
