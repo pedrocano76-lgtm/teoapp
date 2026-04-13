@@ -155,16 +155,19 @@ export function useUpdatePhoto() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
-      photoId, caption, eventId, tagIds,
+      photoId, caption, eventId, tagIds, isShared,
     }: {
       photoId: string;
       caption?: string;
       eventId?: string | null;
       tagIds?: string[];
+      isShared?: boolean;
     }) => {
+      const updates: any = { caption: caption ?? null, event_id: eventId ?? null };
+      if (isShared !== undefined) updates.is_shared = isShared;
       const { error } = await supabase
         .from('photos')
-        .update({ caption: caption ?? null, event_id: eventId ?? null })
+        .update(updates)
         .eq('id', photoId);
       if (error) throw error;
 
@@ -206,7 +209,7 @@ export function useUploadPhoto() {
 
   return useMutation({
     mutationFn: async ({
-      file, childId, caption, takenAt, eventId, tagIds,
+      file, childId, caption, takenAt, eventId, tagIds, isShared,
     }: {
       file: File;
       childId: string;
@@ -214,6 +217,7 @@ export function useUploadPhoto() {
       takenAt?: Date;
       eventId?: string;
       tagIds?: string[];
+      isShared?: boolean;
     }) => {
       // Extract EXIF data
       let photoDate = takenAt;
@@ -252,6 +256,7 @@ export function useUploadPhoto() {
           location_lat: locationLat,
           location_lng: locationLng,
           location_name: locationName,
+          is_shared: isShared ?? true,
         })
         .select()
         .single();
