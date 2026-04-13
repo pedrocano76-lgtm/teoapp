@@ -10,13 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { UserPlus, Trash2, Crown, Eye } from 'lucide-react';
 
-const RELATIONSHIP_OPTIONS = [
+const PARENT_RELATIONSHIPS = ['Padre', 'Madre', 'Hermano/a', 'Otro'];
+
+const GUEST_RELATIONSHIPS = [
   'Abuelo/a',
   'Tío/a',
   'Primo/a',
   'Bisabuelo/a',
   'Padrino/Madrina',
-  'Hermano/a',
   'Otro',
 ];
 
@@ -127,9 +128,8 @@ function InviteDialog({ childId, role, label }: { childId: string; role: string;
 
   const addShare = useMutation({
     mutationFn: async () => {
-      const rel = role === 'guest'
-        ? (relationship === 'Otro' ? customRelationship : relationship) || null
-        : null;
+      const relOptions = role === 'parent' ? PARENT_RELATIONSHIPS : GUEST_RELATIONSHIPS;
+      const rel = (relationship === 'Otro' ? customRelationship : relationship) || null;
       const { error } = await supabase.from('family_shares').insert({
         child_id: childId,
         shared_by: user!.id,
@@ -178,29 +178,27 @@ function InviteDialog({ childId, role, label }: { childId: string; role: string;
             />
           </div>
 
-          {role === 'guest' && (
-            <div className="space-y-1">
-              <Label className="text-xs">Parentesco</Label>
-              <Select value={relationship} onValueChange={setRelationship}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar parentesco" />
-                </SelectTrigger>
-                <SelectContent>
-                  {RELATIONSHIP_OPTIONS.map(r => (
-                    <SelectItem key={r} value={r}>{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {relationship === 'Otro' && (
-                <Input
-                  placeholder="Parentesco personalizado"
-                  value={customRelationship}
-                  onChange={e => setCustomRelationship(e.target.value)}
-                  className="mt-1"
-                />
-              )}
-            </div>
-          )}
+          <div className="space-y-1">
+            <Label className="text-xs">Parentesco</Label>
+            <Select value={relationship} onValueChange={setRelationship}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar parentesco" />
+              </SelectTrigger>
+              <SelectContent>
+                {(role === 'parent' ? PARENT_RELATIONSHIPS : GUEST_RELATIONSHIPS).map(r => (
+                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {relationship === 'Otro' && (
+              <Input
+                placeholder="Parentesco personalizado"
+                value={customRelationship}
+                onChange={e => setCustomRelationship(e.target.value)}
+                className="mt-1"
+              />
+            )}
+          </div>
 
           <Button
             onClick={() => addShare.mutate()}
