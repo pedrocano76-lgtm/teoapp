@@ -63,6 +63,7 @@ for (let i = 0; i < 24; i++) {
     caption: matchingEvent ? `${matchingEvent.icon} ${matchingEvent.name}` : undefined,
     eventId: matchingEvent?.id,
     storagePath: '',
+    isShared: true,
   });
 }
 
@@ -85,5 +86,6 @@ for (let i = 0; i < 8; i++) {
     caption: matchingEvent ? `${matchingEvent.icon} ${matchingEvent.name}` : undefined,
     eventId: matchingEvent?.id,
     storagePath: '',
+    isShared: true,
   });
 }

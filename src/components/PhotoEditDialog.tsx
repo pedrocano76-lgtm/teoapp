@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { TagSelector } from '@/components/TagSelector';
 import { useUpdatePhoto, useDeletePhoto, usePhotoTags, useEvents } from '@/hooks/useData';
 import { MapPin, Trash2 } from 'lucide-react';
@@ -19,6 +20,7 @@ interface PhotoEditDialogProps {
     eventId?: string;
     locationName?: string;
     storagePath: string;
+    isShared?: boolean;
   };
   onDeleted?: () => void;
 }
@@ -27,6 +29,7 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
   const [caption, setCaption] = useState(photo.caption || '');
   const [eventId, setEventId] = useState(photo.eventId || '');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [isShared, setIsShared] = useState(photo.isShared ?? true);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const updatePhoto = useUpdatePhoto();
@@ -38,6 +41,7 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
     if (open) {
       setCaption(photo.caption || '');
       setEventId(photo.eventId || '');
+      setIsShared(photo.isShared ?? true);
       setConfirmDelete(false);
     }
   }, [open, photo]);
@@ -55,6 +59,7 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
         caption: caption || undefined,
         eventId: eventId || null,
         tagIds: selectedTagIds,
+        isShared,
       });
       toast.success('Foto actualizada');
       onOpenChange(false);
@@ -120,6 +125,13 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
           )}
 
           <TagSelector selectedTagIds={selectedTagIds} onToggle={toggleTag} />
+
+          <div className="flex items-center gap-2">
+            <Switch id="edit-shared" checked={isShared} onCheckedChange={setIsShared} />
+            <Label htmlFor="edit-shared" className="text-sm">
+              {isShared ? 'Visible para invitados' : 'Solo padres'}
+            </Label>
+          </div>
 
           {photo.locationName && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">

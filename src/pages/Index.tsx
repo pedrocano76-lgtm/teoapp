@@ -7,7 +7,7 @@ import { AllChildrenTimeline } from '@/components/AllChildrenTimeline';
 import { ChildHeader } from '@/components/ChildHeader';
 import { PhotoUpload } from '@/components/PhotoUpload';
 import { AddChildDialog } from '@/components/AddChildDialog';
-import { ShareAlbumDialog } from '@/components/ShareAlbumDialog';
+
 import { FilterDropdown } from '@/components/FilterDropdown';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -37,6 +37,7 @@ function mapPhoto(row: any): Photo {
     locationLat: row.location_lat ?? undefined,
     locationLng: row.location_lng ?? undefined,
     storagePath: row.storage_path,
+    isShared: row.is_shared ?? true,
   };
 }
 
@@ -163,9 +164,6 @@ const Index = () => {
                     children={children.map(c => ({ id: c.id, name: c.name }))}
                     defaultChildId={selectedChildId ?? undefined}
                   />
-                )}
-                {selectedChild && (
-                  <ShareAlbumDialog childId={selectedChild.id} childName={selectedChild.name} />
                 )}
                 <FilterDropdown
                   sortOrder={sortOrder}

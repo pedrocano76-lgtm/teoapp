@@ -88,6 +88,7 @@ export function PhotoCard({ photo, child, onClick }: PhotoCardProps) {
           eventId: photo.eventId,
           locationName: photo.locationName,
           storagePath: photo.storagePath,
+          isShared: photo.isShared,
         }}
       />
     </>

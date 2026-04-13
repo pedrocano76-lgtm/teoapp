@@ -18,6 +18,7 @@ export interface Photo {
   locationLat?: number;
   locationLng?: number;
   storagePath: string;
+  isShared: boolean;
 }
 
 export interface Event {
