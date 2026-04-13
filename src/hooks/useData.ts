@@ -135,6 +135,55 @@ export function useTagPhoto() {
   });
 }
 
+export function useUpdatePhoto() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      photoId, caption, eventId, tagIds,
+    }: {
+      photoId: string;
+      caption?: string;
+      eventId?: string | null;
+      tagIds?: string[];
+    }) => {
+      const { error } = await supabase
+        .from('photos')
+        .update({ caption: caption ?? null, event_id: eventId ?? null })
+        .eq('id', photoId);
+      if (error) throw error;
+
+      if (tagIds !== undefined) {
+        await supabase.from('photo_tags').delete().eq('photo_id', photoId);
+        if (tagIds.length > 0) {
+          const { error: tagError } = await supabase
+            .from('photo_tags')
+            .insert(tagIds.map(tagId => ({ photo_id: photoId, tag_id: tagId })));
+          if (tagError) throw tagError;
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: ['photo_tags'] });
+    },
+  });
+}
+
+export function useDeletePhoto() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ photoId, storagePath }: { photoId: string; storagePath: string }) => {
+      await supabase.from('photo_tags').delete().eq('photo_id', photoId);
+      const { error } = await supabase.from('photos').delete().eq('id', photoId);
+      if (error) throw error;
+      await supabase.storage.from('photos').remove([storagePath]);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['photos'] });
+    },
+  });
+}
+
 export function useUploadPhoto() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
