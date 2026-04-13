@@ -1,57 +1,40 @@
 
 
-## Plan: Sorting fix, location extraction, sidebar menu, swipe lightbox
+## Plan: Location filter visibility, upload comments, and photo detail editing
 
-### 1. Fix sort order (bug)
+### 1. Location filter — Already working
 
-**Root cause**: `Timeline.tsx` (line 15) and `AllChildrenTimeline.tsx` (line 14) both hardcode ascending sort, overriding the `sortOrder` from Index.tsx.
+The location filter in FilterDropdown only appears when at least one photo has location data. Since EXIF GPS extraction is implemented, it will show automatically once you upload photos taken with GPS enabled (most smartphone photos). No code change needed here — it's working as designed.
 
-**Fix**: Pass `sortOrder` prop to both components and use it instead of hardcoded ascending. Also reverse the group iteration order when descending.
+**However**, to make this clearer, we can show the location filter section even when empty, with a message like "No hay fotos con ubicación", so you know the feature exists.
 
-### 2. Photo location from EXIF + location filter
+### 2. Upload comments — Already working
 
-- Extend `exif-utils.ts` to extract GPS coordinates (latitude/longitude) from EXIF data.
-- Add a `location_lat`, `location_lng`, and `location_name` columns to the `photos` table via migration. The location name will be reverse-geocoded using a free service or stored as raw coordinates.
-- On upload, extract and store GPS data alongside the date.
-- Display location in PhotoCard and PhotoLightbox when available.
-- Add a location filter in the FilterDropdown (list of unique location names).
+The caption/comment field already exists in the upload dialog. No changes needed.
 
-### 3. Sidebar menu
+### 3. Edit photo details after upload (NEW)
 
-Replace the current inline header controls with a proper sidebar layout using the existing `SidebarProvider` / `Sidebar` components:
+Create a **PhotoEditDialog** component accessible from the lightbox (edit button) and from photo cards (context menu or edit icon). This dialog will allow:
 
-- **Account**: Show user email, display name, sign out.
-- **Children management**: List children, add/edit child.
-- **Family sharing**: Add parent/family member (existing ShareAlbumDialog logic).
-- **Settings**: Theme color picker, dark mode toggle (add `ThemeProvider` with localStorage persistence and Tailwind `dark` class).
+- **Edit caption/notes** — update the `caption` field on the `photos` table
+- **Add/change tags** — reuse `TagSelector` component, update `photo_tags` table
+- **Add/change event** — select from existing events
+- **View location** — show extracted location (read-only)
+- **Delete photo** — with confirmation
 
-The main content area (hero, filters, timeline) moves into the sidebar layout's content region. The sidebar will be collapsible on mobile.
+**Files to create:**
+- `src/components/PhotoEditDialog.tsx` — dialog with form for editing photo metadata
 
-### 4. Swipe gestures in Lightbox
-
-Add touch swipe support to `PhotoLightbox.tsx`:
-- Track `touchstart` and `touchend` events.
-- Calculate horizontal delta; if > 50px threshold, navigate next/prev.
-- Works alongside existing arrow buttons and keyboard controls.
+**Files to modify:**
+- `src/components/PhotoLightbox.tsx` — add edit button that opens PhotoEditDialog
+- `src/components/PhotoCard.tsx` — add edit option (small pencil icon on hover)
+- `src/hooks/useData.ts` — add `useUpdatePhoto` and `useDeletePhoto` mutations
+- `src/components/FilterDropdown.tsx` — show location section always with empty state message
 
 ### Technical details
 
-**Files to modify:**
-- `src/components/Timeline.tsx` — accept and use `sortOrder` prop
-- `src/components/AllChildrenTimeline.tsx` — accept and use `sortOrder` prop
-- `src/pages/Index.tsx` — pass `sortOrder` to timelines; restructure into sidebar layout
-- `src/components/PhotoLightbox.tsx` — add touch event handlers for swipe
-- `src/lib/exif-utils.ts` — add `getExifLocation()` function
-- `src/hooks/useData.ts` — pass location data on upload
-- `src/components/FilterDropdown.tsx` — add location filter section
-- `src/components/PhotoCard.tsx` — show location if available
-
-**New files:**
-- `src/components/AppSidebar.tsx` — sidebar with navigation sections
-- `src/components/SettingsPanel.tsx` — theme/color/dark mode settings
-- `src/components/ChildrenManager.tsx` — list and manage children
-- `src/hooks/useTheme.tsx` — dark mode and color theme provider
-
-**Database migration:**
-- Add `location_lat DOUBLE PRECISION`, `location_lng DOUBLE PRECISION`, `location_name TEXT` to `photos` table.
+- `useUpdatePhoto` mutation: updates `photos` row (caption, event_id) + replaces `photo_tags` entries
+- `useDeletePhoto` mutation: deletes from `photos` table and removes file from storage
+- PhotoEditDialog receives current photo data, loads its tags via `usePhotoTags`, and saves changes
+- The `photos` table already has UPDATE RLS policy via `can_edit_child`, so no migration needed
 
