@@ -181,7 +181,14 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const handleCopyCode = async () => {
+  const handleShareCode = async () => {
+    const text = `¡Únete a nuestro álbum familiar! Regístrate con el email ${lastEmail} y usa el código: ${lastInviteCode}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Invitación familiar', text });
+        return;
+      } catch {}
+    }
     await navigator.clipboard.writeText(lastInviteCode);
     setCodeCopied(true);
     toast.success('Código copiado');
