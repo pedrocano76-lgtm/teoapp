@@ -30,7 +30,7 @@ export function Timeline({ photos, child }: TimelineProps) {
   return (
     <div className="space-y-10">
       {Array.from(groups.entries()).map(([label, { photos: groupPhotos, date }]) => {
-        const dateLabel = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        const dateLabel = date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
         const ageLabel = getAge(child.birthDate, date);
 
         return (
