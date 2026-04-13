@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { UserPlus, Trash2, Crown, Eye } from 'lucide-react';
+import { UserPlus, Trash2, Crown, Eye, Copy, Check } from 'lucide-react';
 
 const PARENT_RELATIONSHIPS = ['Padre', 'Madre', 'Hermano/a', 'Otro'];
 
@@ -43,7 +43,6 @@ export function FamilySection() {
 
   return (
     <div className="space-y-4 px-2">
-      {/* Parents */}
       <div>
         <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
           <Crown className="h-3 w-3" /> Padres
@@ -59,7 +58,6 @@ export function FamilySection() {
         <InviteDialog role="parent" label="Invitar padre/madre" />
       </div>
 
-      {/* Guests */}
       <div>
         <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
           <Eye className="h-3 w-3" /> Invitados
@@ -81,6 +79,8 @@ export function FamilySection() {
 
 function ShareRow({ share }: { share: any }) {
   const queryClient = useQueryClient();
+  const [copied, setCopied] = useState(false);
+
   const removeShare = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from('family_shares').delete().eq('id', share.id);
@@ -92,22 +92,48 @@ function ShareRow({ share }: { share: any }) {
     },
   });
 
+  const handleCopyCode = async () => {
+    if (!share.invite_code) return;
+    await navigator.clipboard.writeText(share.invite_code);
+    setCopied(true);
+    toast.success('Código copiado');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const isPending = !share.shared_with_user_id;
+
   return (
-    <div className="flex items-center justify-between text-xs group">
+    <div className="flex items-center justify-between text-xs group gap-1">
       <div className="truncate flex-1">
         <span className="text-foreground">{share.shared_with_email}</span>
         {share.relationship && (
           <span className="text-muted-foreground ml-1">({share.relationship})</span>
         )}
+        {isPending && (
+          <span className="text-amber-500 ml-1">(pendiente)</span>
+        )}
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive"
-        onClick={() => removeShare.mutate()}
-      >
-        <Trash2 className="h-3 w-3" />
-      </Button>
+      <div className="flex items-center gap-0.5">
+        {isPending && share.invite_code && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+            onClick={handleCopyCode}
+            title={`Código: ${share.invite_code}`}
+          >
+            {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive"
+          onClick={() => removeShare.mutate()}
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -119,35 +145,52 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
   const [email, setEmail] = useState('');
   const [relationship, setRelationship] = useState('');
   const [customRelationship, setCustomRelationship] = useState('');
+  const [lastInviteCode, setLastInviteCode] = useState('');
+  const [codeCopied, setCodeCopied] = useState(false);
 
   const addShare = useMutation({
     mutationFn: async () => {
       const rel = (relationship === 'Otro' ? customRelationship : relationship) || null;
-      const { error } = await supabase.from('family_shares').insert({
+      const { data, error } = await supabase.from('family_shares').insert({
         family_owner_id: user!.id,
         shared_by: user!.id,
         shared_with_email: email.trim().toLowerCase(),
         can_edit: role === 'parent',
         role,
         relationship: rel,
-      });
+      }).select('invite_code').single();
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['family_shares'] });
+      setLastInviteCode(data.invite_code || '');
       setEmail('');
       setRelationship('');
       setCustomRelationship('');
-      setOpen(false);
-      toast.success('Invitación enviada');
     },
     onError: (e: any) => toast.error(e.message),
   });
 
+  const handleCopyCode = async () => {
+    await navigator.clipboard.writeText(lastInviteCode);
+    setCodeCopied(true);
+    toast.success('Código copiado');
+    setTimeout(() => setCodeCopied(false), 2000);
+  };
+
+  const handleClose = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setLastInviteCode('');
+      setCodeCopied(false);
+    }
+  };
+
   const options = role === 'parent' ? PARENT_RELATIONSHIPS : GUEST_RELATIONSHIPS;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs h-7">
           <UserPlus className="h-3 w-3" /> {label}
@@ -162,47 +205,71 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
               : 'Los invitados solo podrán ver las fotos marcadas como compartidas.'}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <Label className="text-xs">Email</Label>
-            <Input
-              placeholder="email@ejemplo.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              type="email"
-            />
-          </div>
 
-          <div className="space-y-1">
-            <Label className="text-xs">Parentesco</Label>
-            <Select value={relationship} onValueChange={setRelationship}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar parentesco" />
-              </SelectTrigger>
-              <SelectContent>
-                {options.map(r => (
-                  <SelectItem key={r} value={r}>{r}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {relationship === 'Otro' && (
+        {lastInviteCode ? (
+          <div className="space-y-3 text-center">
+            <p className="text-sm text-muted-foreground">
+              ¡Invitación creada! Comparte este código:
+            </p>
+            <div className="bg-muted rounded-lg p-4">
+              <p className="text-2xl font-mono font-bold tracking-widest text-foreground">
+                {lastInviteCode}
+              </p>
+            </div>
+            <Button onClick={handleCopyCode} variant="outline" className="w-full gap-2">
+              {codeCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+              {codeCopied ? 'Copiado' : 'Copiar código'}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Cuando se registre con el email indicado, se enlazará automáticamente a tu familia.
+            </p>
+            <Button variant="ghost" size="sm" onClick={() => handleClose(false)}>
+              Cerrar
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Email</Label>
               <Input
-                placeholder="Parentesco personalizado"
-                value={customRelationship}
-                onChange={e => setCustomRelationship(e.target.value)}
-                className="mt-1"
+                placeholder="email@ejemplo.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                type="email"
               />
-            )}
-          </div>
+            </div>
 
-          <Button
-            onClick={() => addShare.mutate()}
-            disabled={!email.trim() || addShare.isPending}
-            className="w-full"
-          >
-            Enviar invitación
-          </Button>
-        </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Parentesco</Label>
+              <Select value={relationship} onValueChange={setRelationship}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar parentesco" />
+                </SelectTrigger>
+                <SelectContent>
+                  {options.map(r => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {relationship === 'Otro' && (
+                <Input
+                  placeholder="Parentesco personalizado"
+                  value={customRelationship}
+                  onChange={e => setCustomRelationship(e.target.value)}
+                  className="mt-1"
+                />
+              )}
+            </div>
+
+            <Button
+              onClick={() => addShare.mutate()}
+              disabled={!email.trim() || addShare.isPending}
+              className="w-full"
+            >
+              Crear invitación
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
