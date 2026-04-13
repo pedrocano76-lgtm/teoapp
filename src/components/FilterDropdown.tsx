@@ -134,9 +134,9 @@ export function FilterDropdown({
         )}
 
         {/* Locations */}
-        {locations.length > 0 && (
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Lugar</Label>
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Lugar</Label>
+          {locations.length > 0 ? (
             <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
               <button
                 onClick={() => onLocationSelect(null)}
@@ -163,8 +163,10 @@ export function FilterDropdown({
                 </button>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <p className="text-xs text-muted-foreground italic">No hay fotos con ubicación</p>
+          )}
+        </div>
 
         {/* Clear all */}
         {hasFilters && (
