@@ -178,29 +178,27 @@ function InviteDialog({ childId, role, label }: { childId: string; role: string;
             />
           </div>
 
-          {role === 'guest' && (
-            <div className="space-y-1">
-              <Label className="text-xs">Parentesco</Label>
-              <Select value={relationship} onValueChange={setRelationship}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar parentesco" />
-                </SelectTrigger>
-                <SelectContent>
-                  {RELATIONSHIP_OPTIONS.map(r => (
-                    <SelectItem key={r} value={r}>{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {relationship === 'Otro' && (
-                <Input
-                  placeholder="Parentesco personalizado"
-                  value={customRelationship}
-                  onChange={e => setCustomRelationship(e.target.value)}
-                  className="mt-1"
-                />
-              )}
-            </div>
-          )}
+          <div className="space-y-1">
+            <Label className="text-xs">Parentesco</Label>
+            <Select value={relationship} onValueChange={setRelationship}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar parentesco" />
+              </SelectTrigger>
+              <SelectContent>
+                {(role === 'parent' ? PARENT_RELATIONSHIPS : GUEST_RELATIONSHIPS).map(r => (
+                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {relationship === 'Otro' && (
+              <Input
+                placeholder="Parentesco personalizado"
+                value={customRelationship}
+                onChange={e => setCustomRelationship(e.target.value)}
+                className="mt-1"
+              />
+            )}
+          </div>
 
           <Button
             onClick={() => addShare.mutate()}
