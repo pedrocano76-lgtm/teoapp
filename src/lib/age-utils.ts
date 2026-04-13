@@ -26,6 +26,41 @@ export function getAgeMonths(birthDate: Date, atDate: Date = new Date()): number
   return Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.44));
 }
 
+export function getAgeWeeks(birthDate: Date, atDate: Date = new Date()): number {
+  const diffMs = atDate.getTime() - birthDate.getTime();
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24 * 7));
+}
+
+export function getAgeDays(birthDate: Date, atDate: Date = new Date()): number {
+  const diffMs = atDate.getTime() - birthDate.getTime();
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
+
+export function getTimelineGroupLabel(birthDate: Date, photoDate: Date): string {
+  const days = getAgeDays(birthDate, photoDate);
+  const weeks = getAgeWeeks(birthDate, photoDate);
+  const months = getAgeMonths(birthDate, photoDate);
+
+  if (days < 0) return '⏳ Antes de nacer';
+  if (days < 7) return '🍼 Primera semana';
+  if (weeks < 4) return `🍼 Semana ${weeks + 1}`;
+  if (months < 24) return `🌱 ${months + 1} ${months === 0 ? 'mes' : 'meses'}`;
+  const years = Math.floor(months / 12);
+  return `🎂 ${years} año${years !== 1 ? 's' : ''}`;
+}
+
+export function getTimelineGroupKey(birthDate: Date, photoDate: Date): string {
+  const days = getAgeDays(birthDate, photoDate);
+  const weeks = getAgeWeeks(birthDate, photoDate);
+  const months = getAgeMonths(birthDate, photoDate);
+
+  if (days < 0) return 'pre';
+  if (days < 7) return 'w0';
+  if (weeks < 4) return `w${weeks}`;
+  if (months < 24) return `m${months}`;
+  return `y${Math.floor(months / 12)}`;
+}
+
 export function getAgeLabel(birthDate: Date, photoDate: Date): string {
   return getAge(birthDate, photoDate);
 }
