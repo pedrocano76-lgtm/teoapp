@@ -2,14 +2,19 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+
+const CREATOR_RELATIONSHIPS = ['Padre', 'Madre', 'Hermano/a', 'Otro'];
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [relationship, setRelationship] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -22,18 +27,23 @@ export default function Auth() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else {
+        if (!relationship) {
+          toast({ title: 'Error', description: 'Selecciona tu parentesco', variant: 'destructive' });
+          setLoading(false);
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { full_name: fullName },
+            data: { full_name: fullName, relationship },
             emailRedirectTo: window.location.origin,
           },
         });
         if (error) throw error;
         toast({
-          title: 'Check your email',
-          description: 'We sent you a confirmation link to verify your account.',
+          title: 'Revisa tu email',
+          description: 'Te hemos enviado un enlace de confirmación para verificar tu cuenta.',
         });
       }
     } catch (error: any) {
@@ -53,18 +63,36 @@ export default function Auth() {
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-heading">Little Moments</CardTitle>
           <CardDescription>
-            {isLogin ? 'Welcome back! Sign in to your album.' : 'Create an account to start your family album.'}
+            {isLogin ? 'Bienvenido de nuevo. Inicia sesión en tu álbum.' : 'Crea una cuenta para empezar el álbum familiar.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <Input
-                placeholder="Full name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required={!isLogin}
-              />
+              <>
+                <div className="space-y-1">
+                  <Label className="text-sm">Tu nombre</Label>
+                  <Input
+                    placeholder="Nombre completo"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required={!isLogin}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm">¿Quién eres?</Label>
+                  <Select value={relationship} onValueChange={setRelationship}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona tu parentesco" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CREATOR_RELATIONSHIPS.map(r => (
+                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
             <Input
               type="email"
@@ -75,23 +103,23 @@ export default function Auth() {
             />
             <Input
               type="password"
-              placeholder="Password"
+              placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
             />
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Loading...' : isLogin ? 'Sign In' : 'Sign Up'}
+              {loading ? 'Cargando...' : isLogin ? 'Iniciar sesión' : 'Crear cuenta'}
             </Button>
           </form>
           <p className="text-center text-sm text-muted-foreground mt-4">
-            {isLogin ? "Don't have an account? " : 'Already have an account? '}
+            {isLogin ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
             <button
               onClick={() => setIsLogin(!isLogin)}
               className="text-primary font-semibold hover:underline"
             >
-              {isLogin ? 'Sign Up' : 'Sign In'}
+              {isLogin ? 'Regístrate' : 'Inicia sesión'}
             </button>
           </p>
         </CardContent>
