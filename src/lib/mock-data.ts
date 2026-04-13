@@ -62,6 +62,7 @@ for (let i = 0; i < 24; i++) {
     date,
     caption: matchingEvent ? `${matchingEvent.icon} ${matchingEvent.name}` : undefined,
     eventId: matchingEvent?.id,
+    storagePath: '',
   });
 }
 
@@ -83,5 +84,6 @@ for (let i = 0; i < 8; i++) {
     date,
     caption: matchingEvent ? `${matchingEvent.icon} ${matchingEvent.name}` : undefined,
     eventId: matchingEvent?.id,
+    storagePath: '',
   });
 }
