@@ -92,8 +92,15 @@ function ShareRow({ share }: { share: any }) {
     },
   });
 
-  const handleCopyCode = async () => {
+  const handleShareCode = async () => {
     if (!share.invite_code) return;
+    const text = `¡Únete a nuestro álbum familiar! Regístrate con este email (${share.shared_with_email}) y usa el código: ${share.invite_code}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Invitación familiar', text });
+        return;
+      } catch {}
+    }
     await navigator.clipboard.writeText(share.invite_code);
     setCopied(true);
     toast.success('Código copiado');
