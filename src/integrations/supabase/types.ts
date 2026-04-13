@@ -91,6 +91,7 @@ export type Database = {
           created_at: string
           family_owner_id: string
           id: string
+          invite_code: string | null
           relationship: string | null
           role: string
           shared_by: string
@@ -102,6 +103,7 @@ export type Database = {
           created_at?: string
           family_owner_id: string
           id?: string
+          invite_code?: string | null
           relationship?: string | null
           role?: string
           shared_by: string
@@ -113,6 +115,7 @@ export type Database = {
           created_at?: string
           family_owner_id?: string
           id?: string
+          invite_code?: string | null
           relationship?: string | null
           role?: string
           shared_by?: string
