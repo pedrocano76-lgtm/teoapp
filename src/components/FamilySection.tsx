@@ -232,9 +232,9 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
                 {lastInviteCode}
               </p>
             </div>
-            <Button onClick={handleCopyCode} variant="outline" className="w-full gap-2">
-              {codeCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-              {codeCopied ? 'Copiado' : 'Copiar código'}
+            <Button onClick={handleShareCode} variant="outline" className="w-full gap-2">
+              {codeCopied ? <Check className="h-4 w-4 text-green-500" /> : <Share2 className="h-4 w-4" />}
+              {codeCopied ? 'Copiado' : 'Compartir invitación'}
             </Button>
             <p className="text-xs text-muted-foreground">
               Cuando se registre con el email indicado, se enlazará automáticamente a tu familia.
