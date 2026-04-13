@@ -173,6 +173,7 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['family_shares'] });
       setLastInviteCode(data.invite_code || '');
+      setLastEmail(email.trim().toLowerCase());
       setEmail('');
       setRelationship('');
       setCustomRelationship('');
