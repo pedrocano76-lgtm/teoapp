@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { UserPlus, Trash2, Crown, Eye, Copy, Check } from 'lucide-react';
+import { UserPlus, Trash2, Crown, Eye, Copy, Check, Share2 } from 'lucide-react';
 
 const PARENT_RELATIONSHIPS = ['Padre', 'Madre', 'Hermano/a', 'Otro'];
 
@@ -92,8 +92,15 @@ function ShareRow({ share }: { share: any }) {
     },
   });
 
-  const handleCopyCode = async () => {
+  const handleShareCode = async () => {
     if (!share.invite_code) return;
+    const text = `¡Únete a nuestro álbum familiar! Regístrate con este email (${share.shared_with_email}) y usa el código: ${share.invite_code}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Invitación familiar', text });
+        return;
+      } catch {}
+    }
     await navigator.clipboard.writeText(share.invite_code);
     setCopied(true);
     toast.success('Código copiado');
@@ -119,7 +126,7 @@ function ShareRow({ share }: { share: any }) {
             variant="ghost"
             size="icon"
             className="h-6 w-6 text-muted-foreground hover:text-foreground"
-            onClick={handleCopyCode}
+            onClick={handleShareCode}
             title={`Código: ${share.invite_code}`}
           >
             {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
@@ -146,6 +153,7 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
   const [relationship, setRelationship] = useState('');
   const [customRelationship, setCustomRelationship] = useState('');
   const [lastInviteCode, setLastInviteCode] = useState('');
+  const [lastEmail, setLastEmail] = useState('');
   const [codeCopied, setCodeCopied] = useState(false);
 
   const addShare = useMutation({
@@ -165,6 +173,7 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['family_shares'] });
       setLastInviteCode(data.invite_code || '');
+      setLastEmail(email.trim().toLowerCase());
       setEmail('');
       setRelationship('');
       setCustomRelationship('');
@@ -172,7 +181,14 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const handleCopyCode = async () => {
+  const handleShareCode = async () => {
+    const text = `¡Únete a nuestro álbum familiar! Regístrate con el email ${lastEmail} y usa el código: ${lastInviteCode}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Invitación familiar', text });
+        return;
+      } catch {}
+    }
     await navigator.clipboard.writeText(lastInviteCode);
     setCodeCopied(true);
     toast.success('Código copiado');
@@ -216,9 +232,9 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
                 {lastInviteCode}
               </p>
             </div>
-            <Button onClick={handleCopyCode} variant="outline" className="w-full gap-2">
-              {codeCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-              {codeCopied ? 'Copiado' : 'Copiar código'}
+            <Button onClick={handleShareCode} variant="outline" className="w-full gap-2">
+              {codeCopied ? <Check className="h-4 w-4 text-green-500" /> : <Share2 className="h-4 w-4" />}
+              {codeCopied ? 'Copiado' : 'Compartir invitación'}
             </Button>
             <p className="text-xs text-muted-foreground">
               Cuando se registre con el email indicado, se enlazará automáticamente a tu familia.
