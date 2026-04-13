@@ -126,7 +126,7 @@ function ShareRow({ share }: { share: any }) {
             variant="ghost"
             size="icon"
             className="h-6 w-6 text-muted-foreground hover:text-foreground"
-            onClick={handleCopyCode}
+            onClick={handleShareCode}
             title={`Código: ${share.invite_code}`}
           >
             {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
