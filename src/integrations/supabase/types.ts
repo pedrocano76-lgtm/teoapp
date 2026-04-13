@@ -91,6 +91,8 @@ export type Database = {
           child_id: string
           created_at: string
           id: string
+          relationship: string | null
+          role: string
           shared_by: string
           shared_with_email: string
           shared_with_user_id: string | null
@@ -100,6 +102,8 @@ export type Database = {
           child_id: string
           created_at?: string
           id?: string
+          relationship?: string | null
+          role?: string
           shared_by: string
           shared_with_email: string
           shared_with_user_id?: string | null
@@ -109,6 +113,8 @@ export type Database = {
           child_id?: string
           created_at?: string
           id?: string
+          relationship?: string | null
+          role?: string
           shared_by?: string
           shared_with_email?: string
           shared_with_user_id?: string | null
@@ -166,6 +172,7 @@ export type Database = {
           created_at: string
           event_id: string | null
           id: string
+          is_shared: boolean
           location_lat: number | null
           location_lng: number | null
           location_name: string | null
@@ -179,6 +186,7 @@ export type Database = {
           created_at?: string
           event_id?: string | null
           id?: string
+          is_shared?: boolean
           location_lat?: number | null
           location_lng?: number | null
           location_name?: string | null
@@ -192,6 +200,7 @@ export type Database = {
           created_at?: string
           event_id?: string | null
           id?: string
+          is_shared?: boolean
           location_lat?: number | null
           location_lng?: number | null
           location_name?: string | null
@@ -280,6 +289,7 @@ export type Database = {
     Functions: {
       can_access_child: { Args: { child_uuid: string }; Returns: boolean }
       can_edit_child: { Args: { child_uuid: string }; Returns: boolean }
+      is_parent_of_child: { Args: { child_uuid: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
