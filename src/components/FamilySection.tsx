@@ -21,22 +21,17 @@ const GUEST_RELATIONSHIPS = [
   'Otro',
 ];
 
-interface FamilySectionProps {
-  childId: string;
-  childName: string;
-}
-
-export function FamilySection({ childId, childName }: FamilySectionProps) {
+export function FamilySection() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: shares } = useQuery({
-    queryKey: ['family_shares', childId],
+    queryKey: ['family_shares'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('family_shares')
         .select('*')
-        .eq('child_id', childId);
+        .eq('family_owner_id', user!.id);
       if (error) throw error;
       return data;
     },
@@ -53,16 +48,15 @@ export function FamilySection({ childId, childName }: FamilySectionProps) {
         <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
           <Crown className="h-3 w-3" /> Padres
         </p>
-        {parents.length === 0 ? (
-          <p className="text-xs text-muted-foreground mb-2">Solo tú por ahora</p>
-        ) : (
+        <p className="text-xs text-muted-foreground mb-1">Tú (creador de la cuenta)</p>
+        {parents.length > 0 && (
           <div className="space-y-1 mb-2">
             {parents.map(p => (
-              <ShareRow key={p.id} share={p} childId={childId} />
+              <ShareRow key={p.id} share={p} />
             ))}
           </div>
         )}
-        <InviteDialog childId={childId} role="parent" label="Invitar padre/madre" />
+        <InviteDialog role="parent" label="Invitar padre/madre" />
       </div>
 
       {/* Guests */}
@@ -75,17 +69,17 @@ export function FamilySection({ childId, childName }: FamilySectionProps) {
         ) : (
           <div className="space-y-1 mb-2">
             {guests.map(g => (
-              <ShareRow key={g.id} share={g} childId={childId} />
+              <ShareRow key={g.id} share={g} />
             ))}
           </div>
         )}
-        <InviteDialog childId={childId} role="guest" label="Invitar familiar" />
+        <InviteDialog role="guest" label="Invitar familiar" />
       </div>
     </div>
   );
 }
 
-function ShareRow({ share, childId }: { share: any; childId: string }) {
+function ShareRow({ share }: { share: any }) {
   const queryClient = useQueryClient();
   const removeShare = useMutation({
     mutationFn: async () => {
@@ -93,7 +87,7 @@ function ShareRow({ share, childId }: { share: any; childId: string }) {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['family_shares', childId] });
+      queryClient.invalidateQueries({ queryKey: ['family_shares'] });
       toast.success('Acceso eliminado');
     },
   });
@@ -118,7 +112,7 @@ function ShareRow({ share, childId }: { share: any; childId: string }) {
   );
 }
 
-function InviteDialog({ childId, role, label }: { childId: string; role: string; label: string }) {
+function InviteDialog({ role, label }: { role: string; label: string }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -128,10 +122,9 @@ function InviteDialog({ childId, role, label }: { childId: string; role: string;
 
   const addShare = useMutation({
     mutationFn: async () => {
-      const relOptions = role === 'parent' ? PARENT_RELATIONSHIPS : GUEST_RELATIONSHIPS;
       const rel = (relationship === 'Otro' ? customRelationship : relationship) || null;
       const { error } = await supabase.from('family_shares').insert({
-        child_id: childId,
+        family_owner_id: user!.id,
         shared_by: user!.id,
         shared_with_email: email.trim().toLowerCase(),
         can_edit: role === 'parent',
@@ -141,7 +134,7 @@ function InviteDialog({ childId, role, label }: { childId: string; role: string;
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['family_shares', childId] });
+      queryClient.invalidateQueries({ queryKey: ['family_shares'] });
       setEmail('');
       setRelationship('');
       setCustomRelationship('');
@@ -150,6 +143,8 @@ function InviteDialog({ childId, role, label }: { childId: string; role: string;
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const options = role === 'parent' ? PARENT_RELATIONSHIPS : GUEST_RELATIONSHIPS;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -185,7 +180,7 @@ function InviteDialog({ childId, role, label }: { childId: string; role: string;
                 <SelectValue placeholder="Seleccionar parentesco" />
               </SelectTrigger>
               <SelectContent>
-                {(role === 'parent' ? PARENT_RELATIONSHIPS : GUEST_RELATIONSHIPS).map(r => (
+                {options.map(r => (
                   <SelectItem key={r} value={r}>{r}</SelectItem>
                 ))}
               </SelectContent>

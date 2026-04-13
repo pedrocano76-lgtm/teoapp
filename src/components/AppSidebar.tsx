@@ -31,8 +31,6 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
   const { user, signOut } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const selectedChild = selectedChildId ? childrenList.find(c => c.id === selectedChildId) : null;
-
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
@@ -55,6 +53,23 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
           </SidebarMenu>
         </SidebarGroup>
 
+        {/* Family (top level) */}
+        <Collapsible defaultOpen>
+          <SidebarGroup>
+            <CollapsibleTrigger asChild>
+              <SidebarGroupLabel className="cursor-pointer flex items-center justify-between">
+                <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Familia</span>
+                <ChevronDown className="h-3.5 w-3.5" />
+              </SidebarGroupLabel>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <FamilySection />
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
+
         {/* Children */}
         <Collapsible defaultOpen>
           <SidebarGroup>
@@ -74,25 +89,6 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
             </CollapsibleContent>
           </SidebarGroup>
         </Collapsible>
-
-        {/* Family */}
-        {selectedChild && (
-          <Collapsible defaultOpen>
-            <SidebarGroup>
-              <CollapsibleTrigger asChild>
-                <SidebarGroupLabel className="cursor-pointer flex items-center justify-between">
-                  <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Familia</span>
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </SidebarGroupLabel>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarGroupContent>
-                  <FamilySection childId={selectedChild.id} childName={selectedChild.name} />
-                </SidebarGroupContent>
-              </CollapsibleContent>
-            </SidebarGroup>
-          </Collapsible>
-        )}
 
         {/* Settings */}
         <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
