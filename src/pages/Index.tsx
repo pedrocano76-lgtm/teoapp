@@ -9,7 +9,8 @@ import { PhotoUpload } from '@/components/PhotoUpload';
 import { AddChildDialog } from '@/components/AddChildDialog';
 import { ShareAlbumDialog } from '@/components/ShareAlbumDialog';
 import { FilterDropdown } from '@/components/FilterDropdown';
-import { Button } from '@/components/ui/button';
+import { AppSidebar } from '@/components/AppSidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { supabase } from '@/integrations/supabase/client';
 import heroPattern from '@/assets/hero-pattern.jpg';
 import type { Child, Photo, Event, Tag } from '@/lib/types';
@@ -37,6 +38,9 @@ function mapPhoto(row: any): Photo {
     date: new Date(row.taken_at),
     caption: row.caption ?? undefined,
     eventId: row.event_id ?? undefined,
+    locationName: row.location_name ?? undefined,
+    locationLat: row.location_lat ?? undefined,
+    locationLng: row.location_lng ?? undefined,
   };
 }
 
@@ -62,7 +66,6 @@ function mapTag(row: any): Tag {
 }
 
 const Index = () => {
-  const { user, signOut } = useAuth();
   const { data: childrenData, isLoading: childrenLoading } = useChildren();
   const { data: photosData } = usePhotos();
   const { data: eventsData } = useEvents();
@@ -71,6 +74,7 @@ const Index = () => {
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const children = useMemo(() => (childrenData || []).map(mapChild), [childrenData]);
@@ -99,113 +103,136 @@ const Index = () => {
         result = result.filter(p => p.eventId && matchingIds.includes(p.eventId));
       }
     }
+    if (selectedLocation) {
+      result = result.filter(p => p.locationName === selectedLocation);
+    }
     return result.sort((a, b) =>
       sortOrder === 'asc' ? a.date.getTime() - b.date.getTime() : b.date.getTime() - a.date.getTime()
     );
-  }, [selectedChildId, selectedEventId, sortOrder, photos, events]);
+  }, [selectedChildId, selectedEventId, selectedLocation, sortOrder, photos, events]);
+
+  const uniqueLocations = useMemo(() => {
+    const locs = new Set<string>();
+    photos.forEach(p => { if (p.locationName) locs.add(p.locationName); });
+    return Array.from(locs).sort();
+  }, [photos]);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero */}
-      <header className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <img src={heroPattern} alt="" className="w-full h-full object-cover opacity-30" width={1920} height={1080} />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/30 to-background" />
-        </div>
-        <div className="relative container mx-auto px-4 pt-8 pb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground">Little Moments</h1>
-              <p className="text-muted-foreground mt-1 text-lg">Cada sonrisa, cada paso — atesorados para siempre ✨</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground hidden sm:inline">{user?.email}</span>
-              <Button variant="outline" size="sm" onClick={signOut}>Salir</Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar
+          children={children}
+          onSelectChild={(id) => {
+            setSelectedChildId(id);
+            setSelectedEventId(null);
+            setSelectedTagId(null);
+            setSelectedLocation(null);
+          }}
+          selectedChildId={selectedChildId}
+        />
 
-      {/* Controls */}
-      <div className="container mx-auto px-4 py-6 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            {children.length > 0 && (
-              <ChildSelector
-                children={children}
-                selectedId={selectedChildId}
-                onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagId(null); }}
-              />
-            )}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header */}
+          <header className="relative overflow-hidden">
+            <div className="absolute inset-0">
+              <img src={heroPattern} alt="" className="w-full h-full object-cover opacity-30" width={1920} height={1080} />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/30 to-background" />
+            </div>
+            <div className="relative container mx-auto px-4 pt-6 pb-4">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger className="shrink-0" />
+                <div className="min-w-0">
+                  <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground truncate">Little Moments</h1>
+                  <p className="text-muted-foreground mt-0.5 text-sm md:text-base">Cada sonrisa, cada paso — atesorados para siempre ✨</p>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* Controls */}
+          <div className="container mx-auto px-4 py-4 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                {children.length > 0 && (
+                  <ChildSelector
+                    children={children}
+                    selectedId={selectedChildId}
+                    onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagId(null); setSelectedLocation(null); }}
+                  />
+                )}
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {children.length > 0 && (
+                  <PhotoUpload
+                    children={children.map(c => ({ id: c.id, name: c.name }))}
+                    defaultChildId={selectedChildId ?? undefined}
+                  />
+                )}
+                {selectedChild && (
+                  <ShareAlbumDialog childId={selectedChild.id} childName={selectedChild.name} />
+                )}
+                <FilterDropdown
+                  sortOrder={sortOrder}
+                  onSortChange={setSortOrder}
+                  tags={tags}
+                  selectedTagId={selectedTagId}
+                  onTagSelect={setSelectedTagId}
+                  events={filteredEvents}
+                  selectedEventId={selectedEventId}
+                  onEventSelect={setSelectedEventId}
+                  locations={uniqueLocations}
+                  selectedLocation={selectedLocation}
+                  onLocationSelect={setSelectedLocation}
+                />
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <AddChildDialog />
-            {children.length > 0 && (
-              <PhotoUpload
-                children={children.map(c => ({ id: c.id, name: c.name }))}
-                defaultChildId={selectedChildId ?? undefined}
-              />
+
+          {/* Content */}
+          <main className="container mx-auto px-4 pb-16 flex-1">
+            {childrenLoading ? (
+              <div className="text-center py-20">
+                <p className="text-muted-foreground">Cargando...</p>
+              </div>
+            ) : children.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-5xl mb-4">👶</p>
+                <h2 className="text-2xl font-heading font-bold text-foreground mb-2">¡Bienvenido a Little Moments!</h2>
+                <p className="text-muted-foreground mb-6">Empieza añadiendo a tu primer hijo para crear su álbum de fotos.</p>
+                <AddChildDialog />
+              </div>
+            ) : filteredPhotos.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-4xl mb-4">📷</p>
+                <p className="text-muted-foreground text-lg">Aún no hay fotos</p>
+                <p className="text-muted-foreground text-sm mt-1 mb-4">Sube tus primeras fotos para iniciar la línea de tiempo</p>
+                <PhotoUpload
+                  children={children.map(c => ({ id: c.id, name: c.name }))}
+                  defaultChildId={selectedChildId ?? undefined}
+                />
+              </div>
+            ) : (
+              <>
+                {selectedChild && (
+                  <ChildHeader child={selectedChild} photoCount={filteredPhotos.length} />
+                )}
+                {selectedChild ? (
+                  <Timeline photos={filteredPhotos} child={selectedChild} sortOrder={sortOrder} />
+                ) : (
+                  <AllChildrenTimeline photos={filteredPhotos} children={children} sortOrder={sortOrder} />
+                )}
+              </>
             )}
-            {selectedChild && (
-              <ShareAlbumDialog childId={selectedChild.id} childName={selectedChild.name} />
-            )}
-            <FilterDropdown
-              sortOrder={sortOrder}
-              onSortChange={setSortOrder}
-              tags={tags}
-              selectedTagId={selectedTagId}
-              onTagSelect={setSelectedTagId}
-              events={filteredEvents}
-              selectedEventId={selectedEventId}
-              onEventSelect={setSelectedEventId}
-            />
-          </div>
+          </main>
+
+          <footer className="border-t border-border py-4">
+            <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+              Hecho con 💕 para familias que crecen
+            </div>
+          </footer>
         </div>
       </div>
-
-      {/* Content */}
-      <main className="container mx-auto px-4 pb-16">
-        {childrenLoading ? (
-          <div className="text-center py-20">
-            <p className="text-muted-foreground">Cargando...</p>
-          </div>
-        ) : children.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-5xl mb-4">👶</p>
-            <h2 className="text-2xl font-heading font-bold text-foreground mb-2">¡Bienvenido a Little Moments!</h2>
-            <p className="text-muted-foreground mb-6">Empieza añadiendo a tu primer hijo para crear su álbum de fotos.</p>
-            <AddChildDialog />
-          </div>
-        ) : filteredPhotos.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-4xl mb-4">📷</p>
-            <p className="text-muted-foreground text-lg">Aún no hay fotos</p>
-            <p className="text-muted-foreground text-sm mt-1 mb-4">Sube tus primeras fotos para iniciar la línea de tiempo</p>
-            <PhotoUpload
-              children={children.map(c => ({ id: c.id, name: c.name }))}
-              defaultChildId={selectedChildId ?? undefined}
-            />
-          </div>
-        ) : (
-          <>
-            {selectedChild && (
-              <ChildHeader child={selectedChild} photoCount={filteredPhotos.length} />
-            )}
-            {selectedChild ? (
-              <Timeline photos={filteredPhotos} child={selectedChild} />
-            ) : (
-              <AllChildrenTimeline photos={filteredPhotos} children={children} />
-            )}
-          </>
-        )}
-      </main>
-
-      <footer className="border-t border-border py-6">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          Hecho con 💕 para familias que crecen
-        </div>
-      </footer>
-    </div>
+    </SidebarProvider>
   );
 };
 

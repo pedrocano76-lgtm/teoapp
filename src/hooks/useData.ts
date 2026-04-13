@@ -1,11 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { getExifDate } from '@/lib/exif-utils';
+import { getExifDate, getExifLocation, reverseGeocode } from '@/lib/exif-utils';
 
 export function useChildren() {
   const { user } = useAuth();
-
   return useQuery({
     queryKey: ['children', user?.id],
     queryFn: async () => {
@@ -23,7 +22,6 @@ export function useChildren() {
 export function useAddChild() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-
   return useMutation({
     mutationFn: async (child: { name: string; birth_date: string; color: string }) => {
       const { error } = await supabase
@@ -38,7 +36,6 @@ export function useAddChild() {
 
 export function usePhotos(childId?: string) {
   const { user } = useAuth();
-
   return useQuery({
     queryKey: ['photos', childId],
     queryFn: async () => {
@@ -46,11 +43,7 @@ export function usePhotos(childId?: string) {
         .from('photos')
         .select('*, events(name, icon, color)')
         .order('taken_at', { ascending: true });
-      
-      if (childId) {
-        query = query.eq('child_id', childId);
-      }
-
+      if (childId) query = query.eq('child_id', childId);
       const { data, error } = await query;
       if (error) throw error;
       return data;
@@ -61,7 +54,6 @@ export function usePhotos(childId?: string) {
 
 export function useEvents(childId?: string) {
   const { user } = useAuth();
-
   return useQuery({
     queryKey: ['events', childId],
     queryFn: async () => {
@@ -77,7 +69,6 @@ export function useEvents(childId?: string) {
 
 export function useTags() {
   const { user } = useAuth();
-
   return useQuery({
     queryKey: ['tags'],
     queryFn: async () => {
@@ -94,7 +85,6 @@ export function useTags() {
 
 export function usePhotoTags(photoId?: string) {
   const { user } = useAuth();
-
   return useQuery({
     queryKey: ['photo_tags', photoId],
     queryFn: async () => {
@@ -112,7 +102,6 @@ export function usePhotoTags(photoId?: string) {
 export function useAddTag() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-
   return useMutation({
     mutationFn: async (tag: { name: string; icon?: string; color?: string }) => {
       const { data, error } = await supabase
@@ -129,12 +118,9 @@ export function useAddTag() {
 
 export function useTagPhoto() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async ({ photoId, tagIds }: { photoId: string; tagIds: string[] }) => {
-      // Remove existing tags
       await supabase.from('photo_tags').delete().eq('photo_id', photoId);
-      // Add new ones
       if (tagIds.length > 0) {
         const { error } = await supabase
           .from('photo_tags')
@@ -155,12 +141,7 @@ export function useUploadPhoto() {
 
   return useMutation({
     mutationFn: async ({
-      file,
-      childId,
-      caption,
-      takenAt,
-      eventId,
-      tagIds,
+      file, childId, caption, takenAt, eventId, tagIds,
     }: {
       file: File;
       childId: string;
@@ -169,10 +150,21 @@ export function useUploadPhoto() {
       eventId?: string;
       tagIds?: string[];
     }) => {
-      // Try to extract EXIF date if no date provided
+      // Extract EXIF data
       let photoDate = takenAt;
       if (!photoDate) {
         photoDate = await getExifDate(file) || undefined;
+      }
+
+      // Extract location
+      let locationLat: number | null = null;
+      let locationLng: number | null = null;
+      let locationName: string | null = null;
+      const loc = await getExifLocation(file);
+      if (loc) {
+        locationLat = loc.lat;
+        locationLng = loc.lng;
+        locationName = await reverseGeocode(loc.lat, loc.lng);
       }
 
       const ext = file.name.split('.').pop();
@@ -192,12 +184,14 @@ export function useUploadPhoto() {
           caption,
           taken_at: (photoDate || new Date()).toISOString(),
           event_id: eventId || null,
+          location_lat: locationLat,
+          location_lng: locationLng,
+          location_name: locationName,
         })
         .select()
         .single();
       if (error) throw error;
 
-      // Tag the photo if tags selected
       if (tagIds && tagIds.length > 0 && data) {
         const { error: tagError } = await supabase
           .from('photo_tags')
