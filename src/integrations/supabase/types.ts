@@ -14,13 +14,197 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      children: {
+        Row: {
+          avatar_url: string | null
+          birth_date: string
+          color: string
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          birth_date: string
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          birth_date?: string
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          child_id: string
+          color: string
+          created_at: string
+          date: string
+          icon: string
+          id: string
+          name: string
+        }
+        Insert: {
+          child_id: string
+          color?: string
+          created_at?: string
+          date: string
+          icon?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          child_id?: string
+          color?: string
+          created_at?: string
+          date?: string
+          icon?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_shares: {
+        Row: {
+          can_edit: boolean
+          child_id: string
+          created_at: string
+          id: string
+          shared_by: string
+          shared_with_email: string
+          shared_with_user_id: string | null
+        }
+        Insert: {
+          can_edit?: boolean
+          child_id: string
+          created_at?: string
+          id?: string
+          shared_by: string
+          shared_with_email: string
+          shared_with_user_id?: string | null
+        }
+        Update: {
+          can_edit?: boolean
+          child_id?: string
+          created_at?: string
+          id?: string
+          shared_by?: string
+          shared_with_email?: string
+          shared_with_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_family_shares_child"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photos: {
+        Row: {
+          caption: string | null
+          child_id: string
+          created_at: string
+          event_id: string | null
+          id: string
+          storage_path: string
+          taken_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          caption?: string | null
+          child_id: string
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          storage_path: string
+          taken_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          caption?: string | null
+          child_id?: string
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          storage_path?: string
+          taken_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photos_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_access_child: { Args: { child_uuid: string }; Returns: boolean }
+      can_edit_child: { Args: { child_uuid: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
