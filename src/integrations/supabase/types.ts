@@ -88,8 +88,8 @@ export type Database = {
       family_shares: {
         Row: {
           can_edit: boolean
-          child_id: string
           created_at: string
+          family_owner_id: string
           id: string
           relationship: string | null
           role: string
@@ -99,8 +99,8 @@ export type Database = {
         }
         Insert: {
           can_edit?: boolean
-          child_id: string
           created_at?: string
+          family_owner_id: string
           id?: string
           relationship?: string | null
           role?: string
@@ -110,8 +110,8 @@ export type Database = {
         }
         Update: {
           can_edit?: boolean
-          child_id?: string
           created_at?: string
+          family_owner_id?: string
           id?: string
           relationship?: string | null
           role?: string
@@ -119,15 +119,7 @@ export type Database = {
           shared_with_email?: string
           shared_with_user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_family_shares_child"
-            columns: ["child_id"]
-            isOneToOne: false
-            referencedRelation: "children"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       photo_tags: {
         Row: {
