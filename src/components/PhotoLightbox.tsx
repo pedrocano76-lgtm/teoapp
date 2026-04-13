@@ -82,7 +82,7 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-foreground/20"
+                className="text-white hover:text-white hover:bg-white/20"
                 onClick={() => setEditOpen(true)}
               >
                 <Pencil className="h-5 w-5" />
@@ -90,7 +90,7 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-foreground/20"
+                className="text-white hover:text-white hover:bg-white/20"
                 onClick={() => onOpenChange(false)}
               >
                 <X className="h-5 w-5" />
@@ -103,7 +103,7 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 z-50 text-primary-foreground/80 hover:text-primary-foreground hover:bg-foreground/20 h-12 w-12"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 z-50 text-white hover:text-white hover:bg-white/20 h-12 w-12"
                   onClick={goPrev}
                 >
                   <ChevronLeft className="h-8 w-8" />
@@ -111,7 +111,7 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 z-50 text-primary-foreground/80 hover:text-primary-foreground hover:bg-foreground/20 h-12 w-12"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 z-50 text-white hover:text-white hover:bg-white/20 h-12 w-12"
                   onClick={goNext}
                 >
                   <ChevronRight className="h-8 w-8" />
