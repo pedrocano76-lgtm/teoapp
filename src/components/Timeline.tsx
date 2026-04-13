@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Photo, Child } from '@/lib/types';
-import { getAgeMonths, getAge } from '@/lib/age-utils';
+import { getAge, getTimelineGroupLabel, getTimelineGroupKey } from '@/lib/age-utils';
 import { PhotoCard } from './PhotoCard';
 import { PhotoLightbox } from './PhotoLightbox';
 
@@ -12,25 +12,16 @@ interface TimelineProps {
 
 export function Timeline({ photos, child, sortOrder = 'asc' }: TimelineProps) {
   const [lightboxIndex, setLightboxIndex] = useState(-1);
-  const groups = new Map<string, { photos: Photo[]; date: Date }>();
+  const groups = new Map<string, { label: string; photos: Photo[]; date: Date }>();
   const sortedPhotos = [...photos].sort((a, b) =>
     sortOrder === 'asc' ? a.date.getTime() - b.date.getTime() : b.date.getTime() - a.date.getTime()
   );
 
   for (const photo of sortedPhotos) {
-    const months = getAgeMonths(child.birthDate, photo.date);
-    let label: string;
-    if (months < 1) label = '🍼 Recién nacido';
-    else if (months < 3) label = '🌸 1–3 meses';
-    else if (months < 6) label = '🌿 3–6 meses';
-    else if (months < 9) label = '☀️ 6–9 meses';
-    else if (months < 12) label = '🍂 9–12 meses';
-    else {
-      const years = Math.floor(months / 12);
-      label = `🎂 ${years} año${years !== 1 ? 's' : ''}`;
-    }
-    if (!groups.has(label)) groups.set(label, { photos: [], date: photo.date });
-    groups.get(label)!.photos.push(photo);
+    const key = getTimelineGroupKey(child.birthDate, photo.date);
+    const label = getTimelineGroupLabel(child.birthDate, photo.date);
+    if (!groups.has(key)) groups.set(key, { label, photos: [], date: photo.date });
+    groups.get(key)!.photos.push(photo);
   }
 
   const flatPhotos: Photo[] = [];
@@ -45,12 +36,12 @@ export function Timeline({ photos, child, sortOrder = 'asc' }: TimelineProps) {
   return (
     <>
       <div className="space-y-10">
-        {Array.from(groups.entries()).map(([label, { photos: groupPhotos, date }]) => {
+        {Array.from(groups.entries()).map(([key, { label, photos: groupPhotos, date }]) => {
           const dateLabel = date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
           const ageLabel = getAge(child.birthDate, date);
 
           return (
-            <section key={label} className="animate-fade-in">
+            <section key={key} className="animate-fade-in">
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-px flex-1 bg-border" />
                 <div className="text-center">
