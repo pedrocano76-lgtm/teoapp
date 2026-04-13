@@ -123,6 +123,42 @@ export type Database = {
           },
         ]
       }
+      photo_tags: {
+        Row: {
+          created_at: string
+          id: string
+          photo_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photo_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photo_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_tags_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       photos: {
         Row: {
           caption: string | null
@@ -195,6 +231,36 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      tags: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string | null
+          icon: string
+          id: string
+          is_predefined: boolean
+          name: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          icon?: string
+          id?: string
+          is_predefined?: boolean
+          name: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          icon?: string
+          id?: string
+          is_predefined?: boolean
+          name?: string
         }
         Relationships: []
       }

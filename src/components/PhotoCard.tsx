@@ -10,6 +10,12 @@ interface PhotoCardProps {
 
 export function PhotoCard({ photo, child, onClick }: PhotoCardProps) {
   const ageLabel = getAgeLabel(child.birthDate, photo.date);
+  const fullDate = photo.date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
     <button
@@ -30,9 +36,16 @@ export function PhotoCard({ photo, child, onClick }: PhotoCardProps) {
         {photo.caption && (
           <p className="text-xs text-primary-foreground/80 mt-0.5">{photo.caption}</p>
         )}
-        <p className="text-xs text-primary-foreground/60 mt-0.5">
-          {photo.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-        </p>
+        <p className="text-xs text-primary-foreground/60 mt-0.5">{fullDate}</p>
+        {photo.tags && photo.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {photo.tags.map(tag => (
+              <span key={tag.id} className="text-[10px] bg-background/20 backdrop-blur-sm text-primary-foreground/90 px-1.5 py-0.5 rounded-full">
+                {tag.icon} {tag.name}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       {photo.eventId && (
         <div className="absolute top-2 right-2">

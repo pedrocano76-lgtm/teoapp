@@ -19,7 +19,6 @@ export function AllChildrenTimeline({ photos, children }: AllChildrenTimelinePro
 
   const childMap = new Map(children.map(c => [c.id, c]));
 
-  // Get representative date for each group for age calculation
   const groupDates = new Map<string, Date>();
   for (const photo of sortedPhotos) {
     const label = photo.date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -30,7 +29,7 @@ export function AllChildrenTimeline({ photos, children }: AllChildrenTimelinePro
     <div className="space-y-10">
       {Array.from(groups.entries()).map(([label, groupPhotos]) => {
         const groupDate = groupDates.get(label)!;
-        // Show age for each child at this date
+        const fullDate = groupDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
         const ageLabels = children.map(c => {
           const age = getAge(c.birthDate, groupDate);
           return `${c.name}: ${age}`;

@@ -13,6 +13,7 @@ export interface Photo {
   date: Date;
   caption?: string;
   eventId?: string;
+  tags?: Tag[];
 }
 
 export interface Event {
@@ -22,6 +23,14 @@ export interface Event {
   childId: string;
   date: Date;
   color: string;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  isPredefined: boolean;
 }
 
 export type AgeUnit = 'days' | 'weeks' | 'months' | 'years';

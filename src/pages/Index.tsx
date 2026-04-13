@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useChildren, usePhotos, useEvents } from '@/hooks/useData';
+import { useChildren, usePhotos, useEvents, useTags } from '@/hooks/useData';
 import { ChildSelector } from '@/components/ChildSelector';
 import { EventFilter } from '@/components/EventFilter';
 import { Timeline } from '@/components/Timeline';
@@ -11,7 +11,7 @@ import { AddChildDialog } from '@/components/AddChildDialog';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import heroPattern from '@/assets/hero-pattern.jpg';
-import type { Child, Photo, Event } from '@/lib/types';
+import type { Child, Photo, Event, Tag } from '@/lib/types';
 
 function mapChild(row: any): Child {
   return {
@@ -50,19 +50,32 @@ function mapEvent(row: any): Event {
   };
 }
 
+function mapTag(row: any): Tag {
+  return {
+    id: row.id,
+    name: row.name,
+    icon: row.icon,
+    color: row.color,
+    isPredefined: row.is_predefined,
+  };
+}
+
 const Index = () => {
   const { user, signOut } = useAuth();
   const { data: childrenData, isLoading: childrenLoading } = useChildren();
   const { data: photosData } = usePhotos();
   const { data: eventsData } = useEvents();
+  const { data: tagsData } = useTags();
 
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const children = useMemo(() => (childrenData || []).map(mapChild), [childrenData]);
   const photos = useMemo(() => (photosData || []).map(mapPhoto), [photosData]);
   const events = useMemo(() => (eventsData || []).map(mapEvent), [eventsData]);
+  const tags = useMemo(() => (tagsData || []).map(mapTag), [tagsData]);
 
   const selectedChild = selectedChildId
     ? children.find(c => c.id === selectedChildId) ?? null
@@ -85,6 +98,7 @@ const Index = () => {
         result = result.filter(p => p.eventId && matchingIds.includes(p.eventId));
       }
     }
+    // Tag filtering would need photo_tags data - for now we filter client-side by tag name
     return result.sort((a, b) =>
       sortOrder === 'asc' ? a.date.getTime() - b.date.getTime() : b.date.getTime() - a.date.getTime()
     );
@@ -120,7 +134,7 @@ const Index = () => {
               <ChildSelector
                 children={children}
                 selectedId={selectedChildId}
-                onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); }}
+                onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagId(null); }}
               />
             )}
           </div>
@@ -143,6 +157,34 @@ const Index = () => {
 
         {filteredEvents.length > 0 && (
           <EventFilter events={filteredEvents} selectedEventId={selectedEventId} onSelect={setSelectedEventId} />
+        )}
+
+        {/* Tag filter */}
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              onClick={() => setSelectedTagId(null)}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                !selectedTagId ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+            >
+              All Tags
+            </button>
+            {tags.map(tag => (
+              <button
+                key={tag.id}
+                onClick={() => setSelectedTagId(selectedTagId === tag.id ? null : tag.id)}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                  selectedTagId === tag.id
+                    ? 'bg-accent text-accent-foreground shadow-sm'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+              >
+                <span>{tag.icon}</span>
+                {tag.name}
+              </button>
+            ))}
+          </div>
         )}
       </div>
 
