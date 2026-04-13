@@ -17,6 +17,7 @@ export interface Photo {
   locationName?: string;
   locationLat?: number;
   locationLng?: number;
+  storagePath: string;
 }
 
 export interface Event {

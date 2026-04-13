@@ -41,6 +41,7 @@ function mapPhoto(row: any): Photo {
     locationName: row.location_name ?? undefined,
     locationLat: row.location_lat ?? undefined,
     locationLng: row.location_lng ?? undefined,
+    storagePath: row.storage_path,
   };
 }
 
