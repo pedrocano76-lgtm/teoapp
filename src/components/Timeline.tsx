@@ -7,12 +7,15 @@ import { PhotoLightbox } from './PhotoLightbox';
 interface TimelineProps {
   photos: Photo[];
   child: Child;
+  sortOrder?: 'asc' | 'desc';
 }
 
-export function Timeline({ photos, child }: TimelineProps) {
+export function Timeline({ photos, child, sortOrder = 'asc' }: TimelineProps) {
   const [lightboxIndex, setLightboxIndex] = useState(-1);
   const groups = new Map<string, { photos: Photo[]; date: Date }>();
-  const sortedPhotos = [...photos].sort((a, b) => a.date.getTime() - b.date.getTime());
+  const sortedPhotos = [...photos].sort((a, b) =>
+    sortOrder === 'asc' ? a.date.getTime() - b.date.getTime() : b.date.getTime() - a.date.getTime()
+  );
 
   for (const photo of sortedPhotos) {
     const months = getAgeMonths(child.birthDate, photo.date);
@@ -30,7 +33,6 @@ export function Timeline({ photos, child }: TimelineProps) {
     groups.get(label)!.photos.push(photo);
   }
 
-  // Build a flat index map for lightbox
   const flatPhotos: Photo[] = [];
   const indexMap = new Map<string, number>();
   for (const [, { photos: gp }] of groups) {
@@ -44,7 +46,7 @@ export function Timeline({ photos, child }: TimelineProps) {
     <>
       <div className="space-y-10">
         {Array.from(groups.entries()).map(([label, { photos: groupPhotos, date }]) => {
-          const dateLabel = date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+          const dateLabel = date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
           const ageLabel = getAge(child.birthDate, date);
 
           return (
