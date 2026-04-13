@@ -153,6 +153,7 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
   const [relationship, setRelationship] = useState('');
   const [customRelationship, setCustomRelationship] = useState('');
   const [lastInviteCode, setLastInviteCode] = useState('');
+  const [lastEmail, setLastEmail] = useState('');
   const [codeCopied, setCodeCopied] = useState(false);
 
   const addShare = useMutation({
