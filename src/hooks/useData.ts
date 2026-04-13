@@ -25,13 +25,11 @@ export function useAddChild() {
 
   return useMutation({
     mutationFn: async (child: { name: string; birth_date: string; color: string }) => {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('children')
-        .insert({ ...child, owner_id: user!.id })
-        .select()
-        .single();
+        .insert({ ...child, owner_id: user!.id });
       if (error) throw error;
-      return data;
+      return null;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['children'] }),
   });
