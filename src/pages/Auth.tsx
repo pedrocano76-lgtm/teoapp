@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,16 +8,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 
-const CREATOR_RELATIONSHIPS = ['Padre', 'Madre', 'Hermano/a', 'Otro'];
+const ALL_RELATIONSHIPS = [
+  'Padre',
+  'Madre',
+  'Abuelo/a',
+  'Tío/a',
+  'Primo/a',
+  'Bisabuelo/a',
+  'Padrino/Madrina',
+  'Hermano/a',
+  'Otro',
+];
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
+  const [searchParams] = useSearchParams();
+  const inviteCode = searchParams.get('invite') || '';
+  const inviteEmail = searchParams.get('email') || '';
+
+  const [isLogin, setIsLogin] = useState(!inviteCode);
+  const [email, setEmail] = useState(inviteEmail);
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [relationship, setRelationship] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (inviteCode) {
+      setIsLogin(false);
+      if (inviteEmail) setEmail(inviteEmail);
+    }
+  }, [inviteCode, inviteEmail]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +58,7 @@ export default function Auth() {
           email,
           password,
           options: {
-            data: { full_name: fullName, relationship },
+            data: { full_name: fullName, relationship, invite_code: inviteCode || undefined },
             emailRedirectTo: window.location.origin,
           },
         });
@@ -63,7 +85,11 @@ export default function Auth() {
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-heading">Little Moments</CardTitle>
           <CardDescription>
-            {isLogin ? 'Bienvenido de nuevo. Inicia sesión en tu álbum.' : 'Crea una cuenta para empezar el álbum familiar.'}
+            {inviteCode
+              ? '¡Te han invitado a un álbum familiar! Crea tu cuenta para unirte.'
+              : isLogin
+                ? 'Bienvenido de nuevo. Inicia sesión en tu álbum.'
+                : 'Crea una cuenta para empezar el álbum familiar.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -86,7 +112,7 @@ export default function Auth() {
                       <SelectValue placeholder="Selecciona tu parentesco" />
                     </SelectTrigger>
                     <SelectContent>
-                      {CREATOR_RELATIONSHIPS.map(r => (
+                      {ALL_RELATIONSHIPS.map(r => (
                         <SelectItem key={r} value={r}>{r}</SelectItem>
                       ))}
                     </SelectContent>

@@ -94,7 +94,8 @@ function ShareRow({ share }: { share: any }) {
 
   const handleShareCode = async () => {
     if (!share.invite_code) return;
-    const text = `¡Únete a nuestro álbum familiar! Regístrate con este email (${share.shared_with_email}) y usa el código: ${share.invite_code}`;
+    const inviteUrl = `${window.location.origin}/auth?invite=${share.invite_code}&email=${encodeURIComponent(share.shared_with_email)}`;
+    const text = `¡Únete a nuestro álbum familiar! Regístrate aquí: ${inviteUrl}`;
     if (navigator.share) {
       try {
         await navigator.share({ title: 'Invitación familiar', text });
@@ -182,7 +183,8 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
   });
 
   const handleShareCode = async () => {
-    const text = `¡Únete a nuestro álbum familiar! Regístrate con el email ${lastEmail} y usa el código: ${lastInviteCode}`;
+    const inviteUrl = `${window.location.origin}/auth?invite=${lastInviteCode}&email=${encodeURIComponent(lastEmail)}`;
+    const text = `¡Únete a nuestro álbum familiar! Regístrate aquí: ${inviteUrl}`;
     if (navigator.share) {
       try {
         await navigator.share({ title: 'Invitación familiar', text });
