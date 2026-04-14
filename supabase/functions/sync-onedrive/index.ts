@@ -83,6 +83,22 @@ serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
+    // ─── HELPER: Verify resource ownership via RLS-protected userClient ─
+    async function verifyConnectionOwnership(connectionId: string) {
+      const { data, error } = await userClient.from('cloud_connections').select('id').eq('id', connectionId).single();
+      if (error || !data) {
+        return false;
+      }
+      return true;
+    }
+    async function verifyChildAccess(childId: string) {
+      const { data, error } = await userClient.from('children').select('id').eq('id', childId).single();
+      if (error || !data) {
+        return false;
+      }
+      return true;
+    }
+
     const gatewayHeaders: GatewayHeaders = {
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
       "X-Connection-Api-Key": ONEDRIVE_API_KEY,
