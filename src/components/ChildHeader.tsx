@@ -36,10 +36,10 @@ export function ChildHeader({ child, photoCount }: ChildHeaderProps) {
         <div>
           <h2 className="text-2xl font-heading font-bold text-foreground">{child.name}</h2>
           <p className="text-muted-foreground text-sm mt-1">
-            {getAge(child.birthDate)} • {photoCount} photos
+            {getAge(child.birthDate)} • {photoCount} {photoCount === 1 ? 'foto' : 'fotos'}
           </p>
           <p className="text-muted-foreground text-xs mt-0.5">
-            Born {child.birthDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            Nacido el {child.birthDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
       </div>

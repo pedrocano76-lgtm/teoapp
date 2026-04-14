@@ -26,7 +26,7 @@ export function AddChildDialog() {
     e.preventDefault();
     try {
       await addChild.mutateAsync({ name, birth_date: birthDate, color });
-      toast({ title: '🎉 Added!', description: `${name} has been added to your album.` });
+      toast({ title: '🎉 ¡Añadido!', description: `${name} se ha añadido a tu álbum.` });
       setOpen(false);
       setName('');
       setBirthDate('');
@@ -40,7 +40,7 @@ export function AddChildDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
-          👶 Add Child
+          👶 Añadir hijo/a
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -50,7 +50,7 @@ export function AddChildDialog() {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            placeholder="Child's name"
+            placeholder="Nombre del niño/a"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -72,7 +72,7 @@ export function AddChildDialog() {
             </SelectContent>
           </Select>
           <Button type="submit" className="w-full" disabled={addChild.isPending}>
-            {addChild.isPending ? 'Adding...' : 'Add Child'}
+            {addChild.isPending ? 'Añadiendo...' : 'Añadir hijo/a'}
           </Button>
         </form>
       </DialogContent>

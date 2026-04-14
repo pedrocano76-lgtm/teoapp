@@ -49,7 +49,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
           isShared,
         });
       }
-      toast({ title: 'Uploaded!', description: `${files.length} photo${files.length > 1 ? 's' : ''} added.` });
+      toast({ title: '¡Subidas!', description: `${files.length} foto${files.length > 1 ? 's' : ''} añadida${files.length > 1 ? 's' : ''}.` });
       setOpen(false);
       setFiles([]);
       setCaption('');
@@ -57,7 +57,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
       setSelectedTagIds([]);
       setIsShared(true);
     } catch (error: any) {
-      toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
+      toast({ title: 'Error al subir', description: error.message, variant: 'destructive' });
     } finally {
       setUploading(false);
     }
@@ -69,18 +69,18 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="gap-2">
-          📷 Add Photos
+          📷 Añadir fotos
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-heading">Upload Photos</DialogTitle>
-          <DialogDescription>Upload photos from your device. The date will be extracted automatically from the photo.</DialogDescription>
+          <DialogTitle className="font-heading">Subir fotos</DialogTitle>
+          <DialogDescription>Sube fotos desde tu dispositivo. La fecha se extraerá automáticamente de la foto.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <Select value={selectedChild} onValueChange={setSelectedChild}>
             <SelectTrigger>
-              <SelectValue placeholder="Select child" />
+              <SelectValue placeholder="Seleccionar hijo/a" />
             </SelectTrigger>
             <SelectContent>
               {children.map((c) => (
@@ -103,7 +103,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
               className="w-full"
               onClick={() => fileInputRef.current?.click()}
             >
-              {files.length > 0 ? `${files.length} file${files.length > 1 ? 's' : ''} selected` : 'Choose photos'}
+              {files.length > 0 ? `${files.length} archivo${files.length > 1 ? 's' : ''} seleccionado${files.length > 1 ? 's' : ''}` : 'Elegir fotos'}
             </Button>
           </div>
 
@@ -127,7 +127,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
           )}
 
           <Input
-            placeholder="Caption (optional)"
+            placeholder="Comentario (opcional)"
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
           />
@@ -136,10 +136,10 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
           {childEvents.length > 0 && (
             <Select value={selectedEventId} onValueChange={setSelectedEventId}>
               <SelectTrigger>
-                <SelectValue placeholder="Link to event (optional)" />
+                <SelectValue placeholder="Vincular a evento (opcional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">No event</SelectItem>
+                <SelectItem value="none">Sin evento</SelectItem>
                 {childEvents.map((e) => (
                   <SelectItem key={e.id} value={e.id}>
                     {e.icon} {e.name}
@@ -164,7 +164,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
             disabled={!selectedChild || files.length === 0 || uploading}
             className="w-full"
           >
-            {uploading ? 'Uploading...' : `Upload ${files.length} photo${files.length !== 1 ? 's' : ''}`}
+            {uploading ? 'Subiendo...' : `Subir ${files.length} foto${files.length !== 1 ? 's' : ''}`}
           </Button>
         </div>
       </DialogContent>
