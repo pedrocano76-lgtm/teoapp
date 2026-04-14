@@ -7,11 +7,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const colors = [
-  { value: 'primary', label: '🌸 Rose' },
-  { value: 'sage', label: '🌿 Sage' },
-  { value: 'lavender', label: '💜 Lavender' },
-  { value: 'peach', label: '🍑 Peach' },
-  { value: 'sky', label: '🩵 Sky' },
+  { value: 'primary', label: '🌸 Rosa' },
+  { value: 'sage', label: '🌿 Salvia' },
+  { value: 'lavender', label: '💜 Lavanda' },
+  { value: 'peach', label: '🍑 Melocotón' },
+  { value: 'sky', label: '🩵 Cielo' },
 ];
 
 export function AddChildDialog() {
