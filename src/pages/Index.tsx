@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useChildren, usePhotos, useEvents, useTags } from '@/hooks/useData';
 import { useUserRole } from '@/hooks/useUserRole';
+import { usePendingImports } from '@/hooks/useCloudSync';
 import { ChildSelector } from '@/components/ChildSelector';
 import { Timeline } from '@/components/Timeline';
 import { AllChildrenTimeline } from '@/components/AllChildrenTimeline';
@@ -12,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { FilterDropdown } from '@/components/FilterDropdown';
 import { AppSidebar } from '@/components/AppSidebar';
+import { PendingImportsReview } from '@/components/PendingImportsReview';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { supabase } from '@/integrations/supabase/client';
 import heroPattern from '@/assets/hero-pattern.jpg';
@@ -71,6 +73,8 @@ const Index = () => {
   const { data: eventsData } = useEvents();
   const { data: tagsData } = useTags();
   const { isGuest, canEdit } = useUserRole();
+  const { data: pendingImportsData } = usePendingImports();
+  const hasPendingImports = !isGuest && (pendingImportsData || []).length > 0;
 
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -196,6 +200,12 @@ const Index = () => {
 
           {/* Content */}
           <main className="container mx-auto px-4 pb-16 flex-1">
+            {/* Pending cloud imports */}
+            {hasPendingImports && (
+              <div className="mb-8">
+                <PendingImportsReview />
+              </div>
+            )}
             {childrenLoading ? (
               <div className="text-center py-20">
                 <p className="text-muted-foreground">Cargando...</p>
