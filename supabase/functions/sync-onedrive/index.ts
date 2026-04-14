@@ -164,7 +164,7 @@ serve(async (req) => {
         cloud_connection_id: connectionId,
         source: "onedrive",
         external_id: f.id,
-        thumbnail_url: f.thumbnails?.[0]?.medium?.url || null,
+        thumbnail_url: f.thumbnails?.[0]?.large?.url || f.thumbnails?.[0]?.medium?.url || f.thumbnails?.[0]?.small?.url || null,
         full_image_url: f["@microsoft.graph.downloadUrl"] || null,
         file_name: f.name,
         taken_at: f.photo?.takenDateTime || f.createdDateTime || null,
@@ -239,7 +239,7 @@ serve(async (req) => {
       }
 
       if (referenceUrls.length === 0) {
-        // No reference photos - can't do AI analysis, mark all as 0.5
+        // No reference photos - can't do AI analysis, avoid suggesting uncertain matches
         const { data: unanalyzed } = await supabase
           .from("pending_imports")
           .select("id")
@@ -252,7 +252,7 @@ serve(async (req) => {
           for (let i = 0; i < ids.length; i += 200) {
             await supabase
               .from("pending_imports")
-              .update({ confidence_score: 0.5 })
+              .update({ confidence_score: 0 })
               .in("id", ids.slice(i, i + 200));
           }
         }
@@ -296,7 +296,7 @@ serve(async (req) => {
       const results = await Promise.allSettled(
         batch.map(async (imp: any) => {
           const thumbnailUrl = imp.thumbnail_url || imp.full_image_url;
-          if (!thumbnailUrl) return { id: imp.id, confidence: 0.5 };
+          if (!thumbnailUrl) return { id: imp.id, confidence: 0 };
 
           try {
             const aiResp = await fetch(
@@ -315,13 +315,17 @@ serve(async (req) => {
                       content: [
                         {
                           type: "text",
-                          text: `You are a face recognition assistant. The first image(s) are reference photos of a specific child. The last image is a candidate photo.
+                          text: `You are a strict child face-matching assistant. The first image(s) are reference photos of one specific child. The last image is the candidate photo to evaluate.
 
-RULES:
-- The candidate photo MUST contain a human face that resembles the child in the reference photos.
-- If the candidate photo is a landscape, object, animal, food, screenshot, or any image WITHOUT a clearly visible human face, reply {"match": false, "confidence": 0.0}.
-- Only reply {"match": true, "confidence": X} if you can see a face in the candidate that looks like the same child.
-- Confidence should reflect how certain you are it's the same child (0.0-1.0).
+HARD RULES:
+- Return match=false if there is no clearly visible human face.
+- Return match=false for landscapes, rooms, objects, food, animals, screenshots, text, drawings, or any non-person photo.
+- Return match=false if the face is tiny, blurry, heavily occluded, turned away, cropped, or too far to compare reliably.
+- Return match=false for group photos unless one face is clearly visible and plausibly matches the child.
+- Never infer from context like clothes, toys, stroller, location, or date.
+- Prefer false negatives over false positives.
+- Only return match=true when a clearly visible face in the candidate plausibly matches the same child in the reference photos.
+- Confidence must be 0.0-1.0 and should be high only when the facial similarity is visually clear.
 
 Reply with ONLY a JSON object: {"match": true/false, "confidence": 0.0-1.0}`,
                         },
@@ -342,12 +346,12 @@ Reply with ONLY a JSON object: {"match": true/false, "confidence": 0.0-1.0}`,
 
             if (aiResp.status === 429 || aiResp.status === 402) {
               console.warn("AI rate limited, skipping:", imp.file_name);
-              return { id: imp.id, confidence: 0.5 };
+              return { id: imp.id, confidence: 0 };
             }
 
             if (!aiResp.ok) {
               console.error("AI error:", await aiResp.text());
-              return { id: imp.id, confidence: 0.5 };
+              return { id: imp.id, confidence: 0 };
             }
 
             const aiData = await aiResp.json();
@@ -355,15 +359,20 @@ Reply with ONLY a JSON object: {"match": true/false, "confidence": 0.0-1.0}`,
             const jsonMatch = content.match(/\{[^}]+\}/);
             if (jsonMatch) {
               const parsed = JSON.parse(jsonMatch[0]);
+              const rawConfidence = Number(parsed.confidence);
+              const normalizedConfidence = Number.isFinite(rawConfidence)
+                ? Math.max(0, Math.min(1, rawConfidence))
+                : 0;
+
               return {
                 id: imp.id,
-                confidence: parsed.match ? parsed.confidence : 0,
+                confidence: parsed.match ? normalizedConfidence : 0,
               };
             }
-            return { id: imp.id, confidence: 0.5 };
+            return { id: imp.id, confidence: 0 };
           } catch (e) {
             console.error("AI analysis failed:", imp.file_name, e);
-            return { id: imp.id, confidence: 0.5 };
+            return { id: imp.id, confidence: 0 };
           }
         })
       );
