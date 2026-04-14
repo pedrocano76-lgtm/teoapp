@@ -9,6 +9,50 @@ const corsHeaders = {
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/microsoft_onedrive";
 
+interface GatewayHeaders {
+  Authorization: string;
+  "X-Connection-Api-Key": string;
+}
+
+async function listFolderItems(itemId: string, headers: GatewayHeaders): Promise<any[]> {
+  const url = `${GATEWAY_URL}/me/drive/items/${itemId}/children?$top=200&$select=id,name,file,folder,photo,size,createdDateTime,@microsoft.graph.downloadUrl,thumbnails&$expand=thumbnails`;
+  console.log("Fetching:", url);
+  const resp = await fetch(url, { headers });
+  if (!resp.ok) {
+    const t = await resp.text();
+    console.error(`Error listing ${itemId}: ${resp.status} ${t}`);
+    return [];
+  }
+  const data = await resp.json();
+  return data.value || [];
+}
+
+async function scanRecursive(itemId: string, headers: GatewayHeaders, maxDepth = 5, currentDepth = 0): Promise<any[]> {
+  if (currentDepth > maxDepth) return [];
+  
+  const items = await listFolderItems(itemId, headers);
+  const images: any[] = [];
+  const subfolders: any[] = [];
+
+  for (const item of items) {
+    if (item.file?.mimeType?.startsWith("image/")) {
+      images.push(item);
+    } else if (item.folder) {
+      subfolders.push(item);
+    }
+  }
+
+  console.log(`Depth ${currentDepth}: ${images.length} images, ${subfolders.length} subfolders in ${itemId}`);
+
+  // Recurse into subfolders
+  for (const folder of subfolders) {
+    const subImages = await scanRecursive(folder.id, headers, maxDepth, currentDepth + 1);
+    images.push(...subImages);
+  }
+
+  return images;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -35,7 +79,7 @@ serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
-    const gatewayHeaders = {
+    const gatewayHeaders: GatewayHeaders = {
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
       "X-Connection-Api-Key": ONEDRIVE_API_KEY,
     };
@@ -63,7 +107,6 @@ serve(async (req) => {
         });
       }
 
-      // Extract the item ID from the folder path like /me/drive/items/{id}
       const itemIdMatch = folderPath.match(/\/me\/drive\/items\/([^/]+)/);
       if (!itemIdMatch) {
         return new Response(JSON.stringify({ error: "Ruta de carpeta inválida" }), {
@@ -72,22 +115,10 @@ serve(async (req) => {
       }
       const itemId = itemIdMatch[1];
 
-      // FIXED: Use correct OneDrive API path /me/drive/items/{id}/children
-      const scanUrl = `${GATEWAY_URL}/me/drive/items/${itemId}/children?$top=50&$select=id,name,file,photo,size,createdDateTime,@microsoft.graph.downloadUrl,thumbnails&$expand=thumbnails`;
-      console.log("Scanning URL:", scanUrl);
-
-      const resp = await fetch(scanUrl, { headers: gatewayHeaders });
-      if (!resp.ok) {
-        const t = await resp.text();
-        console.error("OneDrive scan error:", resp.status, t);
-        throw new Error(`Error al escanear OneDrive [${resp.status}]: ${t}`);
-      }
-      const data = await resp.json();
-      const imageFiles = (data.value || []).filter((f: any) =>
-        f.file?.mimeType?.startsWith("image/")
-      );
-
-      console.log(`Found ${imageFiles.length} image files in folder`);
+      // Recursive scan through all subfolders
+      console.log(`Starting recursive scan from ${itemId}`);
+      const imageFiles = await scanRecursive(itemId, gatewayHeaders);
+      console.log(`Total images found across all folders: ${imageFiles.length}`);
 
       // Check already imported
       const externalIds = imageFiles.map((f: any) => f.id);
@@ -96,13 +127,6 @@ serve(async (req) => {
         .select("external_id")
         .eq("cloud_connection_id", connectionId)
         .in("external_id", externalIds);
-
-      // Also check photos already imported (via metadata or external tracking)
-      const { data: existingPhotos } = await supabase
-        .from("photos")
-        .select("storage_path")
-        .eq("child_id", childId);
-      const importedPaths = new Set((existingPhotos || []).map((p: any) => p.storage_path));
 
       const existingIds = new Set((existing || []).map((e: any) => e.external_id));
       const newFiles = imageFiles.filter((f: any) => !existingIds.has(f.id));
@@ -116,7 +140,7 @@ serve(async (req) => {
         return new Response(JSON.stringify({
           imported: 0,
           total_scanned: imageFiles.length,
-          message: "No hay fotos nuevas en esta carpeta",
+          message: `Se escanearon ${imageFiles.length} fotos, no hay nuevas`,
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -239,7 +263,6 @@ serve(async (req) => {
           .upsert(rows, { onConflict: "cloud_connection_id,external_id" });
         if (insertError) throw insertError;
 
-        // Create notification
         await supabase.from("notifications").insert({
           user_id: user.id,
           type: "cloud_import",
