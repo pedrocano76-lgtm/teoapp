@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, X, MapPin, Pencil } from 'lucide-react';
 import { Photo, Child } from '@/lib/types';
 import { getAgeLabel } from '@/lib/age-utils';
 import { PhotoEditDialog } from '@/components/PhotoEditDialog';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface PhotoLightboxProps {
   photos: Photo[];
@@ -17,6 +18,7 @@ interface PhotoLightboxProps {
 export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChange }: PhotoLightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [editOpen, setEditOpen] = useState(false);
+  const { canEdit } = useUserRole();
   const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
@@ -79,14 +81,16 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
           >
             {/* Close & Edit */}
             <div className="absolute top-3 right-3 z-50 flex gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white hover:text-white hover:bg-white/20"
-                onClick={() => setEditOpen(true)}
-              >
-                <Pencil className="h-5 w-5" />
-              </Button>
+              {canEdit && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:text-white hover:bg-white/20"
+                  onClick={() => setEditOpen(true)}
+                >
+                  <Pencil className="h-5 w-5" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -147,22 +151,24 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
         </DialogContent>
       </Dialog>
 
-      <PhotoEditDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        photo={{
-          id: photo.id,
-          childId: photo.childId,
-          caption: photo.caption,
-          eventId: photo.eventId,
-          locationName: photo.locationName,
-          storagePath: photo.storagePath,
-        }}
-        onDeleted={() => {
-          setEditOpen(false);
-          onOpenChange(false);
-        }}
-      />
+      {canEdit && (
+        <PhotoEditDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          photo={{
+            id: photo.id,
+            childId: photo.childId,
+            caption: photo.caption,
+            eventId: photo.eventId,
+            locationName: photo.locationName,
+            storagePath: photo.storagePath,
+          }}
+          onDeleted={() => {
+            setEditOpen(false);
+            onOpenChange(false);
+          }}
+        />
+      )}
     </>
   );
 }

@@ -1,13 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useChildren, usePhotos, useEvents, useTags } from '@/hooks/useData';
+import { useUserRole } from '@/hooks/useUserRole';
 import { ChildSelector } from '@/components/ChildSelector';
 import { Timeline } from '@/components/Timeline';
 import { AllChildrenTimeline } from '@/components/AllChildrenTimeline';
 import { ChildHeader } from '@/components/ChildHeader';
 import { PhotoUpload } from '@/components/PhotoUpload';
 import { AddChildDialog } from '@/components/AddChildDialog';
-
+import { Button } from '@/components/ui/button';
+import { LogOut } from 'lucide-react';
 import { FilterDropdown } from '@/components/FilterDropdown';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -63,10 +65,12 @@ function mapTag(row: any): Tag {
 }
 
 const Index = () => {
+  const { signOut } = useAuth();
   const { data: childrenData, isLoading: childrenLoading } = useChildren();
   const { data: photosData } = usePhotos();
   const { data: eventsData } = useEvents();
   const { data: tagsData } = useTags();
+  const { isGuest, canEdit } = useUserRole();
 
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -117,16 +121,18 @@ const Index = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <AppSidebar
-          children={children}
-          onSelectChild={(id) => {
-            setSelectedChildId(id);
-            setSelectedEventId(null);
-            setSelectedTagId(null);
-            setSelectedLocation(null);
-          }}
-          selectedChildId={selectedChildId}
-        />
+        {!isGuest && (
+          <AppSidebar
+            children={children}
+            onSelectChild={(id) => {
+              setSelectedChildId(id);
+              setSelectedEventId(null);
+              setSelectedTagId(null);
+              setSelectedLocation(null);
+            }}
+            selectedChildId={selectedChildId}
+          />
+        )}
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
@@ -137,11 +143,17 @@ const Index = () => {
             </div>
             <div className="relative container mx-auto px-4 pt-6 pb-4">
               <div className="flex items-center gap-3">
-                <SidebarTrigger className="shrink-0" />
-                <div className="min-w-0">
+                {!isGuest && <SidebarTrigger className="shrink-0" />}
+                <div className="min-w-0 flex-1">
                   <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground truncate">Little Moments</h1>
                   <p className="text-muted-foreground mt-0.5 text-sm md:text-base">Cada sonrisa, cada paso — atesorados para siempre ✨</p>
                 </div>
+                {isGuest && (
+                  <Button variant="ghost" size="sm" className="text-muted-foreground gap-1.5" onClick={signOut}>
+                    <LogOut className="h-4 w-4" />
+                    <span className="hidden sm:inline">Salir</span>
+                  </Button>
+                )}
               </div>
             </div>
           </header>
@@ -159,7 +171,7 @@ const Index = () => {
                 )}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                {children.length > 0 && (
+                {canEdit && children.length > 0 && (
                   <PhotoUpload
                     children={children.map(c => ({ id: c.id, name: c.name }))}
                     defaultChildId={selectedChildId ?? undefined}
@@ -192,18 +204,28 @@ const Index = () => {
               <div className="text-center py-20">
                 <p className="text-5xl mb-4">👶</p>
                 <h2 className="text-2xl font-heading font-bold text-foreground mb-2">¡Bienvenido a Little Moments!</h2>
-                <p className="text-muted-foreground mb-6">Empieza añadiendo a tu primer hijo para crear su álbum de fotos.</p>
-                <AddChildDialog />
+                {isGuest ? (
+                  <p className="text-muted-foreground mb-6">Aún no hay fotos compartidas contigo.</p>
+                ) : (
+                  <>
+                    <p className="text-muted-foreground mb-6">Empieza añadiendo a tu primer hijo para crear su álbum de fotos.</p>
+                    <AddChildDialog />
+                  </>
+                )}
               </div>
             ) : filteredPhotos.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-4xl mb-4">📷</p>
                 <p className="text-muted-foreground text-lg">Aún no hay fotos</p>
-                <p className="text-muted-foreground text-sm mt-1 mb-4">Sube tus primeras fotos para iniciar la línea de tiempo</p>
-                <PhotoUpload
-                  children={children.map(c => ({ id: c.id, name: c.name }))}
-                  defaultChildId={selectedChildId ?? undefined}
-                />
+                {canEdit && (
+                  <>
+                    <p className="text-muted-foreground text-sm mt-1 mb-4">Sube tus primeras fotos para iniciar la línea de tiempo</p>
+                    <PhotoUpload
+                      children={children.map(c => ({ id: c.id, name: c.name }))}
+                      defaultChildId={selectedChildId ?? undefined}
+                    />
+                  </>
+                )}
               </div>
             ) : (
               <>

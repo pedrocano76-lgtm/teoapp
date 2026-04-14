@@ -4,6 +4,7 @@ import { getAgeLabel } from '@/lib/age-utils';
 import { cn } from '@/lib/utils';
 import { MapPin, Pencil } from 'lucide-react';
 import { PhotoEditDialog } from '@/components/PhotoEditDialog';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface PhotoCardProps {
   photo: Photo;
@@ -13,6 +14,7 @@ interface PhotoCardProps {
 
 export function PhotoCard({ photo, child, onClick }: PhotoCardProps) {
   const [editOpen, setEditOpen] = useState(false);
+  const { canEdit } = useUserRole();
   const ageLabel = getAgeLabel(child.birthDate, photo.date);
   const fullDate = photo.date.toLocaleDateString('es-ES', {
     weekday: 'short',
@@ -24,13 +26,15 @@ export function PhotoCard({ photo, child, onClick }: PhotoCardProps) {
   return (
     <>
       <div className="group relative overflow-hidden rounded-xl bg-card shadow-sm hover:shadow-lg transition-all duration-300 animate-fade-in">
-        {/* Edit button */}
-        <button
-          onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}
-          className="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-black/50 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
-        >
-          <Pencil className="h-3.5 w-3.5" />
-        </button>
+        {/* Edit button - only for parents/owners */}
+        {canEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}
+            className="absolute top-2 left-2 z-10 p-1.5 rounded-full bg-black/50 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        )}
 
         <button
           onClick={onClick}
@@ -78,19 +82,21 @@ export function PhotoCard({ photo, child, onClick }: PhotoCardProps) {
         )}
       </div>
 
-      <PhotoEditDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        photo={{
-          id: photo.id,
-          childId: photo.childId,
-          caption: photo.caption,
-          eventId: photo.eventId,
-          locationName: photo.locationName,
-          storagePath: photo.storagePath,
-          isShared: photo.isShared,
-        }}
-      />
+      {canEdit && (
+        <PhotoEditDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          photo={{
+            id: photo.id,
+            childId: photo.childId,
+            caption: photo.caption,
+            eventId: photo.eventId,
+            locationName: photo.locationName,
+            storagePath: photo.storagePath,
+            isShared: photo.isShared,
+          }}
+        />
+      )}
     </>
   );
 }
