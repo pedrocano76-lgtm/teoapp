@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useChildren, usePhotos, useEvents, useTags } from '@/hooks/useData';
+import { useUserRole } from '@/hooks/useUserRole';
 import { ChildSelector } from '@/components/ChildSelector';
 import { Timeline } from '@/components/Timeline';
 import { AllChildrenTimeline } from '@/components/AllChildrenTimeline';
@@ -67,6 +68,7 @@ const Index = () => {
   const { data: photosData } = usePhotos();
   const { data: eventsData } = useEvents();
   const { data: tagsData } = useTags();
+  const { isGuest, canEdit } = useUserRole();
 
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -117,16 +119,18 @@ const Index = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <AppSidebar
-          children={children}
-          onSelectChild={(id) => {
-            setSelectedChildId(id);
-            setSelectedEventId(null);
-            setSelectedTagId(null);
-            setSelectedLocation(null);
-          }}
-          selectedChildId={selectedChildId}
-        />
+        {!isGuest && (
+          <AppSidebar
+            children={children}
+            onSelectChild={(id) => {
+              setSelectedChildId(id);
+              setSelectedEventId(null);
+              setSelectedTagId(null);
+              setSelectedLocation(null);
+            }}
+            selectedChildId={selectedChildId}
+          />
+        )}
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
@@ -137,7 +141,7 @@ const Index = () => {
             </div>
             <div className="relative container mx-auto px-4 pt-6 pb-4">
               <div className="flex items-center gap-3">
-                <SidebarTrigger className="shrink-0" />
+                {!isGuest && <SidebarTrigger className="shrink-0" />}
                 <div className="min-w-0">
                   <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground truncate">Little Moments</h1>
                   <p className="text-muted-foreground mt-0.5 text-sm md:text-base">Cada sonrisa, cada paso — atesorados para siempre ✨</p>
@@ -159,7 +163,7 @@ const Index = () => {
                 )}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                {children.length > 0 && (
+                {canEdit && children.length > 0 && (
                   <PhotoUpload
                     children={children.map(c => ({ id: c.id, name: c.name }))}
                     defaultChildId={selectedChildId ?? undefined}
