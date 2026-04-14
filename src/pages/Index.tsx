@@ -196,18 +196,28 @@ const Index = () => {
               <div className="text-center py-20">
                 <p className="text-5xl mb-4">👶</p>
                 <h2 className="text-2xl font-heading font-bold text-foreground mb-2">¡Bienvenido a Little Moments!</h2>
-                <p className="text-muted-foreground mb-6">Empieza añadiendo a tu primer hijo para crear su álbum de fotos.</p>
-                <AddChildDialog />
+                {isGuest ? (
+                  <p className="text-muted-foreground mb-6">Aún no hay fotos compartidas contigo.</p>
+                ) : (
+                  <>
+                    <p className="text-muted-foreground mb-6">Empieza añadiendo a tu primer hijo para crear su álbum de fotos.</p>
+                    <AddChildDialog />
+                  </>
+                )}
               </div>
             ) : filteredPhotos.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-4xl mb-4">📷</p>
                 <p className="text-muted-foreground text-lg">Aún no hay fotos</p>
-                <p className="text-muted-foreground text-sm mt-1 mb-4">Sube tus primeras fotos para iniciar la línea de tiempo</p>
-                <PhotoUpload
-                  children={children.map(c => ({ id: c.id, name: c.name }))}
-                  defaultChildId={selectedChildId ?? undefined}
-                />
+                {canEdit && (
+                  <>
+                    <p className="text-muted-foreground text-sm mt-1 mb-4">Sube tus primeras fotos para iniciar la línea de tiempo</p>
+                    <PhotoUpload
+                      children={children.map(c => ({ id: c.id, name: c.name }))}
+                      defaultChildId={selectedChildId ?? undefined}
+                    />
+                  </>
+                )}
               </div>
             ) : (
               <>
