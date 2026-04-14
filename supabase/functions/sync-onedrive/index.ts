@@ -27,7 +27,7 @@ async function listFolderItems(itemId: string, headers: GatewayHeaders): Promise
   return data.value || [];
 }
 
-async function scanRecursive(itemId: string, headers: GatewayHeaders, maxDepth = 5, currentDepth = 0): Promise<any[]> {
+async function scanRecursive(itemId: string, headers: GatewayHeaders, sinceDate: string | null, maxDepth = 5, currentDepth = 0): Promise<any[]> {
   if (currentDepth > maxDepth) return [];
   
   const items = await listFolderItems(itemId, headers);
@@ -36,6 +36,11 @@ async function scanRecursive(itemId: string, headers: GatewayHeaders, maxDepth =
 
   for (const item of items) {
     if (item.file?.mimeType?.startsWith("image/")) {
+      // Filter by date if provided
+      if (sinceDate) {
+        const itemDate = item.photo?.takenDateTime || item.createdDateTime;
+        if (itemDate && itemDate < sinceDate) continue;
+      }
       images.push(item);
     } else if (item.folder) {
       subfolders.push(item);
@@ -45,7 +50,7 @@ async function scanRecursive(itemId: string, headers: GatewayHeaders, maxDepth =
   console.log(`Depth ${currentDepth}: ${images.length} images, ${subfolders.length} subfolders in ${itemId}`);
 
   for (const folder of subfolders) {
-    const subImages = await scanRecursive(folder.id, headers, maxDepth, currentDepth + 1);
+    const subImages = await scanRecursive(folder.id, headers, sinceDate, maxDepth, currentDepth + 1);
     images.push(...subImages);
   }
 
@@ -101,7 +106,7 @@ serve(async (req) => {
 
     // ─── SCAN (index only, no AI) ───────────────────────────────
     if (action === "scan") {
-      const { connectionId, childId, folderPath } = body;
+      const { connectionId, childId, folderPath, sinceDate } = body;
       if (!connectionId || !childId || !folderPath) {
         return new Response(JSON.stringify({ error: "Faltan campos requeridos" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -116,9 +121,9 @@ serve(async (req) => {
       }
       const itemId = itemIdMatch[1];
 
-      console.log(`Starting recursive scan from ${itemId}`);
-      const imageFiles = await scanRecursive(itemId, gatewayHeaders);
-      console.log(`Total images found: ${imageFiles.length}`);
+      console.log(`Starting recursive scan from ${itemId}, sinceDate: ${sinceDate || 'none'}`);
+      const imageFiles = await scanRecursive(itemId, gatewayHeaders, sinceDate || null);
+      console.log(`Total images found (after date filter): ${imageFiles.length}`);
 
       // Check already imported
       const externalIds = imageFiles.map((f: any) => f.id);
