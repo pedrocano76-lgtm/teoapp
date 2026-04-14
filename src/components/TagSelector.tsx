@@ -28,7 +28,7 @@ export function TagSelector({ selectedTagIds, onToggle }: TagSelectorProps) {
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-foreground">Tags (optional)</p>
+      <p className="text-sm font-medium text-foreground">Etiquetas (opcional)</p>
       <div className="flex flex-wrap gap-1.5">
         {(tags || []).map((tag) => (
           <button
@@ -49,14 +49,14 @@ export function TagSelector({ selectedTagIds, onToggle }: TagSelectorProps) {
       </div>
       <div className="flex gap-2">
         <Input
-          placeholder="Add custom tag..."
+          placeholder="Añadir etiqueta..."
           value={newTag}
           onChange={(e) => setNewTag(e.target.value)}
           className="text-sm h-8"
           onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCustom())}
         />
         <Button type="button" size="sm" variant="outline" onClick={handleAddCustom} disabled={!newTag.trim()}>
-          Add
+          Añadir
         </Button>
       </div>
     </div>

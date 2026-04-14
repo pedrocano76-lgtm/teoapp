@@ -103,7 +103,7 @@ export function FilterDropdown({
         {/* Tags */}
         {tags.length > 0 && (
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tags</Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Etiquetas</Label>
             <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
               <button
                 onClick={() => onTagSelect(null)}

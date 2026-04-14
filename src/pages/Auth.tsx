@@ -177,17 +177,6 @@ export default function Auth() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Cargando...' : isLogin ? 'Iniciar sesión' : 'Crear cuenta'}
             </Button>
-            {isLogin && (
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={handleResendConfirmation}
-                disabled={resendingConfirmation || loading}
-              >
-                {resendingConfirmation ? 'Reenviando...' : 'Reenviar email de confirmación'}
-              </Button>
-            )}
           </form>
           <p className="text-center text-sm text-muted-foreground mt-4">
             {isLogin ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}

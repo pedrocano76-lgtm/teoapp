@@ -43,7 +43,7 @@ export function PhotoCard({ photo, child, onClick }: PhotoCardProps) {
           <div className="aspect-square overflow-hidden">
             <img
               src={photo.url}
-              alt={photo.caption || `Photo of ${child.name}`}
+              alt={photo.caption || `Foto de ${child.name}`}
               loading="lazy"
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />

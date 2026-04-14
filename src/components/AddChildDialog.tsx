@@ -7,11 +7,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const colors = [
-  { value: 'primary', label: '🌸 Rose' },
-  { value: 'sage', label: '🌿 Sage' },
-  { value: 'lavender', label: '💜 Lavender' },
-  { value: 'peach', label: '🍑 Peach' },
-  { value: 'sky', label: '🩵 Sky' },
+  { value: 'primary', label: '🌸 Rosa' },
+  { value: 'sage', label: '🌿 Salvia' },
+  { value: 'lavender', label: '💜 Lavanda' },
+  { value: 'peach', label: '🍑 Melocotón' },
+  { value: 'sky', label: '🩵 Cielo' },
 ];
 
 export function AddChildDialog() {
@@ -26,7 +26,7 @@ export function AddChildDialog() {
     e.preventDefault();
     try {
       await addChild.mutateAsync({ name, birth_date: birthDate, color });
-      toast({ title: '🎉 Added!', description: `${name} has been added to your album.` });
+      toast({ title: '🎉 ¡Añadido!', description: `${name} se ha añadido a tu álbum.` });
       setOpen(false);
       setName('');
       setBirthDate('');
@@ -40,17 +40,17 @@ export function AddChildDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
-          👶 Add Child
+          👶 Añadir hijo/a
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="font-heading">Add a Child</DialogTitle>
-          <DialogDescription>Add your child’s name, birth date, and album color.</DialogDescription>
+          <DialogTitle className="font-heading">Añadir hijo/a</DialogTitle>
+          <DialogDescription>Introduce el nombre, fecha de nacimiento y color del álbum.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            placeholder="Child's name"
+            placeholder="Nombre del niño/a"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -72,7 +72,7 @@ export function AddChildDialog() {
             </SelectContent>
           </Select>
           <Button type="submit" className="w-full" disabled={addChild.isPending}>
-            {addChild.isPending ? 'Adding...' : 'Add Child'}
+            {addChild.isPending ? 'Añadiendo...' : 'Añadir hijo/a'}
           </Button>
         </form>
       </DialogContent>

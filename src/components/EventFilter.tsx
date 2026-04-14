@@ -21,7 +21,7 @@ export function EventFilter({ events, selectedEventId, onSelect }: EventFilterPr
             : 'bg-muted text-muted-foreground hover:bg-muted/80'
         )}
       >
-        All Moments
+        Todos
       </button>
       {uniqueNames.map((event) => (
         <button
