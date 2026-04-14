@@ -47,6 +47,39 @@ export type Database = {
         }
         Relationships: []
       }
+      cloud_connections: {
+        Row: {
+          created_at: string
+          folder_name: string | null
+          folder_path: string | null
+          id: string
+          last_synced_at: string | null
+          provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          folder_name?: string | null
+          folder_path?: string | null
+          id?: string
+          last_synced_at?: string | null
+          provider?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          folder_name?: string | null
+          folder_path?: string | null
+          id?: string
+          last_synced_at?: string | null
+          provider?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           child_id: string
@@ -123,6 +156,72 @@ export type Database = {
           shared_with_user_id?: string | null
         }
         Relationships: []
+      }
+      pending_imports: {
+        Row: {
+          child_id: string
+          cloud_connection_id: string
+          confidence_score: number | null
+          created_at: string
+          external_id: string
+          file_name: string | null
+          full_image_url: string | null
+          id: string
+          metadata: Json | null
+          source: string
+          status: string
+          taken_at: string | null
+          thumbnail_url: string | null
+          user_id: string
+        }
+        Insert: {
+          child_id: string
+          cloud_connection_id: string
+          confidence_score?: number | null
+          created_at?: string
+          external_id: string
+          file_name?: string | null
+          full_image_url?: string | null
+          id?: string
+          metadata?: Json | null
+          source?: string
+          status?: string
+          taken_at?: string | null
+          thumbnail_url?: string | null
+          user_id: string
+        }
+        Update: {
+          child_id?: string
+          cloud_connection_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          external_id?: string
+          file_name?: string | null
+          full_image_url?: string | null
+          id?: string
+          metadata?: Json | null
+          source?: string
+          status?: string
+          taken_at?: string | null
+          thumbnail_url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_imports_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_imports_cloud_connection_id_fkey"
+            columns: ["cloud_connection_id"]
+            isOneToOne: false
+            referencedRelation: "cloud_connections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       photo_tags: {
         Row: {
