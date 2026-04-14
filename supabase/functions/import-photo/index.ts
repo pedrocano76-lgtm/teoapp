@@ -63,7 +63,7 @@ serve(async (req) => {
           // Always re-fetch download URL since stored ones expire after ~1 hour
           let downloadUrl: string | null = null;
           const itemResp = await fetch(
-            `${GATEWAY_URL}/me/drive/items/${imp.external_id}?$select=id,name,@microsoft.graph.downloadUrl`,
+            `${GATEWAY_URL}/me/drive/items/${imp.external_id}`,
             {
               headers: {
                 Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -73,18 +73,37 @@ serve(async (req) => {
           );
           if (itemResp.ok) {
             const itemData = await itemResp.json();
-            downloadUrl = itemData["@microsoft.graph.downloadUrl"] || itemData["@content.downloadUrl"] || null;
+            downloadUrl = itemData["@microsoft.graph.downloadUrl"] || itemData["@content.downloadUrl"] || itemData.downloadUrl || null;
           } else {
             console.error(`Failed to get download URL for ${imp.external_id}: ${itemResp.status}`);
           }
 
           // Fallback to stored URL if re-fetch failed
           if (!downloadUrl) downloadUrl = imp.full_image_url;
-          if (!downloadUrl) throw new Error("No download URL available");
 
           // Download the file
-          const fileResp = await fetch(downloadUrl);
-          if (!fileResp.ok) throw new Error(`Failed to download: ${fileResp.status}`);
+          let fileResp: Response | null = null;
+          if (downloadUrl) {
+            const resp = await fetch(downloadUrl);
+            if (resp.ok) {
+              fileResp = resp;
+            } else {
+              console.error(`Failed to download via temporary URL for ${imp.external_id}: ${resp.status}`);
+            }
+          }
+
+          if (!fileResp) {
+            const gatewayResp = await fetch(`${GATEWAY_URL}/me/drive/items/${imp.external_id}/content`, {
+              headers: {
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                "X-Connection-Api-Key": ONEDRIVE_API_KEY,
+              },
+            });
+
+            if (!gatewayResp.ok) throw new Error(`Failed to download: ${gatewayResp.status}`);
+            fileResp = gatewayResp;
+          }
+
           const fileBlob = await fileResp.blob();
 
           // Determine extension

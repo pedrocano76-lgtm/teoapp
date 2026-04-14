@@ -12,6 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Cloud, FolderOpen, RefreshCw, Trash2, Loader2, CheckCircle2, ImageIcon, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 type ScanPhase = 'idle' | 'indexing' | 'analyzing' | 'done';
 
@@ -141,18 +142,31 @@ export function CloudSyncSettings() {
         }
       }
 
+      const { count: suggestedCount } = await supabase
+        .from('pending_imports')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending')
+        .eq('child_id', selectedChildId)
+        .eq('cloud_connection_id', connectionId)
+        .gte('confidence_score', 0.6);
+
+      const suggestedMatches = suggestedCount || 0;
+      const completionMessage = suggestedMatches > 0
+        ? `${suggestedMatches} foto${suggestedMatches > 1 ? 's' : ''} sugerida${suggestedMatches > 1 ? 's' : ''} para revisar.`
+        : 'Análisis terminado. No se encontraron coincidencias claras.';
+
       setScanProgress(prev => ({
         ...prev,
         [connectionId]: {
           phase: 'done',
-          message: `¡${scanResult.imported} foto${scanResult.imported > 1 ? 's' : ''} encontrada${scanResult.imported > 1 ? 's' : ''}! Revísalas en la pestaña de importación.`,
+          message: completionMessage,
           result: scanResult,
         },
       }));
 
       toast({
-        title: '¡Fotos encontradas!',
-        description: `${scanResult.imported} foto${scanResult.imported > 1 ? 's' : ''} lista${scanResult.imported > 1 ? 's' : ''} para revisar.`,
+        title: suggestedMatches > 0 ? 'Análisis completado' : 'Sin coincidencias claras',
+        description: completionMessage,
       });
 
       clearProgressAfterDelay(connectionId, 8000);

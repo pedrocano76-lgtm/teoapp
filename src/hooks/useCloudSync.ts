@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
+const MIN_IMPORT_CONFIDENCE = 0.6;
+
 export function useCloudConnections() {
   const { user } = useAuth();
   return useQuery({
@@ -61,6 +63,7 @@ export function usePendingImports(childId?: string) {
         .from('pending_imports')
         .select('*')
         .eq('status', 'pending')
+        .gte('confidence_score', MIN_IMPORT_CONFIDENCE)
         .order('confidence_score', { ascending: false, nullsFirst: false });
       if (childId) query = query.eq('child_id', childId);
       const { data, error } = await query;
