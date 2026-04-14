@@ -182,6 +182,7 @@ export function CloudSyncSettings() {
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">Selecciona una carpeta de OneDrive:</p>
             <div className="max-h-48 overflow-y-auto space-y-1 rounded-md border p-2">
+              {folders.map((f: any) => (
                 <button
                   key={f.id}
                   className={`w-full text-left px-2 py-1.5 rounded text-sm flex items-center gap-2 transition-colors ${
