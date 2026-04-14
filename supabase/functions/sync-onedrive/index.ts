@@ -44,7 +44,6 @@ async function scanRecursive(itemId: string, headers: GatewayHeaders, maxDepth =
 
   console.log(`Depth ${currentDepth}: ${images.length} images, ${subfolders.length} subfolders in ${itemId}`);
 
-  // Recurse into subfolders
   for (const folder of subfolders) {
     const subImages = await scanRecursive(folder.id, headers, maxDepth, currentDepth + 1);
     images.push(...subImages);
@@ -84,6 +83,7 @@ serve(async (req) => {
       "X-Connection-Api-Key": ONEDRIVE_API_KEY,
     };
 
+    // ─── LIST FOLDERS ───────────────────────────────────────────
     if (action === "list-folders") {
       const path = body.folderPath || "/me/drive/root/children";
       const resp = await fetch(`${GATEWAY_URL}${path}?$filter=folder ne null&$select=id,name,folder,parentReference`, {
@@ -99,8 +99,9 @@ serve(async (req) => {
       });
     }
 
+    // ─── SCAN (index only, no AI) ───────────────────────────────
     if (action === "scan") {
-      const { connectionId, childId, folderPath, referencePhotoUrls } = body;
+      const { connectionId, childId, folderPath } = body;
       if (!connectionId || !childId || !folderPath) {
         return new Response(JSON.stringify({ error: "Faltan campos requeridos" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -115,20 +116,25 @@ serve(async (req) => {
       }
       const itemId = itemIdMatch[1];
 
-      // Recursive scan through all subfolders
       console.log(`Starting recursive scan from ${itemId}`);
       const imageFiles = await scanRecursive(itemId, gatewayHeaders);
-      console.log(`Total images found across all folders: ${imageFiles.length}`);
+      console.log(`Total images found: ${imageFiles.length}`);
 
       // Check already imported
       const externalIds = imageFiles.map((f: any) => f.id);
-      const { data: existing } = await supabase
-        .from("pending_imports")
-        .select("external_id")
-        .eq("cloud_connection_id", connectionId)
-        .in("external_id", externalIds);
+      
+      // Query in chunks of 500 to avoid query size limits
+      const existingIds = new Set<string>();
+      for (let i = 0; i < externalIds.length; i += 500) {
+        const chunk = externalIds.slice(i, i + 500);
+        const { data: existing } = await supabase
+          .from("pending_imports")
+          .select("external_id")
+          .eq("cloud_connection_id", connectionId)
+          .in("external_id", chunk);
+        if (existing) existing.forEach((e: any) => existingIds.add(e.external_id));
+      }
 
-      const existingIds = new Set((existing || []).map((e: any) => e.external_id));
       const newFiles = imageFiles.filter((f: any) => !existingIds.has(f.id));
 
       if (newFiles.length === 0) {
@@ -146,129 +152,35 @@ serve(async (req) => {
         });
       }
 
-      // Analyze with Gemini Vision if reference photos provided
-      let analyzedFiles = newFiles.map((f: any) => ({
-        ...f,
-        confidence: null as number | null,
+      // Insert ALL new files as pending (status=pending, no AI yet)
+      const rows = newFiles.map((f: any) => ({
+        user_id: user.id,
+        child_id: childId,
+        cloud_connection_id: connectionId,
+        source: "onedrive",
+        external_id: f.id,
+        thumbnail_url: f.thumbnails?.[0]?.medium?.url || null,
+        full_image_url: f["@microsoft.graph.downloadUrl"] || null,
+        file_name: f.name,
+        taken_at: f.photo?.takenDateTime || f.createdDateTime || null,
+        confidence_score: null, // Not analyzed yet
+        status: "pending",
+        metadata: {
+          mimeType: f.file?.mimeType,
+          size: f.size,
+        },
       }));
 
-      let analyzed = false;
-      if (referencePhotoUrls && referencePhotoUrls.length > 0) {
-        analyzed = true;
-        for (let i = 0; i < analyzedFiles.length; i += 5) {
-          const batch = analyzedFiles.slice(i, i + 5);
-          const results = await Promise.allSettled(
-            batch.map(async (file: any) => {
-              const thumbnailUrl =
-                file.thumbnails?.[0]?.medium?.url ||
-                file["@microsoft.graph.downloadUrl"];
-              if (!thumbnailUrl) return { ...file, confidence: 0.5 };
-
-              try {
-                const aiResp = await fetch(
-                  "https://ai.gateway.lovable.dev/v1/chat/completions",
-                  {
-                    method: "POST",
-                    headers: {
-                      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                      model: "google/gemini-2.5-flash",
-                      messages: [
-                        {
-                          role: "user",
-                          content: [
-                            {
-                              type: "text",
-                              text: `Compare these images. The first image(s) are reference photos of a specific child. The last image is a candidate photo. Does the candidate photo contain the same child? Reply with ONLY a JSON object: {"match": true/false, "confidence": 0.0-1.0}. Be generous - if unsure, lean towards true with lower confidence.`,
-                            },
-                            ...referencePhotoUrls.map((url: string) => ({
-                              type: "image_url",
-                              image_url: { url },
-                            })),
-                            {
-                              type: "image_url",
-                              image_url: { url: thumbnailUrl },
-                            },
-                          ],
-                        },
-                      ],
-                    }),
-                  }
-                );
-
-                if (aiResp.status === 429 || aiResp.status === 402) {
-                  console.warn("AI rate limited, skipping:", file.name);
-                  return { ...file, confidence: 0.5 };
-                }
-
-                if (!aiResp.ok) {
-                  console.error("AI error:", await aiResp.text());
-                  return { ...file, confidence: 0.5 };
-                }
-
-                const aiData = await aiResp.json();
-                const content = aiData.choices?.[0]?.message?.content || "";
-                const jsonMatch = content.match(/\{[^}]+\}/);
-                if (jsonMatch) {
-                  const parsed = JSON.parse(jsonMatch[0]);
-                  return {
-                    ...file,
-                    confidence: parsed.match ? parsed.confidence : 0,
-                  };
-                }
-                return { ...file, confidence: 0.5 };
-              } catch (e) {
-                console.error("AI analysis failed:", file.name, e);
-                return { ...file, confidence: 0.5 };
-              }
-            })
-          );
-
-          for (let j = 0; j < results.length; j++) {
-            if (results[j].status === "fulfilled") {
-              analyzedFiles[i + j] = (results[j] as PromiseFulfilledResult<any>).value;
-            }
-          }
-        }
-      }
-
-      // Filter: only import files with confidence > 0.3 or no analysis
-      const candidates = analyzedFiles.filter(
-        (f) => f.confidence === null || f.confidence > 0.3
-      );
-
-      if (candidates.length > 0) {
-        const rows = candidates.map((f: any) => ({
-          user_id: user.id,
-          child_id: childId,
-          cloud_connection_id: connectionId,
-          source: "onedrive",
-          external_id: f.id,
-          thumbnail_url: f.thumbnails?.[0]?.medium?.url || null,
-          full_image_url: f["@microsoft.graph.downloadUrl"] || null,
-          file_name: f.name,
-          taken_at: f.photo?.takenDateTime || f.createdDateTime || null,
-          confidence_score: f.confidence,
-          status: "pending",
-          metadata: {
-            mimeType: f.file?.mimeType,
-            size: f.size,
-          },
-        }));
-
+      // Insert in chunks of 200
+      for (let i = 0; i < rows.length; i += 200) {
+        const chunk = rows.slice(i, i + 200);
         const { error: insertError } = await supabase
           .from("pending_imports")
-          .upsert(rows, { onConflict: "cloud_connection_id,external_id" });
-        if (insertError) throw insertError;
-
-        await supabase.from("notifications").insert({
-          user_id: user.id,
-          type: "cloud_import",
-          message: `Se encontraron ${candidates.length} foto${candidates.length > 1 ? 's' : ''} nuevas en OneDrive`,
-          data: { count: candidates.length, connectionId },
-        });
+          .upsert(chunk, { onConflict: "cloud_connection_id,external_id" });
+        if (insertError) {
+          console.error("Insert error:", insertError);
+          throw insertError;
+        }
       }
 
       await supabase
@@ -276,12 +188,192 @@ serve(async (req) => {
         .update({ last_synced_at: new Date().toISOString() })
         .eq("id", connectionId);
 
+      await supabase.from("notifications").insert({
+        user_id: user.id,
+        type: "cloud_import",
+        message: `Se encontraron ${newFiles.length} foto${newFiles.length > 1 ? 's' : ''} nuevas en OneDrive`,
+        data: { count: newFiles.length, connectionId },
+      });
+
       return new Response(
         JSON.stringify({
-          imported: candidates.length,
+          imported: newFiles.length,
           total_scanned: imageFiles.length,
           total_new: newFiles.length,
-          analyzed,
+          needs_analysis: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ─── ANALYZE (AI batch - process N unanalyzed imports) ─────
+    if (action === "analyze-batch") {
+      const { childId, batchSize = 10 } = body;
+      if (!childId) {
+        return new Response(JSON.stringify({ error: "childId requerido" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Get reference photos for this child
+      const { data: existingPhotos } = await supabase
+        .from("photos")
+        .select("storage_path")
+        .eq("child_id", childId)
+        .limit(3);
+
+      let referenceUrls: string[] = [];
+      if (existingPhotos && existingPhotos.length > 0) {
+        const paths = existingPhotos.map(p => p.storage_path);
+        const { data: signed } = await supabase.storage
+          .from("photos")
+          .createSignedUrls(paths, 3600);
+        if (signed) {
+          referenceUrls = signed.filter(s => s.signedUrl).map(s => s.signedUrl);
+        }
+      }
+
+      if (referenceUrls.length === 0) {
+        // No reference photos - can't do AI analysis, mark all as 0.5
+        const { data: unanalyzed } = await supabase
+          .from("pending_imports")
+          .select("id")
+          .eq("child_id", childId)
+          .eq("status", "pending")
+          .is("confidence_score", null);
+
+        if (unanalyzed && unanalyzed.length > 0) {
+          const ids = unanalyzed.map(u => u.id);
+          for (let i = 0; i < ids.length; i += 200) {
+            await supabase
+              .from("pending_imports")
+              .update({ confidence_score: 0.5 })
+              .in("id", ids.slice(i, i + 200));
+          }
+        }
+
+        return new Response(JSON.stringify({
+          analyzed: unanalyzed?.length || 0,
+          remaining: 0,
+          no_references: true,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Get a batch of unanalyzed imports
+      const { data: batch } = await supabase
+        .from("pending_imports")
+        .select("*")
+        .eq("child_id", childId)
+        .eq("status", "pending")
+        .is("confidence_score", null)
+        .limit(batchSize);
+
+      if (!batch || batch.length === 0) {
+        return new Response(JSON.stringify({
+          analyzed: 0,
+          remaining: 0,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Count remaining
+      const { count: totalRemaining } = await supabase
+        .from("pending_imports")
+        .select("id", { count: "exact", head: true })
+        .eq("child_id", childId)
+        .eq("status", "pending")
+        .is("confidence_score", null);
+
+      // Analyze batch with AI
+      const results = await Promise.allSettled(
+        batch.map(async (imp: any) => {
+          const thumbnailUrl = imp.thumbnail_url || imp.full_image_url;
+          if (!thumbnailUrl) return { id: imp.id, confidence: 0.5 };
+
+          try {
+            const aiResp = await fetch(
+              "https://ai.gateway.lovable.dev/v1/chat/completions",
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  model: "google/gemini-2.5-flash",
+                  messages: [
+                    {
+                      role: "user",
+                      content: [
+                        {
+                          type: "text",
+                          text: `Compare these images. The first image(s) are reference photos of a specific child. The last image is a candidate photo. Does the candidate photo contain the same child? Reply with ONLY a JSON object: {"match": true/false, "confidence": 0.0-1.0}. Be generous - if unsure, lean towards true with lower confidence.`,
+                        },
+                        ...referenceUrls.map((url: string) => ({
+                          type: "image_url",
+                          image_url: { url },
+                        })),
+                        {
+                          type: "image_url",
+                          image_url: { url: thumbnailUrl },
+                        },
+                      ],
+                    },
+                  ],
+                }),
+              }
+            );
+
+            if (aiResp.status === 429 || aiResp.status === 402) {
+              console.warn("AI rate limited, skipping:", imp.file_name);
+              return { id: imp.id, confidence: 0.5 };
+            }
+
+            if (!aiResp.ok) {
+              console.error("AI error:", await aiResp.text());
+              return { id: imp.id, confidence: 0.5 };
+            }
+
+            const aiData = await aiResp.json();
+            const content = aiData.choices?.[0]?.message?.content || "";
+            const jsonMatch = content.match(/\{[^}]+\}/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]);
+              return {
+                id: imp.id,
+                confidence: parsed.match ? parsed.confidence : 0,
+              };
+            }
+            return { id: imp.id, confidence: 0.5 };
+          } catch (e) {
+            console.error("AI analysis failed:", imp.file_name, e);
+            return { id: imp.id, confidence: 0.5 };
+          }
+        })
+      );
+
+      // Update each import with its score
+      let analyzedCount = 0;
+      for (const result of results) {
+        if (result.status === "fulfilled") {
+          const { id, confidence } = result.value;
+          await supabase
+            .from("pending_imports")
+            .update({ confidence_score: confidence })
+            .eq("id", id);
+          analyzedCount++;
+        }
+      }
+
+      const remaining = (totalRemaining || 0) - analyzedCount;
+
+      return new Response(
+        JSON.stringify({
+          analyzed: analyzedCount,
+          remaining: Math.max(0, remaining),
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
