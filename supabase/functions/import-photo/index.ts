@@ -60,25 +60,26 @@ serve(async (req) => {
 
       for (const imp of imports) {
         try {
-          // Download from OneDrive via gateway
-          let downloadUrl = imp.full_image_url;
-
-          // If download URL expired, re-fetch via API
-          if (!downloadUrl) {
-            const itemResp = await fetch(
-              `${GATEWAY_URL}/me/drive/items/${imp.external_id}?$select=id,@microsoft.graph.downloadUrl`,
-              {
-                headers: {
-                  Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                  "X-Connection-Api-Key": ONEDRIVE_API_KEY,
-                },
-              }
-            );
-            if (!itemResp.ok) throw new Error(`Failed to get download URL: ${itemResp.status}`);
+          // Always re-fetch download URL since stored ones expire after ~1 hour
+          let downloadUrl: string | null = null;
+          const itemResp = await fetch(
+            `${GATEWAY_URL}/me/drive/items/${imp.external_id}?$select=id,name,@microsoft.graph.downloadUrl`,
+            {
+              headers: {
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                "X-Connection-Api-Key": ONEDRIVE_API_KEY,
+              },
+            }
+          );
+          if (itemResp.ok) {
             const itemData = await itemResp.json();
-            downloadUrl = itemData["@microsoft.graph.downloadUrl"];
+            downloadUrl = itemData["@microsoft.graph.downloadUrl"] || itemData["@content.downloadUrl"] || null;
+          } else {
+            console.error(`Failed to get download URL for ${imp.external_id}: ${itemResp.status}`);
           }
 
+          // Fallback to stored URL if re-fetch failed
+          if (!downloadUrl) downloadUrl = imp.full_image_url;
           if (!downloadUrl) throw new Error("No download URL available");
 
           // Download the file

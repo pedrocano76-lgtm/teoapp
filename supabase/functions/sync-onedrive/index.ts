@@ -315,7 +315,15 @@ serve(async (req) => {
                       content: [
                         {
                           type: "text",
-                          text: `Compare these images. The first image(s) are reference photos of a specific child. The last image is a candidate photo. Does the candidate photo contain the same child? Reply with ONLY a JSON object: {"match": true/false, "confidence": 0.0-1.0}. Be generous - if unsure, lean towards true with lower confidence.`,
+                          text: `You are a face recognition assistant. The first image(s) are reference photos of a specific child. The last image is a candidate photo.
+
+RULES:
+- The candidate photo MUST contain a human face that resembles the child in the reference photos.
+- If the candidate photo is a landscape, object, animal, food, screenshot, or any image WITHOUT a clearly visible human face, reply {"match": false, "confidence": 0.0}.
+- Only reply {"match": true, "confidence": X} if you can see a face in the candidate that looks like the same child.
+- Confidence should reflect how certain you are it's the same child (0.0-1.0).
+
+Reply with ONLY a JSON object: {"match": true/false, "confidence": 0.0-1.0}`,
                         },
                         ...referenceUrls.map((url: string) => ({
                           type: "image_url",
