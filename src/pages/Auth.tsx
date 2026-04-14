@@ -31,6 +31,7 @@ export default function Auth() {
   const [fullName, setFullName] = useState('');
   const [relationship, setRelationship] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -76,6 +77,44 @@ export default function Auth() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      toast({
+        title: 'Falta el email',
+        description: 'Introduce tu email para reenviar la confirmación.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setResendingConfirmation(true);
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Email reenviado',
+        description: 'Te hemos vuelto a enviar el enlace de confirmación.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'No se pudo reenviar',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setResendingConfirmation(false);
     }
   };
 
@@ -138,6 +177,17 @@ export default function Auth() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Cargando...' : isLogin ? 'Iniciar sesión' : 'Crear cuenta'}
             </Button>
+            {isLogin && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleResendConfirmation}
+                disabled={resendingConfirmation || loading}
+              >
+                {resendingConfirmation ? 'Reenviando...' : 'Reenviar email de confirmación'}
+              </Button>
+            )}
           </form>
           <p className="text-center text-sm text-muted-foreground mt-4">
             {isLogin ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
