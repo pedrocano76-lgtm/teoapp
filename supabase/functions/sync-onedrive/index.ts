@@ -22,7 +22,6 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header");
 
@@ -36,18 +35,19 @@ serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
+    const gatewayHeaders = {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "X-Connection-Api-Key": ONEDRIVE_API_KEY,
+    };
+
     if (action === "list-folders") {
-      // List root folders from OneDrive
       const path = body.folderPath || "/me/drive/root/children";
       const resp = await fetch(`${GATEWAY_URL}${path}?$filter=folder ne null&$select=id,name,folder,parentReference`, {
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "X-Connection-Api-Key": ONEDRIVE_API_KEY,
-        },
+        headers: gatewayHeaders,
       });
       if (!resp.ok) {
         const t = await resp.text();
-        throw new Error(`OneDrive API error [${resp.status}]: ${t}`);
+        throw new Error(`Error al listar carpetas de OneDrive [${resp.status}]: ${t}`);
       }
       const data = await resp.json();
       return new Response(JSON.stringify({ folders: data.value || [] }), {
@@ -58,31 +58,38 @@ serve(async (req) => {
     if (action === "scan") {
       const { connectionId, childId, folderPath, referencePhotoUrls } = body;
       if (!connectionId || !childId || !folderPath) {
-        return new Response(JSON.stringify({ error: "Missing required fields" }), {
+        return new Response(JSON.stringify({ error: "Faltan campos requeridos" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      // Fetch photos from OneDrive folder
-      const resp = await fetch(
-        `${GATEWAY_URL}${folderPath}:/children?$filter=file ne null&$top=50&$select=id,name,file,photo,createdDateTime,@microsoft.graph.downloadUrl,thumbnails&$expand=thumbnails`,
-        {
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "X-Connection-Api-Key": ONEDRIVE_API_KEY,
-          },
-        }
-      );
+      // Extract the item ID from the folder path like /me/drive/items/{id}
+      const itemIdMatch = folderPath.match(/\/me\/drive\/items\/([^/]+)/);
+      if (!itemIdMatch) {
+        return new Response(JSON.stringify({ error: "Ruta de carpeta inválida" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const itemId = itemIdMatch[1];
+
+      // FIXED: Use correct OneDrive API path /me/drive/items/{id}/children
+      const scanUrl = `${GATEWAY_URL}/me/drive/items/${itemId}/children?$filter=file ne null&$top=50&$select=id,name,file,photo,createdDateTime,@microsoft.graph.downloadUrl,thumbnails&$expand=thumbnails`;
+      console.log("Scanning URL:", scanUrl);
+
+      const resp = await fetch(scanUrl, { headers: gatewayHeaders });
       if (!resp.ok) {
         const t = await resp.text();
-        throw new Error(`OneDrive scan error [${resp.status}]: ${t}`);
+        console.error("OneDrive scan error:", resp.status, t);
+        throw new Error(`Error al escanear OneDrive [${resp.status}]: ${t}`);
       }
       const data = await resp.json();
       const imageFiles = (data.value || []).filter((f: any) =>
         f.file?.mimeType?.startsWith("image/")
       );
 
-      // Check which files are already imported
+      console.log(`Found ${imageFiles.length} image files in folder`);
+
+      // Check already imported
       const externalIds = imageFiles.map((f: any) => f.id);
       const { data: existing } = await supabase
         .from("pending_imports")
@@ -90,17 +97,27 @@ serve(async (req) => {
         .eq("cloud_connection_id", connectionId)
         .in("external_id", externalIds);
 
+      // Also check photos already imported (via metadata or external tracking)
+      const { data: existingPhotos } = await supabase
+        .from("photos")
+        .select("storage_path")
+        .eq("child_id", childId);
+      const importedPaths = new Set((existingPhotos || []).map((p: any) => p.storage_path));
+
       const existingIds = new Set((existing || []).map((e: any) => e.external_id));
       const newFiles = imageFiles.filter((f: any) => !existingIds.has(f.id));
 
       if (newFiles.length === 0) {
-        // Update last_synced_at
         await supabase
           .from("cloud_connections")
           .update({ last_synced_at: new Date().toISOString() })
           .eq("id", connectionId);
 
-        return new Response(JSON.stringify({ imported: 0, message: "No hay fotos nuevas" }), {
+        return new Response(JSON.stringify({
+          imported: 0,
+          total_scanned: imageFiles.length,
+          message: "No hay fotos nuevas en esta carpeta",
+        }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -111,8 +128,9 @@ serve(async (req) => {
         confidence: null as number | null,
       }));
 
+      let analyzed = false;
       if (referencePhotoUrls && referencePhotoUrls.length > 0) {
-        // Process in batches of 5
+        analyzed = true;
         for (let i = 0; i < analyzedFiles.length; i += 5) {
           const batch = analyzedFiles.slice(i, i + 5);
           const results = await Promise.allSettled(
@@ -157,7 +175,7 @@ serve(async (req) => {
                 );
 
                 if (aiResp.status === 429 || aiResp.status === 402) {
-                  console.warn("AI rate limited, skipping analysis for:", file.name);
+                  console.warn("AI rate limited, skipping:", file.name);
                   return { ...file, confidence: 0.5 };
                 }
 
@@ -178,7 +196,7 @@ serve(async (req) => {
                 }
                 return { ...file, confidence: 0.5 };
               } catch (e) {
-                console.error("AI analysis failed for:", file.name, e);
+                console.error("AI analysis failed:", file.name, e);
                 return { ...file, confidence: 0.5 };
               }
             })
@@ -197,7 +215,6 @@ serve(async (req) => {
         (f) => f.confidence === null || f.confidence > 0.3
       );
 
-      // Insert pending imports
       if (candidates.length > 0) {
         const rows = candidates.map((f: any) => ({
           user_id: user.id,
@@ -221,9 +238,16 @@ serve(async (req) => {
           .from("pending_imports")
           .upsert(rows, { onConflict: "cloud_connection_id,external_id" });
         if (insertError) throw insertError;
+
+        // Create notification
+        await supabase.from("notifications").insert({
+          user_id: user.id,
+          type: "cloud_import",
+          message: `Se encontraron ${candidates.length} foto${candidates.length > 1 ? 's' : ''} nuevas en OneDrive`,
+          data: { count: candidates.length, connectionId },
+        });
       }
 
-      // Update last_synced_at
       await supabase
         .from("cloud_connections")
         .update({ last_synced_at: new Date().toISOString() })
@@ -232,21 +256,21 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           imported: candidates.length,
-          total_found: newFiles.length,
-          analyzed: referencePhotoUrls?.length > 0,
+          total_scanned: imageFiles.length,
+          total_new: newFiles.length,
+          analyzed,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    return new Response(JSON.stringify({ error: "Unknown action" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({ error: "Acción desconocida" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("sync-onedrive error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: e instanceof Error ? e.message : "Error desconocido" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

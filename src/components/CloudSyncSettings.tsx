@@ -5,8 +5,17 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Cloud, FolderOpen, RefreshCw, Trash2, Loader2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Cloud, FolderOpen, RefreshCw, Trash2, Loader2, CheckCircle2, ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+
+type ScanPhase = 'idle' | 'fetching' | 'analyzing' | 'done';
+
+interface ScanProgress {
+  phase: ScanPhase;
+  message: string;
+  result?: { imported: number; total_scanned: number };
+}
 
 export function CloudSyncSettings() {
   const { data: connections, isLoading } = useCloudConnections();
@@ -20,37 +29,19 @@ export function CloudSyncSettings() {
   const [folders, setFolders] = useState<any[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<any>(null);
   const [selectedChildId, setSelectedChildId] = useState('');
-  const [scanning, setScanning] = useState<string | null>(null);
+  const [scanProgress, setScanProgress] = useState<Record<string, ScanProgress>>({});
 
   const children = childrenData || [];
 
   const handleBrowseFolders = async () => {
     setBrowsing(true);
     try {
-      const result = await syncOneDrive.mutateAsync({
-        action: 'list-folders',
-      });
+      const result = await syncOneDrive.mutateAsync({ action: 'list-folders' });
       setFolders(result.folders || []);
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
     } finally {
       setBrowsing(false);
-    }
-  };
-
-  const handleAddFolder = async () => {
-    if (!selectedFolder) return;
-    try {
-      await addConnection.mutateAsync({
-        provider: 'onedrive',
-        folder_path: `/me/drive/items/${selectedFolder.id}`,
-        folder_name: selectedFolder.name,
-      });
-      toast({ title: '¡Carpeta vinculada!', description: `Se ha vinculado "${selectedFolder.name}" de OneDrive.` });
-      setSelectedFolder(null);
-      setFolders([]);
-    } catch (e: any) {
-      toast({ title: 'Error', description: e.message, variant: 'destructive' });
     }
   };
 
@@ -60,8 +51,13 @@ export function CloudSyncSettings() {
       return;
     }
 
-    setScanning(connectionId);
+    setScanProgress(prev => ({
+      ...prev,
+      [connectionId]: { phase: 'fetching', message: 'Buscando fotos en OneDrive...' },
+    }));
+
     try {
+      // Get reference photos
       const { data: existingPhotos } = await supabase
         .from('photos')
         .select('storage_path')
@@ -70,6 +66,10 @@ export function CloudSyncSettings() {
 
       let referenceUrls: string[] = [];
       if (existingPhotos && existingPhotos.length > 0) {
+        setScanProgress(prev => ({
+          ...prev,
+          [connectionId]: { phase: 'analyzing', message: 'Analizando fotos con IA...' },
+        }));
         const paths = existingPhotos.map(p => p.storage_path);
         const { data: signed } = await supabase.storage
           .from('photos')
@@ -87,18 +87,59 @@ export function CloudSyncSettings() {
         referencePhotoUrls: referenceUrls,
       });
 
+      setScanProgress(prev => ({
+        ...prev,
+        [connectionId]: {
+          phase: 'done',
+          message: result.imported > 0
+            ? `¡${result.imported} foto${result.imported > 1 ? 's' : ''} encontrada${result.imported > 1 ? 's' : ''}!`
+            : 'No se encontraron fotos nuevas',
+          result,
+        },
+      }));
+
       if (result.imported > 0) {
         toast({
           title: '¡Fotos encontradas!',
-          description: `Se encontraron ${result.imported} fotos candidatas. Revísalas en la sección de importaciones.`,
+          description: `${result.imported} foto${result.imported > 1 ? 's' : ''} lista${result.imported > 1 ? 's' : ''} para revisar.`,
         });
-      } else {
-        toast({ title: 'Sin novedades', description: result.message || 'No se encontraron fotos nuevas.' });
+      }
+
+      // Clear progress after 5 seconds
+      setTimeout(() => {
+        setScanProgress(prev => {
+          const next = { ...prev };
+          delete next[connectionId];
+          return next;
+        });
+      }, 5000);
+    } catch (e: any) {
+      setScanProgress(prev => ({
+        ...prev,
+        [connectionId]: { phase: 'idle', message: '' },
+      }));
+      toast({ title: 'Error al escanear', description: e.message, variant: 'destructive' });
+    }
+  };
+
+  const handleAddFolder = async () => {
+    if (!selectedFolder) return;
+    try {
+      const conn = await addConnection.mutateAsync({
+        provider: 'onedrive',
+        folder_path: `/me/drive/items/${selectedFolder.id}`,
+        folder_name: selectedFolder.name,
+      });
+      toast({ title: '¡Carpeta vinculada!', description: `"${selectedFolder.name}" conectada.` });
+      setSelectedFolder(null);
+      setFolders([]);
+
+      // Auto-scan if child selected
+      if (selectedChildId && conn?.id) {
+        setTimeout(() => handleScan(conn.id, `/me/drive/items/${selectedFolder.id}`), 500);
       }
     } catch (e: any) {
-      toast({ title: 'Error al escanear', description: e.message, variant: 'destructive' });
-    } finally {
-      setScanning(null);
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
     }
   };
 
@@ -121,7 +162,7 @@ export function CloudSyncSettings() {
         {children.length > 0 && (
           <Select value={selectedChildId} onValueChange={setSelectedChildId}>
             <SelectTrigger className="h-8 text-xs">
-              <SelectValue placeholder="Seleccionar hijo/a" />
+              <SelectValue placeholder="Seleccionar hijo/a para escanear" />
             </SelectTrigger>
             <SelectContent>
               {children.map((c: any) => (
@@ -135,46 +176,83 @@ export function CloudSyncSettings() {
           <p className="text-xs text-muted-foreground">Cargando...</p>
         ) : (connections || []).length > 0 ? (
           <div className="space-y-2">
-            {(connections || []).map((conn: any) => (
-              <Card key={conn.id} className="bg-muted/50">
-                <CardContent className="p-3 flex items-center justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium flex items-center gap-1.5 truncate">
-                      <FolderOpen className="h-3.5 w-3.5 text-primary shrink-0" />
-                      {conn.folder_name || 'Carpeta'}
-                    </p>
-                    {conn.last_synced_at && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Último escaneo: {new Date(conn.last_synced_at).toLocaleDateString('es-ES')}
-                      </p>
+            {(connections || []).map((conn: any) => {
+              const progress = scanProgress[conn.id];
+              const isScanning = progress && progress.phase !== 'idle' && progress.phase !== 'done';
+
+              return (
+                <Card key={conn.id} className="bg-muted/50">
+                  <CardContent className="p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium flex items-center gap-1.5 truncate">
+                          <FolderOpen className="h-3.5 w-3.5 text-primary shrink-0" />
+                          {conn.folder_name || 'Carpeta'}
+                        </p>
+                        {conn.last_synced_at && !progress && (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Último escaneo: {new Date(conn.last_synced_at).toLocaleDateString('es-ES')}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          disabled={!!isScanning || !selectedChildId}
+                          onClick={() => handleScan(conn.id, conn.folder_path)}
+                          title={!selectedChildId ? 'Selecciona un hijo/a primero' : 'Escanear carpeta'}
+                        >
+                          {isScanning ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <RefreshCw className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive"
+                          onClick={() => handleDelete(conn.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Progress indicator */}
+                    {progress && progress.phase !== 'idle' && (
+                      <div className="space-y-1.5">
+                        {progress.phase === 'done' ? (
+                          <div className="flex items-center gap-1.5 text-xs">
+                            {progress.result && progress.result.imported > 0 ? (
+                              <>
+                                <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                                <span className="text-green-600 dark:text-green-400 font-medium">{progress.message}</span>
+                              </>
+                            ) : (
+                              <>
+                                <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                                <span className="text-muted-foreground">{progress.message}</span>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <>
+                            <Progress value={progress.phase === 'fetching' ? 30 : 70} className="h-1.5" />
+                            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              {progress.message}
+                            </p>
+                          </>
+                        )}
+                      </div>
                     )}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      disabled={scanning === conn.id || !selectedChildId}
-                      onClick={() => handleScan(conn.id, conn.folder_path)}
-                    >
-                      {scanning === conn.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-3.5 w-3.5" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-destructive"
-                      onClick={() => handleDelete(conn.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : null}
 
