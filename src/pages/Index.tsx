@@ -207,11 +207,16 @@ const Index = () => {
               </div>
             ) : (
               <>
-                {selectedChild && (
-                  <ChildHeader child={selectedChild} photoCount={filteredPhotos.length} />
-                )}
                 {selectedChild ? (
-                  <Timeline photos={filteredPhotos} child={selectedChild} sortOrder={sortOrder} />
+                  <>
+                    <ChildHeader child={selectedChild} photoCount={filteredPhotos.length} />
+                    <Timeline photos={filteredPhotos} child={selectedChild} sortOrder={sortOrder} />
+                  </>
+                ) : children.length === 1 ? (
+                  <>
+                    <ChildHeader child={children[0]} photoCount={filteredPhotos.length} />
+                    <Timeline photos={filteredPhotos} child={children[0]} sortOrder={sortOrder} />
+                  </>
                 ) : (
                   <AllChildrenTimeline photos={filteredPhotos} children={children} sortOrder={sortOrder} />
                 )}
