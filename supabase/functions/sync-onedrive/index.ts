@@ -83,6 +83,22 @@ serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
+    // ─── HELPER: Verify resource ownership via RLS-protected userClient ─
+    async function verifyConnectionOwnership(connectionId: string) {
+      const { data, error } = await userClient.from('cloud_connections').select('id').eq('id', connectionId).single();
+      if (error || !data) {
+        return false;
+      }
+      return true;
+    }
+    async function verifyChildAccess(childId: string) {
+      const { data, error } = await userClient.from('children').select('id').eq('id', childId).single();
+      if (error || !data) {
+        return false;
+      }
+      return true;
+    }
+
     const gatewayHeaders: GatewayHeaders = {
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
       "X-Connection-Api-Key": ONEDRIVE_API_KEY,
@@ -107,9 +123,15 @@ serve(async (req) => {
     // ─── SCAN (index only, no AI) ───────────────────────────────
     if (action === "scan") {
       const { connectionId, childId, folderPath, sinceDate } = body;
-      if (!connectionId || !childId || !folderPath) {
-        return new Response(JSON.stringify({ error: "Faltan campos requeridos" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      // Verify ownership of connectionId and childId
+      if (!await verifyConnectionOwnership(connectionId)) {
+        return new Response(JSON.stringify({ error: "Conexión no encontrada" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!await verifyChildAccess(childId)) {
+        return new Response(JSON.stringify({ error: "Hijo no encontrado" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
@@ -220,6 +242,13 @@ serve(async (req) => {
         });
       }
 
+      // Verify ownership of childId
+      if (!await verifyChildAccess(childId)) {
+        return new Response(JSON.stringify({ error: "Hijo no encontrado" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       // Get reference photos for this child
       const { data: existingPhotos } = await supabase
         .from("photos")
@@ -243,6 +272,7 @@ serve(async (req) => {
         const { data: unanalyzed } = await supabase
           .from("pending_imports")
           .select("id")
+          .eq("user_id", user.id)
           .eq("child_id", childId)
           .eq("status", "pending")
           .is("confidence_score", null);
@@ -270,6 +300,7 @@ serve(async (req) => {
       const { data: batch } = await supabase
         .from("pending_imports")
         .select("*")
+        .eq("user_id", user.id)
         .eq("child_id", childId)
         .eq("status", "pending")
         .is("confidence_score", null)
@@ -288,6 +319,7 @@ serve(async (req) => {
       const { count: totalRemaining } = await supabase
         .from("pending_imports")
         .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
         .eq("child_id", childId)
         .eq("status", "pending")
         .is("confidence_score", null);
