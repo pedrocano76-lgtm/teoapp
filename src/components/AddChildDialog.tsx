@@ -45,8 +45,8 @@ export function AddChildDialog() {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="font-heading">Add a Child</DialogTitle>
-          <DialogDescription>Add your child’s name, birth date, and album color.</DialogDescription>
+          <DialogTitle className="font-heading">Añadir hijo/a</DialogTitle>
+          <DialogDescription>Introduce el nombre, fecha de nacimiento y color del álbum.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
