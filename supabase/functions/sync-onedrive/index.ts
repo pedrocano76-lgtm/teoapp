@@ -300,6 +300,7 @@ serve(async (req) => {
       const { data: batch } = await supabase
         .from("pending_imports")
         .select("*")
+        .eq("user_id", user.id)
         .eq("child_id", childId)
         .eq("status", "pending")
         .is("confidence_score", null)
@@ -318,6 +319,7 @@ serve(async (req) => {
       const { count: totalRemaining } = await supabase
         .from("pending_imports")
         .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
         .eq("child_id", childId)
         .eq("status", "pending")
         .is("confidence_score", null);
