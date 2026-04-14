@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { useCloudConnections, useAddCloudConnection, useDeleteCloudConnection, useSyncOneDrive } from '@/hooks/useCloudSync';
 import { useChildren } from '@/hooks/useData';
 import { useToast } from '@/hooks/use-toast';
@@ -6,7 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Cloud, FolderOpen, RefreshCw, Trash2, Loader2, CheckCircle2, ImageIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Cloud, FolderOpen, RefreshCw, Trash2, Loader2, CheckCircle2, ImageIcon, CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type ScanPhase = 'idle' | 'indexing' | 'analyzing' | 'done';
 
@@ -29,9 +34,20 @@ export function CloudSyncSettings() {
   const [folders, setFolders] = useState<any[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<any>(null);
   const [selectedChildId, setSelectedChildId] = useState('');
+  const [sinceDate, setSinceDate] = useState<Date | undefined>(undefined);
   const [scanProgress, setScanProgress] = useState<Record<string, ScanProgress>>({});
 
   const children = childrenData || [];
+
+  // Set default sinceDate to selected child's birth date
+  useEffect(() => {
+    if (selectedChildId) {
+      const child = children.find((c: any) => c.id === selectedChildId);
+      if (child?.birth_date) {
+        setSinceDate(new Date(child.birth_date));
+      }
+    }
+  }, [selectedChildId, children]);
 
   const handleBrowseFolders = async () => {
     setBrowsing(true);
@@ -51,7 +67,6 @@ export function CloudSyncSettings() {
       return;
     }
 
-    // Phase 1: Index all files (no AI)
     setScanProgress(prev => ({
       ...prev,
       [connectionId]: { phase: 'indexing', message: 'Buscando fotos en OneDrive...', progressPercent: 15 },
@@ -63,6 +78,7 @@ export function CloudSyncSettings() {
         connectionId,
         childId: selectedChildId,
         folderPath,
+        sinceDate: sinceDate ? sinceDate.toISOString() : undefined,
       });
 
       if (scanResult.imported === 0) {
@@ -78,7 +94,6 @@ export function CloudSyncSettings() {
         return;
       }
 
-      // Phase 2: Analyze with AI in batches
       setScanProgress(prev => ({
         ...prev,
         [connectionId]: {
@@ -122,7 +137,6 @@ export function CloudSyncSettings() {
           }
         } catch (batchErr: any) {
           console.error('Batch analysis error:', batchErr);
-          // Continue anyway - unanalyzed photos will show with neutral confidence
           break;
         }
       }
@@ -208,6 +222,37 @@ export function CloudSyncSettings() {
               ))}
             </SelectContent>
           </Select>
+        )}
+
+        {/* Date filter */}
+        {selectedChildId && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "w-full justify-start text-left text-xs h-8 font-normal",
+                  !sinceDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="h-3.5 w-3.5 mr-1.5" />
+                {sinceDate
+                  ? `Desde: ${format(sinceDate, "d MMM yyyy", { locale: es })}`
+                  : "Buscar desde fecha..."}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={sinceDate}
+                onSelect={setSinceDate}
+                disabled={(date) => date > new Date()}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
         )}
 
         {isLoading ? (
