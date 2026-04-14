@@ -123,9 +123,15 @@ serve(async (req) => {
     // ─── SCAN (index only, no AI) ───────────────────────────────
     if (action === "scan") {
       const { connectionId, childId, folderPath, sinceDate } = body;
-      if (!connectionId || !childId || !folderPath) {
-        return new Response(JSON.stringify({ error: "Faltan campos requeridos" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      // Verify ownership of connectionId and childId
+      if (!await verifyConnectionOwnership(connectionId)) {
+        return new Response(JSON.stringify({ error: "Conexión no encontrada" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!await verifyChildAccess(childId)) {
+        return new Response(JSON.stringify({ error: "Hijo no encontrado" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
