@@ -242,6 +242,13 @@ serve(async (req) => {
         });
       }
 
+      // Verify ownership of childId
+      if (!await verifyChildAccess(childId)) {
+        return new Response(JSON.stringify({ error: "Hijo no encontrado" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       // Get reference photos for this child
       const { data: existingPhotos } = await supabase
         .from("photos")
