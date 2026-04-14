@@ -1,80 +1,64 @@
 
 
-## Sincronización con nubes de fotos + detección facial
+## Mejoras en la sincronización con OneDrive
 
-### Resumen
+### Problema principal: conexión por usuario
 
-Crear un sistema que conecte con servicios de almacenamiento en la nube (OneDrive, Google Photos, iCloud), detecte fotos nuevas con la cara del niño, y proponga añadirlas a Little Moments. El usuario decide qué fotos importar — no es automático al 100%.
+El conector de OneDrive de Lovable autentica **tu cuenta** (Pedro), no la de cada usuario. Esto significa que todos los usuarios de la app accederían a **tu** OneDrive, no al suyo. **No es posible hacer OAuth per-user con el conector estándar.**
 
-### Análisis de viabilidad por servicio
+Para que cada usuario conecte su propio OneDrive, necesitaríamos implementar un flujo OAuth completo propio (registrar app en Azure, gestionar tokens por usuario, refresh tokens, etc.). Esto es significativamente más complejo y requiere que tú crees una app en el portal de Azure.
 
-| Servicio | API disponible | Detección facial | Viabilidad |
-|----------|---------------|-------------------|------------|
-| **OneDrive** | Sí (conector disponible en Lovable) | No nativa, necesita IA aparte | Alta |
-| **Google Photos** | Sí (API pública, pero sin conector Lovable) | Google ya agrupa por caras, pero la API no expone esa info | Media |
-| **iCloud/Apple** | No tiene API pública | N/A | Muy baja |
+**Propuesta pragmática**: Dado que esta app es para tu familia, usar tu conexión OneDrive es válido como punto de partida. Los padres con rol `parent` podrían usar esta funcionalidad para importar desde tus carpetas compartidas.
 
-### Arquitectura propuesta
+### Problemas técnicos actuales
 
-```text
-┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│  OneDrive / │────▶│  Edge Function   │────▶│  Lovable AI     │
-│  Google     │     │  (sync-photos)   │     │  (Gemini Vision)│
-│  Photos     │     │                  │     │  Face matching   │
-└─────────────┘     └──────┬───────────┘     └────────┬────────┘
-                           │                          │
-                           ▼                          ▼
-                    ┌──────────────┐          ┌───────────────┐
-                    │  pending_    │          │  "¿Añadir     │
-                    │  imports     │          │   esta foto?" │
-                    │  (DB table)  │          │   (UI)        │
-                    └──────────────┘          └───────────────┘
-```
+1. **Error 404 al escanear**: La URL de la API de OneDrive está mal construida (`/me/drive/items/{id}:/children` no es válida). Hay que usar `/me/drive/items/{id}/children`.
 
-### Plan de implementación
+2. **Sin feedback visual**: No hay indicador de progreso durante el escaneo ni el análisis facial. El usuario no sabe qué está pasando.
 
-**Fase 1 — OneDrive (conector ya disponible)**
+3. **Sin acción clara post-vinculación**: Vincular una carpeta no desencadena nada visible.
 
-1. **Conectar OneDrive** vía el conector estándar de Lovable
-2. **Edge function `sync-onedrive`**: Listar fotos recientes de una carpeta seleccionada del usuario vía el connector gateway
-3. **Tabla `pending_imports`**: Almacenar fotos candidatas con thumbnail, fecha y estado (pending/accepted/rejected)
-4. **Detección facial con Lovable AI (Gemini Vision)**: Enviar thumbnails al modelo con una foto de referencia del niño para determinar si aparece en la imagen
-5. **UI de revisión**: Pantalla donde el padre ve las fotos sugeridas y acepta/rechaza con un toque. Las aceptadas se descargan y almacenan en el bucket privado
-6. **Sincronización periódica** (opcional): cron job que revise nuevas fotos cada X horas
+### Plan de mejoras
 
-**Fase 2 — Google Photos (requiere OAuth propio)**
+**1. Corregir el escaneo (edge function `sync-onedrive`)**
+- Arreglar la URL de la API: usar `/me/drive/items/{id}/children` en lugar del formato actual con `:/children`.
+- Mejorar el manejo de errores con mensajes claros en español.
 
-7. Google Photos no tiene conector Lovable, así que requeriría configurar credenciales OAuth propias en Google Cloud Console. Mismo flujo que OneDrive pero con la API de Google Photos.
+**2. Flujo guiado con feedback visual (CloudSyncSettings)**
+- Al vincular carpeta: automáticamente iniciar el primer escaneo.
+- Barra de progreso durante el escaneo: "Buscando fotos...", "Analizando 15 fotos...", "3 coincidencias encontradas".
+- Usar polling o un estado intermedio para mostrar que algo está procesándose.
 
-**Fase 3 — iCloud** — No viable. Apple no ofrece API pública para acceder a fotos.
+**3. Pantalla de revisión mejorada (PendingImportsReview)**
+- Mover la revisión a una vista dedicada (diálogo/modal) que se abre al terminar el escaneo o al tocar una notificación.
+- Mostrar las fotos en grid grande con botones claros de aceptar/rechazar.
+- Badge de confianza más intuitivo (verde = alta, amarillo = media).
 
-### Modelo de privacidad
+**4. Sincronización automática diaria**
+- Crear un cron job con `pg_cron` que llame a `sync-onedrive` una vez al día.
+- Cuando encuentre fotos nuevas, crear un registro de notificación en una tabla `notifications`.
+- Mostrar un badge/indicador en el sidebar cuando haya fotos pendientes de revisar.
 
-- Las fotos de la nube **nunca se comparten con invitados automáticamente**. Solo el padre las ve en la pantalla de revisión.
-- La foto de referencia facial del niño se almacena solo en el bucket privado.
-- El análisis facial se hace vía Lovable AI (Gemini), sin almacenar datos biométricos.
-- Las fotos importadas siguen las mismas reglas de visibilidad (`is_shared`) que las subidas manualmente.
-- Los invitados/guests nunca ven la funcionalidad de sincronización.
+**5. Notificaciones de fotos nuevas**
+- Nueva tabla `notifications` (user_id, type, message, read, created_at).
+- Icono de campana en el header con contador de no leídas.
+- Al tocar la notificación, abre directamente la revisión de fotos.
 
-### Limitaciones a considerar
+### Archivos a modificar/crear
 
-- **Precisión facial**: Gemini Vision es bueno pero no perfecto. Habrá falsos positivos/negativos, de ahí la revisión manual.
-- **Coste**: Cada análisis de imagen consume créditos de Lovable AI. Con muchas fotos puede acumularse.
-- **Google Photos**: Requiere que configures un proyecto en Google Cloud Console (gratis pero manual).
-- **iCloud**: Descartado por falta de API.
-- **Volumen**: Para usuarios con miles de fotos, habría que paginar y limitar el escaneo inicial.
+- `supabase/functions/sync-onedrive/index.ts` — corregir URLs y mejorar respuestas
+- `src/components/CloudSyncSettings.tsx` — feedback visual, auto-scan
+- `src/components/PendingImportsReview.tsx` — mejorar UI de revisión
+- `src/pages/Index.tsx` — integrar notificaciones
+- Nueva migración: tabla `notifications` + cron job para sync diario
 
-### Detalles técnicos
+### Sobre OAuth per-user (futuro)
 
-- **DB**: Nueva tabla `pending_imports` (id, user_id, child_id, source, external_id, thumbnail_url, status, metadata, created_at)
-- **DB**: Nueva tabla `cloud_connections` (id, user_id, provider, folder_path, last_synced_at) para rastrear qué carpetas están vinculadas
-- **Edge functions**: `sync-onedrive` (listar + analizar), `import-photo` (descargar y guardar)
-- **Foto de referencia**: Al configurar la sincronización, el padre sube 2-3 fotos de referencia del niño que se usan como prompt para Gemini
-- **UI**: Nueva sección en Settings o en el menú lateral: "Sincronización con la nube"
+Si en el futuro quieres que cada usuario conecte su propio OneDrive, sería necesario:
+1. Registrar una app en Azure Portal (gratuito)
+2. Implementar flujo OAuth con redirect en una edge function
+3. Almacenar tokens por usuario en la DB
+4. Gestionar refresh de tokens automáticamente
 
-### Recomendación
-
-Empezar con **OneDrive** (Fase 1) ya que el conector está disponible y es plug-and-play. El flujo sería: conectar OneDrive → seleccionar carpeta → el sistema escanea fotos nuevas → sugiere las que tienen la cara del niño → el padre acepta con un toque.
-
-¿Quieres que empiece con la Fase 1 (OneDrive)?
+Esto es viable pero requiere configuración manual en Azure. Lo podemos abordar como fase 2 si lo necesitas.
 
