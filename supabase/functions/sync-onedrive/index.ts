@@ -73,7 +73,7 @@ serve(async (req) => {
       const itemId = itemIdMatch[1];
 
       // FIXED: Use correct OneDrive API path /me/drive/items/{id}/children
-      const scanUrl = `${GATEWAY_URL}/me/drive/items/${itemId}/children?$filter=file ne null&$top=50&$select=id,name,file,photo,createdDateTime,@microsoft.graph.downloadUrl,thumbnails&$expand=thumbnails`;
+      const scanUrl = `${GATEWAY_URL}/me/drive/items/${itemId}/children?$top=50&$select=id,name,file,photo,size,createdDateTime,@microsoft.graph.downloadUrl,thumbnails&$expand=thumbnails`;
       console.log("Scanning URL:", scanUrl);
 
       const resp = await fetch(scanUrl, { headers: gatewayHeaders });
