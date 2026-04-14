@@ -19,6 +19,7 @@ import { AddChildDialog } from './AddChildDialog';
 import { ChildrenManager } from './ChildrenManager';
 import { SettingsPanel } from './SettingsPanel';
 import { FamilySection } from './FamilySection';
+import { CloudSyncSettings } from './CloudSyncSettings';
 import { Child } from '@/lib/types';
 
 interface AppSidebarProps {
