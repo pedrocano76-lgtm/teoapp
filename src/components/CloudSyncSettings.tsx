@@ -7,13 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Cloud, FolderOpen, RefreshCw, Trash2, Loader2, CheckCircle2, ImageIcon } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
-type ScanPhase = 'idle' | 'fetching' | 'analyzing' | 'done';
+type ScanPhase = 'idle' | 'indexing' | 'analyzing' | 'done';
 
 interface ScanProgress {
   phase: ScanPhase;
   message: string;
+  progressPercent?: number;
   result?: { imported: number; total_scanned: number };
 }
 
@@ -51,68 +51,97 @@ export function CloudSyncSettings() {
       return;
     }
 
+    // Phase 1: Index all files (no AI)
     setScanProgress(prev => ({
       ...prev,
-      [connectionId]: { phase: 'fetching', message: 'Buscando fotos en OneDrive...' },
+      [connectionId]: { phase: 'indexing', message: 'Buscando fotos en OneDrive...', progressPercent: 15 },
     }));
 
     try {
-      // Get reference photos
-      const { data: existingPhotos } = await supabase
-        .from('photos')
-        .select('storage_path')
-        .eq('child_id', selectedChildId)
-        .limit(3);
-
-      let referenceUrls: string[] = [];
-      if (existingPhotos && existingPhotos.length > 0) {
-        setScanProgress(prev => ({
-          ...prev,
-          [connectionId]: { phase: 'analyzing', message: 'Analizando fotos con IA...' },
-        }));
-        const paths = existingPhotos.map(p => p.storage_path);
-        const { data: signed } = await supabase.storage
-          .from('photos')
-          .createSignedUrls(paths, 3600);
-        if (signed) {
-          referenceUrls = signed.filter(s => s.signedUrl).map(s => s.signedUrl);
-        }
-      }
-
-      const result = await syncOneDrive.mutateAsync({
+      const scanResult = await syncOneDrive.mutateAsync({
         action: 'scan',
         connectionId,
         childId: selectedChildId,
         folderPath,
-        referencePhotoUrls: referenceUrls,
       });
+
+      if (scanResult.imported === 0) {
+        setScanProgress(prev => ({
+          ...prev,
+          [connectionId]: {
+            phase: 'done',
+            message: `Se escanearon ${scanResult.total_scanned} fotos, no hay nuevas`,
+            result: scanResult,
+          },
+        }));
+        clearProgressAfterDelay(connectionId);
+        return;
+      }
+
+      // Phase 2: Analyze with AI in batches
+      setScanProgress(prev => ({
+        ...prev,
+        [connectionId]: {
+          phase: 'analyzing',
+          message: `Analizando ${scanResult.imported} fotos con IA...`,
+          progressPercent: 40,
+        },
+      }));
+
+      let totalAnalyzed = 0;
+      const totalToAnalyze = scanResult.imported;
+      let remaining = totalToAnalyze;
+
+      while (remaining > 0) {
+        try {
+          const batchResult = await syncOneDrive.mutateAsync({
+            action: 'analyze-batch',
+            childId: selectedChildId,
+          });
+
+          totalAnalyzed += batchResult.analyzed;
+          remaining = batchResult.remaining;
+
+          const percent = 40 + Math.round((totalAnalyzed / totalToAnalyze) * 55);
+          setScanProgress(prev => ({
+            ...prev,
+            [connectionId]: {
+              phase: 'analyzing',
+              message: `Analizando fotos... ${totalAnalyzed}/${totalToAnalyze}`,
+              progressPercent: Math.min(percent, 95),
+            },
+          }));
+
+          if (batchResult.analyzed === 0) break;
+          if (batchResult.no_references) {
+            toast({
+              title: 'Sin fotos de referencia',
+              description: 'Sube algunas fotos del niño/a primero para mejorar la detección.',
+            });
+            break;
+          }
+        } catch (batchErr: any) {
+          console.error('Batch analysis error:', batchErr);
+          // Continue anyway - unanalyzed photos will show with neutral confidence
+          break;
+        }
+      }
 
       setScanProgress(prev => ({
         ...prev,
         [connectionId]: {
           phase: 'done',
-          message: result.imported > 0
-            ? `¡${result.imported} foto${result.imported > 1 ? 's' : ''} encontrada${result.imported > 1 ? 's' : ''}!`
-            : 'No se encontraron fotos nuevas',
-          result,
+          message: `¡${scanResult.imported} foto${scanResult.imported > 1 ? 's' : ''} encontrada${scanResult.imported > 1 ? 's' : ''}! Revísalas en la pestaña de importación.`,
+          result: scanResult,
         },
       }));
 
-      if (result.imported > 0) {
-        toast({
-          title: '¡Fotos encontradas!',
-          description: `${result.imported} foto${result.imported > 1 ? 's' : ''} lista${result.imported > 1 ? 's' : ''} para revisar.`,
-        });
-      }
+      toast({
+        title: '¡Fotos encontradas!',
+        description: `${scanResult.imported} foto${scanResult.imported > 1 ? 's' : ''} lista${scanResult.imported > 1 ? 's' : ''} para revisar.`,
+      });
 
-      // Clear progress after 5 seconds
-      setTimeout(() => {
-        setScanProgress(prev => {
-          const next = { ...prev };
-          delete next[connectionId];
-          return next;
-        });
-      }, 5000);
+      clearProgressAfterDelay(connectionId, 8000);
     } catch (e: any) {
       setScanProgress(prev => ({
         ...prev,
@@ -120,6 +149,16 @@ export function CloudSyncSettings() {
       }));
       toast({ title: 'Error al escanear', description: e.message, variant: 'destructive' });
     }
+  };
+
+  const clearProgressAfterDelay = (connectionId: string, delay = 5000) => {
+    setTimeout(() => {
+      setScanProgress(prev => {
+        const next = { ...prev };
+        delete next[connectionId];
+        return next;
+      });
+    }, delay);
   };
 
   const handleAddFolder = async () => {
@@ -134,7 +173,6 @@ export function CloudSyncSettings() {
       setSelectedFolder(null);
       setFolders([]);
 
-      // Auto-scan if child selected
       if (selectedChildId && conn?.id) {
         setTimeout(() => handleScan(conn.id, `/me/drive/items/${selectedFolder.id}`), 500);
       }
@@ -221,7 +259,6 @@ export function CloudSyncSettings() {
                       </div>
                     </div>
 
-                    {/* Progress indicator */}
                     {progress && progress.phase !== 'idle' && (
                       <div className="space-y-1.5">
                         {progress.phase === 'done' ? (
@@ -240,7 +277,7 @@ export function CloudSyncSettings() {
                           </div>
                         ) : (
                           <>
-                            <Progress value={progress.phase === 'fetching' ? 30 : 70} className="h-1.5" />
+                            <Progress value={progress.progressPercent || 30} className="h-1.5" />
                             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                               <Loader2 className="h-3 w-3 animate-spin" />
                               {progress.message}
