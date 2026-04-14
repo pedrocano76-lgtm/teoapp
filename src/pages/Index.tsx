@@ -8,7 +8,8 @@ import { AllChildrenTimeline } from '@/components/AllChildrenTimeline';
 import { ChildHeader } from '@/components/ChildHeader';
 import { PhotoUpload } from '@/components/PhotoUpload';
 import { AddChildDialog } from '@/components/AddChildDialog';
-
+import { Button } from '@/components/ui/button';
+import { LogOut } from 'lucide-react';
 import { FilterDropdown } from '@/components/FilterDropdown';
 import { AppSidebar } from '@/components/AppSidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -64,6 +65,7 @@ function mapTag(row: any): Tag {
 }
 
 const Index = () => {
+  const { signOut } = useAuth();
   const { data: childrenData, isLoading: childrenLoading } = useChildren();
   const { data: photosData } = usePhotos();
   const { data: eventsData } = useEvents();
