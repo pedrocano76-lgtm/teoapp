@@ -80,6 +80,7 @@ export function useSyncOneDrive() {
       childId?: string;
       folderPath?: string;
       referencePhotoUrls?: string[];
+      sinceDate?: string;
     }) => {
       const { data, error } = await supabase.functions.invoke('sync-onedrive', {
         body: params,
