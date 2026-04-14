@@ -12,6 +12,7 @@ import { AddChildDialog } from '@/components/AddChildDialog';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { FilterDropdown } from '@/components/FilterDropdown';
+import { NotificationBell } from '@/components/NotificationBell';
 import { AppSidebar } from '@/components/AppSidebar';
 import { PendingImportsReview } from '@/components/PendingImportsReview';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -152,6 +153,7 @@ const Index = () => {
                   <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground truncate">Little Moments</h1>
                   <p className="text-muted-foreground mt-0.5 text-sm md:text-base">Cada sonrisa, cada paso — atesorados para siempre ✨</p>
                 </div>
+                {!isGuest && <NotificationBell />}
                 {isGuest && (
                   <Button variant="ghost" size="sm" className="text-muted-foreground gap-1.5" onClick={signOut}>
                     <LogOut className="h-4 w-4" />
