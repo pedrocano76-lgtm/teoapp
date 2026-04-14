@@ -272,6 +272,7 @@ serve(async (req) => {
         const { data: unanalyzed } = await supabase
           .from("pending_imports")
           .select("id")
+          .eq("user_id", user.id)
           .eq("child_id", childId)
           .eq("status", "pending")
           .is("confidence_score", null);
