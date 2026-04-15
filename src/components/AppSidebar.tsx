@@ -91,22 +91,24 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
           </SidebarGroup>
         </Collapsible>
 
-        {/* Cloud Sync */}
-        <Collapsible>
-          <SidebarGroup>
-            <CollapsibleTrigger asChild>
-              <SidebarGroupLabel className="cursor-pointer flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><Cloud className="h-3.5 w-3.5" /> Nube</span>
-                <ChevronDown className="h-3.5 w-3.5" />
-              </SidebarGroupLabel>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <CloudSyncSettings />
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
+        {/* Cloud Sync - only for specific family */}
+        {user?.email === 'pedrocano76@gmail.com' && (
+          <Collapsible>
+            <SidebarGroup>
+              <CollapsibleTrigger asChild>
+                <SidebarGroupLabel className="cursor-pointer flex items-center justify-between">
+                  <span className="flex items-center gap-1.5"><Cloud className="h-3.5 w-3.5" /> Nube</span>
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <CloudSyncSettings />
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        )}
 
         {/* Settings */}
         <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
