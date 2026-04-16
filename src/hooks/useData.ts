@@ -205,11 +205,21 @@ export function useUpdatePhoto() {
 export function useDeletePhoto() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ photoId, storagePath }: { photoId: string; storagePath: string }) => {
+    mutationFn: async ({
+      photoId,
+      storagePath,
+      thumbnailPath,
+    }: {
+      photoId: string;
+      storagePath: string;
+      thumbnailPath?: string | null;
+    }) => {
       await supabase.from('photo_tags').delete().eq('photo_id', photoId);
       const { error } = await supabase.from('photos').delete().eq('id', photoId);
       if (error) throw error;
-      await supabase.storage.from('photos').remove([storagePath]);
+      const toRemove = [storagePath];
+      if (thumbnailPath) toRemove.push(thumbnailPath);
+      await supabase.storage.from('photos').remove(toRemove);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['photos'] });
