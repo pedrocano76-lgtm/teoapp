@@ -68,6 +68,7 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
         eventId: eventId || null,
         tagIds: selectedTagIds,
         isShared,
+        takenAt: takenAt ? takenAt.toISOString() : undefined,
       });
       toast.success('Foto actualizada');
       onOpenChange(false);
