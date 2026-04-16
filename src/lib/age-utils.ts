@@ -1,8 +1,14 @@
-export function getAge(birthDate: Date, atDate: Date = new Date()): string {
-  const diffMs = atDate.getTime() - birthDate.getTime();
-  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+// Compare dates ignoring time-of-day to avoid timezone issues with date-only birth_date
+function daysBetween(from: Date, to: Date): number {
+  const a = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+  const b = new Date(to.getFullYear(), to.getMonth(), to.getDate());
+  return Math.floor((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
+}
 
-  if (days < 0) return 'Not born yet';
+export function getAge(birthDate: Date, atDate: Date = new Date()): string {
+  const days = daysBetween(birthDate, atDate);
+
+  if (days < 0) return 'Antes de nacer';
   if (days < 7) return `${days} day${days !== 1 ? 's' : ''} old`;
   if (days < 30) {
     const weeks = Math.floor(days / 7);
@@ -22,18 +28,17 @@ export function getAge(birthDate: Date, atDate: Date = new Date()): string {
 }
 
 export function getAgeMonths(birthDate: Date, atDate: Date = new Date()): number {
-  const diffMs = atDate.getTime() - birthDate.getTime();
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.44));
+  const days = daysBetween(birthDate, atDate);
+  return Math.floor(days / 30.44);
 }
 
 export function getAgeWeeks(birthDate: Date, atDate: Date = new Date()): number {
-  const diffMs = atDate.getTime() - birthDate.getTime();
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24 * 7));
+  const days = daysBetween(birthDate, atDate);
+  return Math.floor(days / 7);
 }
 
 export function getAgeDays(birthDate: Date, atDate: Date = new Date()): number {
-  const diffMs = atDate.getTime() - birthDate.getTime();
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return daysBetween(birthDate, atDate);
 }
 
 export function getTimelineGroupLabel(birthDate: Date, photoDate: Date): string {

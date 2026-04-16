@@ -8,9 +8,12 @@ interface AllChildrenTimelineProps {
   photos: Photo[];
   children: Child[];
   sortOrder?: 'asc' | 'desc';
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
 }
 
-export function AllChildrenTimeline({ photos, children, sortOrder = 'asc' }: AllChildrenTimelineProps) {
+export function AllChildrenTimeline({ photos, children, sortOrder = 'asc', selectionMode, selectedIds, onToggleSelect }: AllChildrenTimelineProps) {
   const [lightboxIndex, setLightboxIndex] = useState(-1);
   const sortedPhotos = [...photos].sort((a, b) =>
     sortOrder === 'asc' ? a.date.getTime() - b.date.getTime() : b.date.getTime() - a.date.getTime()
@@ -65,6 +68,9 @@ export function AllChildrenTimeline({ photos, children, sortOrder = 'asc' }: All
                       photo={photo}
                       child={child}
                       onClick={() => setLightboxIndex(indexMap.get(photo.id) ?? 0)}
+                      selectionMode={selectionMode}
+                      isSelected={selectedIds?.has(photo.id)}
+                      onToggleSelect={onToggleSelect}
                     />
                   );
                 })}
@@ -73,13 +79,15 @@ export function AllChildrenTimeline({ photos, children, sortOrder = 'asc' }: All
           );
         })}
       </div>
-      <PhotoLightbox
-        photos={flatPhotos}
-        children={children}
-        initialIndex={lightboxIndex >= 0 ? lightboxIndex : 0}
-        open={lightboxIndex >= 0}
-        onOpenChange={(open) => { if (!open) setLightboxIndex(-1); }}
-      />
+      {!selectionMode && (
+        <PhotoLightbox
+          photos={flatPhotos}
+          children={children}
+          initialIndex={lightboxIndex >= 0 ? lightboxIndex : 0}
+          open={lightboxIndex >= 0}
+          onOpenChange={(open) => { if (!open) setLightboxIndex(-1); }}
+        />
+      )}
     </>
   );
 }
