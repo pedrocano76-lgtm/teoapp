@@ -162,6 +162,7 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
             eventId: photo.eventId,
             locationName: photo.locationName,
             storagePath: photo.storagePath,
+            takenAt: photo.date instanceof Date ? photo.date.toISOString() : String(photo.date),
           }}
           onDeleted={() => {
             setEditOpen(false);

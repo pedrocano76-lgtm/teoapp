@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TagSelector } from '@/components/TagSelector';
 import { useUpdatePhoto, useDeletePhoto, usePhotoTags, useEvents } from '@/hooks/useData';
-import { MapPin, Trash2 } from 'lucide-react';
+import { MapPin, Trash2, CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface PhotoEditDialogProps {
   open: boolean;
@@ -21,6 +26,7 @@ interface PhotoEditDialogProps {
     locationName?: string;
     storagePath: string;
     isShared?: boolean;
+    takenAt?: string;
   };
   onDeleted?: () => void;
 }
@@ -30,6 +36,7 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
   const [eventId, setEventId] = useState(photo.eventId || '');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [isShared, setIsShared] = useState(photo.isShared ?? true);
+  const [takenAt, setTakenAt] = useState<Date | undefined>(photo.takenAt ? new Date(photo.takenAt) : undefined);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const updatePhoto = useUpdatePhoto();
@@ -42,6 +49,7 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
       setCaption(photo.caption || '');
       setEventId(photo.eventId || '');
       setIsShared(photo.isShared ?? true);
+      setTakenAt(photo.takenAt ? new Date(photo.takenAt) : undefined);
       setConfirmDelete(false);
     }
   }, [open, photo]);
@@ -60,6 +68,7 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
         eventId: eventId || null,
         tagIds: selectedTagIds,
         isShared,
+        takenAt: takenAt ? takenAt.toISOString() : undefined,
       });
       toast.success('Foto actualizada');
       onOpenChange(false);
@@ -105,6 +114,30 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
             />
           </div>
 
+          <div className="space-y-2">
+            <Label>Fecha</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn("w-full justify-start text-left font-normal", !takenAt && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {takenAt ? format(takenAt, "PPP", { locale: es }) : 'Seleccionar fecha'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={takenAt}
+                  onSelect={setTakenAt}
+                  disabled={(date) => date > new Date()}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
           {eventsData && eventsData.length > 0 && (
             <div className="space-y-2">
               <Label>Evento</Label>

@@ -155,16 +155,18 @@ export function useUpdatePhoto() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
-      photoId, caption, eventId, tagIds, isShared,
+      photoId, caption, eventId, tagIds, isShared, takenAt,
     }: {
       photoId: string;
       caption?: string;
       eventId?: string | null;
       tagIds?: string[];
       isShared?: boolean;
+      takenAt?: string;
     }) => {
       const updates: any = { caption: caption ?? null, event_id: eventId ?? null };
       if (isShared !== undefined) updates.is_shared = isShared;
+      if (takenAt) updates.taken_at = takenAt;
       const { error } = await supabase
         .from('photos')
         .update(updates)
