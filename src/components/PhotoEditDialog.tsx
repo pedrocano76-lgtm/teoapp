@@ -49,6 +49,7 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
       setCaption(photo.caption || '');
       setEventId(photo.eventId || '');
       setIsShared(photo.isShared ?? true);
+      setTakenAt(photo.takenAt ? new Date(photo.takenAt) : undefined);
       setConfirmDelete(false);
     }
   }, [open, photo]);
