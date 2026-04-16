@@ -215,7 +215,7 @@ export function DuplicateFinder({ photos, children }: DuplicateFinderProps) {
                               : "border-transparent hover:border-primary"
                           )}
                         >
-                          <img src={photo.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                          <img src={photo.thumbnailUrl || photo.url} alt="" className="w-full h-full object-cover" loading="lazy" />
                           {markedForDeletion.has(photo.id) && (
                             <div className="absolute inset-0 bg-destructive/30 flex items-center justify-center">
                               <Trash2 className="h-6 w-6 text-destructive" />

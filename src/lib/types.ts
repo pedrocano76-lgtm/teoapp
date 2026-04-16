@@ -9,6 +9,7 @@ export interface Child {
 export interface Photo {
   id: string;
   url: string;
+  thumbnailUrl?: string;
   childId: string;
   date: Date;
   caption?: string;

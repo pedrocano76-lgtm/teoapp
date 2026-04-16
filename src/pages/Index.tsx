@@ -36,6 +36,7 @@ function mapPhoto(row: any): Photo {
   return {
     id: row.id,
     url: row.signed_url || '',
+    thumbnailUrl: row.thumbnail_signed_url || row.signed_url || '',
     childId: row.child_id,
     date: new Date(row.taken_at),
     caption: row.caption ?? undefined,
