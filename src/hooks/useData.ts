@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { getExifDate, getExifLocation, reverseGeocode } from '@/lib/exif-utils';
+import { processImageForUpload } from '@/lib/image-processing';
 
 export function useChildren() {
   const { user } = useAuth();
@@ -47,18 +48,29 @@ export function usePhotos(childId?: string) {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Generate signed URLs for the private bucket
+      // Generate signed URLs for the private bucket (full + thumbnail)
       if (data && data.length > 0) {
-        const paths = data.map(p => p.storage_path);
+        const fullPaths = data.map(p => p.storage_path);
+        const thumbPaths = data
+          .map(p => (p as any).thumbnail_path)
+          .filter((p): p is string => !!p);
+        const allPaths = Array.from(new Set([...fullPaths, ...thumbPaths]));
+
         const { data: signedData, error: signError } = await supabase.storage
           .from('photos')
-          .createSignedUrls(paths, 3600);
+          .createSignedUrls(allPaths, 3600);
         if (!signError && signedData) {
           const urlMap: Record<string, string> = {};
           signedData.forEach(s => {
             if (s.signedUrl) urlMap[s.path] = s.signedUrl;
           });
-          return data.map(p => ({ ...p, signed_url: urlMap[p.storage_path] || '' }));
+          return data.map(p => ({
+            ...p,
+            signed_url: urlMap[p.storage_path] || '',
+            thumbnail_signed_url: (p as any).thumbnail_path
+              ? urlMap[(p as any).thumbnail_path] || urlMap[p.storage_path] || ''
+              : urlMap[p.storage_path] || '',
+          }));
         }
       }
 
@@ -238,20 +250,38 @@ export function useUploadPhoto() {
         locationName = await reverseGeocode(loc.lat, loc.lng);
       }
 
-      const ext = file.name.split('.').pop();
-      const path = `${user!.id}/${childId}/${Date.now()}.${ext}`;
+      const ext = 'jpg'; // we always re-encode to JPEG
+      const baseName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const fullPath = `${user!.id}/${childId}/${baseName}.${ext}`;
+      const thumbPath = `${user!.id}/${childId}/thumbs/${baseName}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('photos')
-        .upload(path, file);
-      if (uploadError) throw uploadError;
+      // Compress full + generate thumbnail in parallel
+      const { full, thumbnail } = await processImageForUpload(file);
+
+      // Upload both versions in parallel
+      const [fullUpload, thumbUpload] = await Promise.all([
+        supabase.storage.from('photos').upload(fullPath, full, {
+          contentType: 'image/jpeg',
+          cacheControl: '31536000',
+        }),
+        supabase.storage.from('photos').upload(thumbPath, thumbnail, {
+          contentType: 'image/jpeg',
+          cacheControl: '31536000',
+        }),
+      ]);
+      if (fullUpload.error) throw fullUpload.error;
+      if (thumbUpload.error) {
+        // Thumb is best-effort: log but don't fail upload
+        console.warn('Thumbnail upload failed, falling back to full image:', thumbUpload.error);
+      }
 
       const { data, error } = await supabase
         .from('photos')
         .insert({
           child_id: childId,
           uploaded_by: user!.id,
-          storage_path: path,
+          storage_path: fullPath,
+          thumbnail_path: thumbUpload.error ? null : thumbPath,
           caption,
           taken_at: (photoDate || new Date()).toISOString(),
           event_id: eventId || null,
