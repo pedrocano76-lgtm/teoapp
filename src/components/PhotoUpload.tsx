@@ -1,13 +1,20 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { useUploadPhoto, useEvents } from '@/hooks/useData';
 import { useToast } from '@/hooks/use-toast';
+import { getExifDate } from '@/lib/exif-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TagSelector } from './TagSelector';
+import { CalendarIcon, AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface PhotoUploadProps {
   children: { id: string; name: string }[];
@@ -23,15 +30,42 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [isShared, setIsShared] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [noExifFiles, setNoExifFiles] = useState<string[]>([]);
+  const [manualDate, setManualDate] = useState<Date | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadPhoto = useUploadPhoto();
   const { toast } = useToast();
   const { data: eventsData } = useEvents(selectedChild || undefined);
 
+  // Auto-select if only one child
+  useEffect(() => {
+    if (children.length === 1 && !selectedChild) {
+      setSelectedChild(children[0].id);
+    }
+  }, [children, selectedChild]);
+
   const handleToggleTag = (tagId: string) => {
     setSelectedTagIds(prev =>
       prev.includes(tagId) ? prev.filter(id => id !== tagId) : [...prev, tagId]
     );
+  };
+
+  const handleFilesSelected = async (selectedFiles: File[]) => {
+    setFiles(selectedFiles);
+    setNoExifFiles([]);
+    setManualDate(undefined);
+
+    // Check EXIF dates
+    const missing: string[] = [];
+    for (const file of selectedFiles) {
+      const exifDate = await getExifDate(file);
+      if (!exifDate) {
+        missing.push(file.name);
+      }
+    }
+    if (missing.length > 0) {
+      setNoExifFiles(missing);
+    }
   };
 
   const handleUpload = async () => {
@@ -44,6 +78,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
           file,
           childId: selectedChild,
           caption: caption || undefined,
+          takenAt: noExifFiles.includes(file.name) && manualDate ? manualDate : undefined,
           eventId: selectedEventId || undefined,
           tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
           isShared,
@@ -56,6 +91,8 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
       setSelectedEventId('');
       setSelectedTagIds([]);
       setIsShared(true);
+      setNoExifFiles([]);
+      setManualDate(undefined);
     } catch (error: any) {
       toast({ title: 'Error al subir', description: error.message, variant: 'destructive' });
     } finally {
@@ -78,16 +115,18 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
           <DialogDescription>Sube fotos desde tu dispositivo. La fecha se extraerá automáticamente de la foto.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <Select value={selectedChild} onValueChange={setSelectedChild}>
-            <SelectTrigger>
-              <SelectValue placeholder="Seleccionar hijo/a" />
-            </SelectTrigger>
-            <SelectContent>
-              {children.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {children.length > 1 && (
+            <Select value={selectedChild} onValueChange={setSelectedChild}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar hijo/a" />
+              </SelectTrigger>
+              <SelectContent>
+                {children.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
           <div>
             <input
@@ -96,7 +135,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
               accept="image/*"
               multiple
               className="hidden"
-              onChange={(e) => setFiles(Array.from(e.target.files || []))}
+              onChange={(e) => handleFilesSelected(Array.from(e.target.files || []))}
             />
             <Button
               variant="outline"
@@ -123,6 +162,46 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
                   +{files.length - 8}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Warning when EXIF date not found */}
+          {noExifFiles.length > 0 && (
+            <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3 space-y-2">
+              <p className="text-xs text-yellow-600 dark:text-yellow-400 flex items-center gap-1.5">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                {noExifFiles.length === files.length
+                  ? 'No se pudo extraer la fecha de ninguna foto.'
+                  : `${noExifFiles.length} foto${noExifFiles.length > 1 ? 's' : ''} sin fecha detectada.`}
+              </p>
+              <p className="text-xs text-muted-foreground">Indica cuándo fueron tomadas:</p>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "w-full justify-start text-left text-xs h-8 font-normal",
+                      !manualDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="h-3.5 w-3.5 mr-1.5" />
+                    {manualDate
+                      ? format(manualDate, "d MMM yyyy", { locale: es })
+                      : "Seleccionar fecha..."}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={manualDate}
+                    onSelect={setManualDate}
+                    disabled={(date) => date > new Date()}
+                    initialFocus
+                    className="p-3"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           )}
 
