@@ -25,6 +25,7 @@ interface PhotoEditDialogProps {
     eventId?: string;
     locationName?: string;
     storagePath: string;
+    thumbnailPath?: string | null;
     isShared?: boolean;
     takenAt?: string;
   };
@@ -79,7 +80,7 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
 
   const handleDelete = async () => {
     try {
-      await deletePhoto.mutateAsync({ photoId: photo.id, storagePath: photo.storagePath });
+      await deletePhoto.mutateAsync({ photoId: photo.id, storagePath: photo.storagePath, thumbnailPath: photo.thumbnailPath });
       toast.success('Foto eliminada');
       onOpenChange(false);
       onDeleted?.();

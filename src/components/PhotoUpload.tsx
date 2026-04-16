@@ -73,18 +73,38 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
     setUploading(true);
 
     try {
-      for (const file of files) {
-        await uploadPhoto.mutateAsync({
-          file,
-          childId: selectedChild,
-          caption: caption || undefined,
-          takenAt: noExifFiles.includes(file.name) && manualDate ? manualDate : undefined,
-          eventId: selectedEventId || undefined,
-          tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
-          isShared,
+      // Upload in parallel batches of 3 to balance speed and bandwidth
+      const CONCURRENCY = 3;
+      let completed = 0;
+      let failed = 0;
+      for (let i = 0; i < files.length; i += CONCURRENCY) {
+        const batch = files.slice(i, i + CONCURRENCY);
+        const results = await Promise.allSettled(
+          batch.map(file =>
+            uploadPhoto.mutateAsync({
+              file,
+              childId: selectedChild,
+              caption: caption || undefined,
+              takenAt: noExifFiles.includes(file.name) && manualDate ? manualDate : undefined,
+              eventId: selectedEventId || undefined,
+              tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+              isShared,
+            })
+          )
+        );
+        completed += results.filter(r => r.status === 'fulfilled').length;
+        failed += results.filter(r => r.status === 'rejected').length;
+      }
+
+      if (failed === 0) {
+        toast({ title: '¡Subidas!', description: `${completed} foto${completed > 1 ? 's' : ''} añadida${completed > 1 ? 's' : ''}.` });
+      } else {
+        toast({
+          title: 'Subida parcial',
+          description: `${completed} subidas, ${failed} fallidas.`,
+          variant: failed === files.length ? 'destructive' : 'default',
         });
       }
-      toast({ title: '¡Subidas!', description: `${files.length} foto${files.length > 1 ? 's' : ''} añadida${files.length > 1 ? 's' : ''}.` });
       setOpen(false);
       setFiles([]);
       setCaption('');

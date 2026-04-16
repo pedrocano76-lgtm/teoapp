@@ -9,6 +9,7 @@ export interface Child {
 export interface Photo {
   id: string;
   url: string;
+  thumbnailUrl?: string;
   childId: string;
   date: Date;
   caption?: string;
@@ -18,6 +19,7 @@ export interface Photo {
   locationLat?: number;
   locationLng?: number;
   storagePath: string;
+  thumbnailPath?: string | null;
   isShared: boolean;
 }
 

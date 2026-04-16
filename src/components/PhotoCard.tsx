@@ -68,9 +68,10 @@ export function PhotoCard({ photo, child, onClick, selectionMode, isSelected, on
         >
           <div className="aspect-square overflow-hidden">
             <img
-              src={photo.url}
+              src={photo.thumbnailUrl || photo.url}
               alt={photo.caption || `Foto de ${child.name}`}
               loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
@@ -123,6 +124,7 @@ export function PhotoCard({ photo, child, onClick, selectionMode, isSelected, on
             eventId: photo.eventId,
             locationName: photo.locationName,
             storagePath: photo.storagePath,
+            thumbnailPath: photo.thumbnailPath,
             isShared: photo.isShared,
             takenAt: photo.date instanceof Date ? photo.date.toISOString() : String(photo.date),
           }}
