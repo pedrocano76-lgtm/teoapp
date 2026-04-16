@@ -114,7 +114,30 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
             />
           </div>
 
-          {eventsData && eventsData.length > 0 && (
+          <div className="space-y-2">
+            <Label>Fecha</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn("w-full justify-start text-left font-normal", !takenAt && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {takenAt ? format(takenAt, "PPP", { locale: es }) : 'Seleccionar fecha'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={takenAt}
+                  onSelect={setTakenAt}
+                  disabled={(date) => date > new Date()}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
             <div className="space-y-2">
               <Label>Evento</Label>
               <Select value={eventId} onValueChange={setEventId}>
