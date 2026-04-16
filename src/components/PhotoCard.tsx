@@ -124,6 +124,7 @@ export function PhotoCard({ photo, child, onClick, selectionMode, isSelected, on
             eventId: photo.eventId,
             locationName: photo.locationName,
             storagePath: photo.storagePath,
+            thumbnailPath: photo.thumbnailPath,
             isShared: photo.isShared,
             takenAt: photo.date instanceof Date ? photo.date.toISOString() : String(photo.date),
           }}
