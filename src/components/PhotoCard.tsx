@@ -94,6 +94,7 @@ export function PhotoCard({ photo, child, onClick }: PhotoCardProps) {
             locationName: photo.locationName,
             storagePath: photo.storagePath,
             isShared: photo.isShared,
+            takenAt: photo.date instanceof Date ? photo.date.toISOString() : String(photo.date),
           }}
         />
       )}
