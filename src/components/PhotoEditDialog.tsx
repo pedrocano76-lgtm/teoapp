@@ -26,6 +26,7 @@ interface PhotoEditDialogProps {
     locationName?: string;
     storagePath: string;
     isShared?: boolean;
+    takenAt?: string;
   };
   onDeleted?: () => void;
 }
