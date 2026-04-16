@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useChildren, usePhotos, useEvents, useTags } from '@/hooks/useData';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -10,11 +10,13 @@ import { ChildHeader } from '@/components/ChildHeader';
 import { PhotoUpload } from '@/components/PhotoUpload';
 import { AddChildDialog } from '@/components/AddChildDialog';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, CheckSquare } from 'lucide-react';
 import { FilterDropdown } from '@/components/FilterDropdown';
 import { NotificationBell } from '@/components/NotificationBell';
 import { AppSidebar } from '@/components/AppSidebar';
 import { PendingImportsReview } from '@/components/PendingImportsReview';
+import { BulkActionsToolbar } from '@/components/BulkActionsToolbar';
+import { DuplicateFinder } from '@/components/DuplicateFinder';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { supabase } from '@/integrations/supabase/client';
 import heroPattern from '@/assets/hero-pattern.jpg';
@@ -83,6 +85,10 @@ const Index = () => {
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
+  // Selection mode
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
+
   const children = useMemo(() => (childrenData || []).map(mapChild), [childrenData]);
   const photos = useMemo(() => (photosData || []).map(mapPhoto), [photosData]);
   const events = useMemo(() => (eventsData || []).map(mapEvent), [eventsData]);
@@ -123,6 +129,25 @@ const Index = () => {
     return Array.from(locs).sort();
   }, [photos]);
 
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedPhotoIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const exitSelectionMode = useCallback(() => {
+    setSelectionMode(false);
+    setSelectedPhotoIds(new Set());
+  }, []);
+
+  const selectedPhotos = useMemo(() =>
+    filteredPhotos.filter(p => selectedPhotoIds.has(p.id)),
+    [filteredPhotos, selectedPhotoIds]
+  );
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -134,6 +159,7 @@ const Index = () => {
               setSelectedEventId(null);
               setSelectedTagId(null);
               setSelectedLocation(null);
+              exitSelectionMode();
             }}
             selectedChildId={selectedChildId}
           />
@@ -164,6 +190,15 @@ const Index = () => {
             </div>
           </header>
 
+          {/* Bulk actions toolbar */}
+          {selectionMode && selectedPhotoIds.size > 0 && (
+            <BulkActionsToolbar
+              selectedPhotos={selectedPhotos}
+              onClear={exitSelectionMode}
+              onDone={exitSelectionMode}
+            />
+          )}
+
           {/* Controls */}
           <div className="container mx-auto px-4 py-4 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -182,6 +217,20 @@ const Index = () => {
                     children={children.map(c => ({ id: c.id, name: c.name }))}
                     defaultChildId={selectedChildId ?? undefined}
                   />
+                )}
+                {canEdit && filteredPhotos.length > 0 && (
+                  <>
+                    <Button
+                      variant={selectionMode ? "default" : "outline"}
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => selectionMode ? exitSelectionMode() : setSelectionMode(true)}
+                    >
+                      <CheckSquare className="h-3.5 w-3.5" />
+                      {selectionMode ? 'Cancelar selección' : 'Seleccionar'}
+                    </Button>
+                    <DuplicateFinder photos={filteredPhotos} children={children} />
+                  </>
                 )}
                 <FilterDropdown
                   sortOrder={sortOrder}
@@ -244,15 +293,36 @@ const Index = () => {
                 {selectedChild ? (
                   <>
                     <ChildHeader child={selectedChild} photoCount={filteredPhotos.length} />
-                    <Timeline photos={filteredPhotos} child={selectedChild} sortOrder={sortOrder} />
+                    <Timeline
+                      photos={filteredPhotos}
+                      child={selectedChild}
+                      sortOrder={sortOrder}
+                      selectionMode={selectionMode}
+                      selectedIds={selectedPhotoIds}
+                      onToggleSelect={toggleSelect}
+                    />
                   </>
                 ) : children.length === 1 ? (
                   <>
                     <ChildHeader child={children[0]} photoCount={filteredPhotos.length} />
-                    <Timeline photos={filteredPhotos} child={children[0]} sortOrder={sortOrder} />
+                    <Timeline
+                      photos={filteredPhotos}
+                      child={children[0]}
+                      sortOrder={sortOrder}
+                      selectionMode={selectionMode}
+                      selectedIds={selectedPhotoIds}
+                      onToggleSelect={toggleSelect}
+                    />
                   </>
                 ) : (
-                  <AllChildrenTimeline photos={filteredPhotos} children={children} sortOrder={sortOrder} />
+                  <AllChildrenTimeline
+                    photos={filteredPhotos}
+                    children={children}
+                    sortOrder={sortOrder}
+                    selectionMode={selectionMode}
+                    selectedIds={selectedPhotoIds}
+                    onToggleSelect={toggleSelect}
+                  />
                 )}
               </>
             )}
