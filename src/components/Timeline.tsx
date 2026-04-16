@@ -8,9 +8,12 @@ interface TimelineProps {
   photos: Photo[];
   child: Child;
   sortOrder?: 'asc' | 'desc';
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
 }
 
-export function Timeline({ photos, child, sortOrder = 'asc' }: TimelineProps) {
+export function Timeline({ photos, child, sortOrder = 'asc', selectionMode, selectedIds, onToggleSelect }: TimelineProps) {
   const [lightboxIndex, setLightboxIndex] = useState(-1);
   const groups = new Map<string, { label: string; photos: Photo[]; date: Date }>();
   const sortedPhotos = [...photos].sort((a, b) =>
@@ -61,6 +64,9 @@ export function Timeline({ photos, child, sortOrder = 'asc' }: TimelineProps) {
                     photo={photo}
                     child={child}
                     onClick={() => setLightboxIndex(indexMap.get(photo.id) ?? 0)}
+                    selectionMode={selectionMode}
+                    isSelected={selectedIds?.has(photo.id)}
+                    onToggleSelect={onToggleSelect}
                   />
                 ))}
               </div>
@@ -68,13 +74,15 @@ export function Timeline({ photos, child, sortOrder = 'asc' }: TimelineProps) {
           );
         })}
       </div>
-      <PhotoLightbox
-        photos={flatPhotos}
-        children={[child]}
-        initialIndex={lightboxIndex >= 0 ? lightboxIndex : 0}
-        open={lightboxIndex >= 0}
-        onOpenChange={(open) => { if (!open) setLightboxIndex(-1); }}
-      />
+      {!selectionMode && (
+        <PhotoLightbox
+          photos={flatPhotos}
+          children={[child]}
+          initialIndex={lightboxIndex >= 0 ? lightboxIndex : 0}
+          open={lightboxIndex >= 0}
+          onOpenChange={(open) => { if (!open) setLightboxIndex(-1); }}
+        />
+      )}
     </>
   );
 }
