@@ -138,6 +138,7 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
               </PopoverContent>
             </Popover>
           </div>
+          {eventsData && eventsData.length > 0 && (
             <div className="space-y-2">
               <Label>Evento</Label>
               <Select value={eventId} onValueChange={setEventId}>
