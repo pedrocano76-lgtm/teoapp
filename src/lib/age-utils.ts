@@ -28,18 +28,17 @@ export function getAge(birthDate: Date, atDate: Date = new Date()): string {
 }
 
 export function getAgeMonths(birthDate: Date, atDate: Date = new Date()): number {
-  const diffMs = atDate.getTime() - birthDate.getTime();
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.44));
+  const days = daysBetween(birthDate, atDate);
+  return Math.floor(days / 30.44);
 }
 
 export function getAgeWeeks(birthDate: Date, atDate: Date = new Date()): number {
-  const diffMs = atDate.getTime() - birthDate.getTime();
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24 * 7));
+  const days = daysBetween(birthDate, atDate);
+  return Math.floor(days / 7);
 }
 
 export function getAgeDays(birthDate: Date, atDate: Date = new Date()): number {
-  const diffMs = atDate.getTime() - birthDate.getTime();
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return daysBetween(birthDate, atDate);
 }
 
 export function getTimelineGroupLabel(birthDate: Date, photoDate: Date): string {
