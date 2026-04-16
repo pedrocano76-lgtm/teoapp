@@ -19,6 +19,7 @@ export interface Photo {
   locationLat?: number;
   locationLng?: number;
   storagePath: string;
+  thumbnailPath?: string | null;
   isShared: boolean;
 }
 

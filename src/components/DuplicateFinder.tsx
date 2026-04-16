@@ -117,7 +117,7 @@ export function DuplicateFinder({ photos, children }: DuplicateFinderProps) {
     try {
       const toDelete = photos.filter(p => markedForDeletion.has(p.id));
       for (const photo of toDelete) {
-        await deletePhoto.mutateAsync({ photoId: photo.id, storagePath: photo.storagePath });
+        await deletePhoto.mutateAsync({ photoId: photo.id, storagePath: photo.storagePath, thumbnailPath: photo.thumbnailPath });
       }
       toast.success(`${toDelete.length} duplicados eliminados`);
       setMarkedForDeletion(new Set());

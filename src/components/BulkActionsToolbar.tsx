@@ -68,6 +68,7 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
         await deletePhoto.mutateAsync({
           photoId: photo.id,
           storagePath: photo.storagePath,
+          thumbnailPath: photo.thumbnailPath,
         });
       }
       toast.success(`${selectedPhotos.length} fotos eliminadas`);

@@ -45,6 +45,7 @@ function mapPhoto(row: any): Photo {
     locationLat: row.location_lat ?? undefined,
     locationLng: row.location_lng ?? undefined,
     storagePath: row.storage_path,
+    thumbnailPath: row.thumbnail_path ?? null,
     isShared: row.is_shared ?? true,
   };
 }
