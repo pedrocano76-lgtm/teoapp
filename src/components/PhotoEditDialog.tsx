@@ -36,6 +36,7 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
   const [eventId, setEventId] = useState(photo.eventId || '');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [isShared, setIsShared] = useState(photo.isShared ?? true);
+  const [takenAt, setTakenAt] = useState<Date | undefined>(photo.takenAt ? new Date(photo.takenAt) : undefined);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const updatePhoto = useUpdatePhoto();
