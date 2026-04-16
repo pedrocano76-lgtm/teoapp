@@ -302,6 +302,7 @@ export type Database = {
           location_name: string | null
           storage_path: string
           taken_at: string
+          thumbnail_path: string | null
           uploaded_by: string
         }
         Insert: {
@@ -316,6 +317,7 @@ export type Database = {
           location_name?: string | null
           storage_path: string
           taken_at?: string
+          thumbnail_path?: string | null
           uploaded_by: string
         }
         Update: {
@@ -330,6 +332,7 @@ export type Database = {
           location_name?: string | null
           storage_path?: string
           taken_at?: string
+          thumbnail_path?: string | null
           uploaded_by?: string
         }
         Relationships: [
