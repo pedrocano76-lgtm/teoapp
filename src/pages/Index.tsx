@@ -74,14 +74,22 @@ function mapTag(row: any): Tag {
 const Index = () => {
   const { signOut } = useAuth();
   const { data: childrenData, isLoading: childrenLoading } = useChildren();
-  const { data: photosData } = usePhotos();
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+
+  // Paginated photo fetch — first page (50 newest) lands fast, more load on scroll.
+  const {
+    data: photosPages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: photosLoading,
+  } = usePhotosInfinite(selectedChildId ?? undefined);
   const { data: eventsData } = useEvents();
   const { data: tagsData } = useTags();
   const { isGuest, canEdit } = useUserRole();
   const { data: pendingImportsData } = usePendingImports();
   const hasPendingImports = !isGuest && (pendingImportsData || []).length > 0;
 
-  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
@@ -92,7 +100,10 @@ const Index = () => {
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
 
   const children = useMemo(() => (childrenData || []).map(mapChild), [childrenData]);
-  const photos = useMemo(() => (photosData || []).map(mapPhoto), [photosData]);
+  const photos = useMemo(() => {
+    const allRows = (photosPages?.pages || []).flatMap(p => p.rows);
+    return allRows.map(mapPhoto);
+  }, [photosPages]);
   const events = useMemo(() => (eventsData || []).map(mapEvent), [eventsData]);
   const tags = useMemo(() => (tagsData || []).map(mapTag), [tagsData]);
 
