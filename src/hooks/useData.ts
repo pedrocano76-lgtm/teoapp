@@ -1,8 +1,15 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { getExifDate, getExifLocation, reverseGeocode } from '@/lib/exif-utils';
 import { processImageForUpload } from '@/lib/image-processing';
+import {
+  getCachedSignedUrls,
+  setCachedSignedUrls,
+} from '@/lib/signed-url-cache';
+
+const SIGNED_URL_TTL_SECONDS = 3600; // 1 hour
+export const PHOTOS_PAGE_SIZE = 50;
 
 export function useChildren() {
   const { user } = useAuth();
@@ -35,6 +42,88 @@ export function useAddChild() {
   });
 }
 
+/**
+ * Sign a list of storage paths, reusing localStorage cache where possible.
+ * Returns a map path -> signed URL.
+ */
+async function signPathsWithCache(paths: string[]): Promise<Record<string, string>> {
+  if (paths.length === 0) return {};
+  const unique = Array.from(new Set(paths));
+  const { cached, missing } = getCachedSignedUrls(unique);
+
+  if (missing.length === 0) return cached;
+
+  const { data: signedData, error: signError } = await supabase.storage
+    .from('photos')
+    .createSignedUrls(missing, SIGNED_URL_TTL_SECONDS);
+
+  if (signError || !signedData) return cached;
+
+  const newEntries: { path: string; url: string }[] = [];
+  for (const s of signedData) {
+    if (s.signedUrl && s.path) {
+      cached[s.path] = s.signedUrl;
+      newEntries.push({ path: s.path, url: s.signedUrl });
+    }
+  }
+  if (newEntries.length > 0) {
+    setCachedSignedUrls(newEntries, SIGNED_URL_TTL_SECONDS);
+  }
+  return cached;
+}
+
+async function attachSignedUrls(rows: any[]): Promise<any[]> {
+  if (!rows || rows.length === 0) return rows ?? [];
+  const fullPaths = rows.map(p => p.storage_path).filter(Boolean);
+  const thumbPaths = rows
+    .map(p => p.thumbnail_path)
+    .filter((p): p is string => !!p);
+  const urlMap = await signPathsWithCache([...fullPaths, ...thumbPaths]);
+  return rows.map(p => ({
+    ...p,
+    signed_url: urlMap[p.storage_path] || '',
+    thumbnail_signed_url: p.thumbnail_path
+      ? urlMap[p.thumbnail_path] || urlMap[p.storage_path] || ''
+      : urlMap[p.storage_path] || '',
+  }));
+}
+
+/**
+ * Paginated photos with infinite scroll. Each page is sorted by taken_at DESC
+ * (newest first) so we can stream the most recent photos in first.
+ */
+export function usePhotosInfinite(childId?: string) {
+  const { user } = useAuth();
+  return useInfiniteQuery({
+    queryKey: ['photos', 'infinite', childId ?? 'all', user?.id],
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
+      const from = (pageParam as number) * PHOTOS_PAGE_SIZE;
+      const to = from + PHOTOS_PAGE_SIZE - 1;
+      let query = supabase
+        .from('photos')
+        .select('*, events(name, icon, color)')
+        .order('taken_at', { ascending: false })
+        .range(from, to);
+      if (childId) query = query.eq('child_id', childId);
+      const { data, error } = await query;
+      if (error) throw error;
+      const withUrls = await attachSignedUrls(data ?? []);
+      return { rows: withUrls, page: pageParam as number };
+    },
+    getNextPageParam: (lastPage) => {
+      // If we got a full page, there might be more.
+      if (lastPage.rows.length < PHOTOS_PAGE_SIZE) return undefined;
+      return (lastPage.page as number) + 1;
+    },
+    enabled: !!user,
+  });
+}
+
+/**
+ * Legacy non-paginated fetch. Kept for callers that still need the full list
+ * (e.g. duplicate finder). Prefer usePhotosInfinite for the timeline.
+ */
 export function usePhotos(childId?: string) {
   const { user } = useAuth();
   return useQuery({
@@ -47,34 +136,7 @@ export function usePhotos(childId?: string) {
       if (childId) query = query.eq('child_id', childId);
       const { data, error } = await query;
       if (error) throw error;
-
-      // Generate signed URLs for the private bucket (full + thumbnail)
-      if (data && data.length > 0) {
-        const fullPaths = data.map(p => p.storage_path);
-        const thumbPaths = data
-          .map(p => (p as any).thumbnail_path)
-          .filter((p): p is string => !!p);
-        const allPaths = Array.from(new Set([...fullPaths, ...thumbPaths]));
-
-        const { data: signedData, error: signError } = await supabase.storage
-          .from('photos')
-          .createSignedUrls(allPaths, 3600);
-        if (!signError && signedData) {
-          const urlMap: Record<string, string> = {};
-          signedData.forEach(s => {
-            if (s.signedUrl) urlMap[s.path] = s.signedUrl;
-          });
-          return data.map(p => ({
-            ...p,
-            signed_url: urlMap[p.storage_path] || '',
-            thumbnail_signed_url: (p as any).thumbnail_path
-              ? urlMap[(p as any).thumbnail_path] || urlMap[p.storage_path] || ''
-              : urlMap[p.storage_path] || '',
-          }));
-        }
-      }
-
-      return data;
+      return await attachSignedUrls(data ?? []);
     },
     enabled: !!user,
   });
@@ -313,6 +375,8 @@ export function useUploadPhoto() {
 
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['photos'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['photos'] });
+    },
   });
 }
