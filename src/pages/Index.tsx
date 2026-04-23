@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useChildren, usePhotos, useEvents, useTags } from '@/hooks/useData';
+import { useChildren, usePhotosInfinite, useEvents, useTags } from '@/hooks/useData';
 import { useUserRole } from '@/hooks/useUserRole';
 import { usePendingImports } from '@/hooks/useCloudSync';
 import { ChildSelector } from '@/components/ChildSelector';
@@ -10,7 +10,7 @@ import { ChildHeader } from '@/components/ChildHeader';
 import { PhotoUpload } from '@/components/PhotoUpload';
 import { AddChildDialog } from '@/components/AddChildDialog';
 import { Button } from '@/components/ui/button';
-import { LogOut, CheckSquare } from 'lucide-react';
+import { LogOut, CheckSquare, Loader2 } from 'lucide-react';
 import { FilterDropdown } from '@/components/FilterDropdown';
 import { NotificationBell } from '@/components/NotificationBell';
 import { AppSidebar } from '@/components/AppSidebar';
