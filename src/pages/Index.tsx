@@ -303,6 +303,11 @@ const Index = () => {
                   </>
                 )}
               </div>
+            ) : photosLoading ? (
+              <div className="text-center py-20 flex flex-col items-center gap-3">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <p className="text-muted-foreground">Cargando fotos...</p>
+              </div>
             ) : filteredPhotos.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-4xl mb-4">📷</p>
@@ -352,6 +357,20 @@ const Index = () => {
                     selectedIds={selectedPhotoIds}
                     onToggleSelect={toggleSelect}
                   />
+                )}
+
+                {/* Infinite scroll sentinel + loader */}
+                {hasNextPage && (
+                  <div ref={sentinelRef} className="flex justify-center py-10">
+                    {isFetchingNextPage ? (
+                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Cargando más fotos...
+                      </div>
+                    ) : (
+                      <div className="h-4" />
+                    )}
+                  </div>
                 )}
               </>
             )}
