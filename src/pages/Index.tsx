@@ -161,6 +161,22 @@ const Index = () => {
     [filteredPhotos, selectedPhotoIds]
   );
 
+  // Infinite scroll sentinel — load next page when it enters the viewport.
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node || !hasNextPage || isFetchingNextPage) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) fetchNextPage();
+      },
+      { rootMargin: '600px 0px' } // start loading well before user reaches the end
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
