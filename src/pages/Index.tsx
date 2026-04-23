@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useChildren, usePhotos, useEvents, useTags } from '@/hooks/useData';
+import { useChildren, usePhotosInfinite, useEvents, useTags } from '@/hooks/useData';
 import { useUserRole } from '@/hooks/useUserRole';
 import { usePendingImports } from '@/hooks/useCloudSync';
 import { ChildSelector } from '@/components/ChildSelector';
@@ -10,7 +10,7 @@ import { ChildHeader } from '@/components/ChildHeader';
 import { PhotoUpload } from '@/components/PhotoUpload';
 import { AddChildDialog } from '@/components/AddChildDialog';
 import { Button } from '@/components/ui/button';
-import { LogOut, CheckSquare } from 'lucide-react';
+import { LogOut, CheckSquare, Loader2 } from 'lucide-react';
 import { FilterDropdown } from '@/components/FilterDropdown';
 import { NotificationBell } from '@/components/NotificationBell';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -74,14 +74,22 @@ function mapTag(row: any): Tag {
 const Index = () => {
   const { signOut } = useAuth();
   const { data: childrenData, isLoading: childrenLoading } = useChildren();
-  const { data: photosData } = usePhotos();
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+
+  // Paginated photo fetch — first page (50 newest) lands fast, more load on scroll.
+  const {
+    data: photosPages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: photosLoading,
+  } = usePhotosInfinite(selectedChildId ?? undefined);
   const { data: eventsData } = useEvents();
   const { data: tagsData } = useTags();
   const { isGuest, canEdit } = useUserRole();
   const { data: pendingImportsData } = usePendingImports();
   const hasPendingImports = !isGuest && (pendingImportsData || []).length > 0;
 
-  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
@@ -92,7 +100,10 @@ const Index = () => {
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
 
   const children = useMemo(() => (childrenData || []).map(mapChild), [childrenData]);
-  const photos = useMemo(() => (photosData || []).map(mapPhoto), [photosData]);
+  const photos = useMemo(() => {
+    const allRows = (photosPages?.pages || []).flatMap(p => p.rows);
+    return allRows.map(mapPhoto);
+  }, [photosPages]);
   const events = useMemo(() => (eventsData || []).map(mapEvent), [eventsData]);
   const tags = useMemo(() => (tagsData || []).map(mapTag), [tagsData]);
 
@@ -149,6 +160,22 @@ const Index = () => {
     filteredPhotos.filter(p => selectedPhotoIds.has(p.id)),
     [filteredPhotos, selectedPhotoIds]
   );
+
+  // Infinite scroll sentinel — load next page when it enters the viewport.
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node || !hasNextPage || isFetchingNextPage) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) fetchNextPage();
+      },
+      { rootMargin: '600px 0px' } // start loading well before user reaches the end
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
 
   return (
     <SidebarProvider>
@@ -276,6 +303,11 @@ const Index = () => {
                   </>
                 )}
               </div>
+            ) : photosLoading ? (
+              <div className="text-center py-20 flex flex-col items-center gap-3">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <p className="text-muted-foreground">Cargando fotos...</p>
+              </div>
             ) : filteredPhotos.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-4xl mb-4">📷</p>
@@ -325,6 +357,20 @@ const Index = () => {
                     selectedIds={selectedPhotoIds}
                     onToggleSelect={toggleSelect}
                   />
+                )}
+
+                {/* Infinite scroll sentinel + loader */}
+                {hasNextPage && (
+                  <div ref={sentinelRef} className="flex justify-center py-10">
+                    {isFetchingNextPage ? (
+                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Cargando más fotos...
+                      </div>
+                    ) : (
+                      <div className="h-4" />
+                    )}
+                  </div>
                 )}
               </>
             )}

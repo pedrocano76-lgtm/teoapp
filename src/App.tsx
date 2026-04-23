@@ -8,6 +8,10 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import { pruneExpiredSignedUrls } from "@/lib/signed-url-cache";
+
+// Tidy up expired signed-URL cache entries once per app load.
+pruneExpiredSignedUrls();
 
 const queryClient = new QueryClient();
 

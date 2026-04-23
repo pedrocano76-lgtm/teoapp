@@ -113,7 +113,9 @@ export function PhotoCard({ photo, child, onClick, selectionMode, isSelected, on
         )}
       </div>
 
-      {!selectionMode && canEdit && (
+      {/* Only mount the edit dialog when actually opened. This avoids the N+1
+          usePhotoTags query firing for every photo card on mount. */}
+      {!selectionMode && canEdit && editOpen && (
         <PhotoEditDialog
           open={editOpen}
           onOpenChange={setEditOpen}
