@@ -141,7 +141,7 @@ serve(async (req) => {
           results.push({
             id: imp.id,
             success: false,
-            error: e instanceof Error ? e.message : "Unknown error",
+            error: "No se pudo importar esta foto",
           });
         }
       }
@@ -175,7 +175,7 @@ serve(async (req) => {
   } catch (e) {
     console.error("import-photo error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: "Error interno del servidor" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
