@@ -53,14 +53,42 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
   };
 
   const handleFilesSelected = async (selectedFiles: File[]) => {
-    setFiles(selectedFiles);
+    const MAX_FILE_SIZE_MB = 50;
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'];
+
+    // Validate files
+    const validFiles: File[] = [];
+    const rejected: { name: string; reason: string }[] = [];
+
+    for (const file of selectedFiles) {
+      if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+        rejected.push({ name: file.name, reason: 'supera 50MB' });
+      } else if (!ALLOWED_TYPES.includes(file.type)) {
+        rejected.push({ name: file.name, reason: 'tipo no permitido' });
+      } else {
+        validFiles.push(file);
+      }
+    }
+
+    if (rejected.length > 0) {
+      const list = rejected.map(r => `'${r.name}' (${r.reason})`).join(', ');
+      toast({
+        title: 'Archivos ignorados',
+        description: `${rejected.length} archivo${rejected.length > 1 ? 's' : ''} ignorado${rejected.length > 1 ? 's' : ''}: ${list}`,
+        variant: 'default',
+      });
+    }
+
+    if (validFiles.length === 0) return;
+
+    setFiles(validFiles);
     setNoExifFiles([]);
     setManualDate(undefined);
-    setUploadProgress(Object.fromEntries(selectedFiles.map(f => [f.name, 'pending'])));
+    setUploadProgress(Object.fromEntries(validFiles.map(f => [f.name, 'pending'])));
 
     // Check EXIF dates
     const missing: string[] = [];
-    for (const file of selectedFiles) {
+    for (const file of validFiles) {
       const exifDate = await getExifDate(file);
       if (!exifDate) {
         missing.push(file.name);
@@ -195,6 +223,9 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
                 </Button>
               )}
             </div>
+            <p className="text-xs text-muted-foreground">
+              JPG, PNG, HEIC o WEBP · Máx. 50MB por foto
+            </p>
           </div>
 
           {files.length > 0 && (
