@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TagSelector } from './TagSelector';
-import { CalendarIcon, AlertTriangle } from 'lucide-react';
+import { CalendarIcon, AlertTriangle, Loader2, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PhotoUploadProps {
@@ -32,6 +32,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [noExifFiles, setNoExifFiles] = useState<string[]>([]);
   const [manualDate, setManualDate] = useState<Date | undefined>(undefined);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, 'pending' | 'uploading' | 'done' | 'error'>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadPhoto = useUploadPhoto();
   const { toast } = useToast();
@@ -54,6 +55,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
     setFiles(selectedFiles);
     setNoExifFiles([]);
     setManualDate(undefined);
+    setUploadProgress(Object.fromEntries(selectedFiles.map(f => [f.name, 'pending'])));
 
     // Check EXIF dates
     const missing: string[] = [];
@@ -80,17 +82,24 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
       for (let i = 0; i < files.length; i += CONCURRENCY) {
         const batch = files.slice(i, i + CONCURRENCY);
         const results = await Promise.allSettled(
-          batch.map(file =>
-            uploadPhoto.mutateAsync({
-              file,
-              childId: selectedChild,
-              caption: caption || undefined,
-              takenAt: noExifFiles.includes(file.name) && manualDate ? manualDate : undefined,
-              eventId: selectedEventId || undefined,
-              tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
-              isShared,
-            })
-          )
+          batch.map(async (file) => {
+            setUploadProgress(prev => ({ ...prev, [file.name]: 'uploading' }));
+            try {
+              await uploadPhoto.mutateAsync({
+                file,
+                childId: selectedChild,
+                caption: caption || undefined,
+                takenAt: noExifFiles.includes(file.name) && manualDate ? manualDate : undefined,
+                eventId: selectedEventId || undefined,
+                tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+                isShared,
+              });
+              setUploadProgress(prev => ({ ...prev, [file.name]: 'done' }));
+            } catch (error) {
+              setUploadProgress(prev => ({ ...prev, [file.name]: 'error' }));
+              throw error;
+            }
+          })
         );
         completed += results.filter(r => r.status === 'fulfilled').length;
         failed += results.filter(r => r.status === 'rejected').length;
@@ -113,6 +122,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
       setIsShared(true);
       setNoExifFiles([]);
       setManualDate(undefined);
+      setUploadProgress({});
     } catch (error: any) {
       toast({ title: 'Error al subir', description: error.message, variant: 'destructive' });
     } finally {
@@ -121,6 +131,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
   };
 
   const childEvents = eventsData || [];
+  const completedCount = Object.values(uploadProgress).filter(status => status === 'done' || status === 'error').length;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -169,12 +180,27 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
           {files.length > 0 && (
             <div className="grid grid-cols-4 gap-2">
               {files.slice(0, 8).map((f, i) => (
-                <div key={i} className="aspect-square rounded-lg overflow-hidden bg-muted">
+                <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
                   <img
                     src={URL.createObjectURL(f)}
                     alt=""
                     className="w-full h-full object-cover"
                   />
+                  {uploadProgress[f.name] === 'uploading' && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/60">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    </div>
+                  )}
+                  {uploadProgress[f.name] === 'done' && (
+                    <div className="absolute bottom-1.5 right-1.5 rounded-full bg-success p-1 text-success-foreground shadow-sm">
+                      <Check className="h-3.5 w-3.5" />
+                    </div>
+                  )}
+                  {uploadProgress[f.name] === 'error' && (
+                    <div className="absolute bottom-1.5 right-1.5 rounded-full bg-destructive p-1 text-destructive-foreground shadow-sm">
+                      <X className="h-3.5 w-3.5" />
+                    </div>
+                  )}
                 </div>
               ))}
               {files.length > 8 && (
@@ -263,7 +289,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
             disabled={!selectedChild || files.length === 0 || uploading}
             className="w-full"
           >
-            {uploading ? 'Subiendo...' : `Subir ${files.length} foto${files.length !== 1 ? 's' : ''}`}
+            {uploading ? `Subiendo ${completedCount} de ${files.length}...` : `Subir ${files.length} foto${files.length !== 1 ? 's' : ''}`}
           </Button>
         </div>
       </DialogContent>
