@@ -34,6 +34,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
   const [manualDate, setManualDate] = useState<Date | undefined>(undefined);
   const [uploadProgress, setUploadProgress] = useState<Record<string, 'pending' | 'uploading' | 'done' | 'error'>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadPhoto = useUploadPhoto();
   const { toast } = useToast();
   const { data: eventsData } = useEvents(selectedChild || undefined);
@@ -168,13 +169,32 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
               className="hidden"
               onChange={(e) => handleFilesSelected(Array.from(e.target.files || []))}
             />
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {files.length > 0 ? `${files.length} archivo${files.length > 1 ? 's' : ''} seleccionado${files.length > 1 ? 's' : ''}` : 'Elegir fotos'}
-            </Button>
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => handleFilesSelected(Array.from(e.target.files || []))}
+            />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {files.length > 0 ? `${files.length} archivo${files.length > 1 ? 's' : ''} seleccionado${files.length > 1 ? 's' : ''}` : 'Elegir fotos'}
+              </Button>
+              {files.length === 0 && (
+                <Button
+                  variant="default"
+                  className="w-full sm:hidden"
+                  onClick={() => cameraInputRef.current?.click()}
+                >
+                  📷 Cámara
+                </Button>
+              )}
+            </div>
           </div>
 
           {files.length > 0 && (
