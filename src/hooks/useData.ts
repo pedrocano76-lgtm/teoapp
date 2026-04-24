@@ -314,12 +314,20 @@ export function useUploadPhoto() {
       // Extract location
       let locationLat: number | null = null;
       let locationLng: number | null = null;
-      let locationName: string | null = null;
       const loc = await getExifLocation(file);
       if (loc) {
         locationLat = loc.lat;
         locationLng = loc.lng;
-        locationName = await reverseGeocode(loc.lat, loc.lng);
+        // Geocoding en segundo plano, no esperamos
+        reverseGeocode(loc.lat, loc.lng).then(name => {
+          if (name && data?.id) {
+            supabase.from('photos')
+              .update({ location_name: name })
+              .eq('id', data.id)
+              .then(() => {})
+              .catch(() => {});
+          }
+        }).catch(() => {});
       }
 
       const ext = 'jpg'; // we always re-encode to JPEG
