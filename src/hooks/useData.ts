@@ -9,7 +9,7 @@ import {
 } from '@/lib/signed-url-cache';
 
 const SIGNED_URL_TTL_SECONDS = 3600; // 1 hour
-export const PHOTOS_PAGE_SIZE = 50;
+export const PHOTOS_PAGE_SIZE = 20;
 
 export function useChildren() {
   const { user } = useAuth();
