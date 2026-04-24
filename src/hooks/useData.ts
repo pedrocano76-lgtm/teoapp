@@ -361,7 +361,13 @@ export function useUploadPhoto() {
         })
         .select()
         .single();
-      if (error) throw error;
+      if (error) {
+        // Clean up orphaned files from Storage before throwing
+        const toRemove = [fullPath];
+        if (!thumbUpload.error) toRemove.push(thumbPath);
+        await supabase.storage.from('photos').remove(toRemove).catch(() => {});
+        throw error;
+      }
 
       // Geocoding en segundo plano (después de insertar, no bloquea)
       if (loc && data?.id) {
