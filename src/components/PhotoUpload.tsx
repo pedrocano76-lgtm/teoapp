@@ -192,7 +192,7 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
                     </div>
                   )}
                   {uploadProgress[f.name] === 'done' && (
-                    <div className="absolute bottom-1.5 right-1.5 rounded-full bg-emerald-500 p-1 text-primary-foreground shadow-sm">
+                    <div className="absolute bottom-1.5 right-1.5 rounded-full bg-success p-1 text-success-foreground shadow-sm">
                       <Check className="h-3.5 w-3.5" />
                     </div>
                   )}
