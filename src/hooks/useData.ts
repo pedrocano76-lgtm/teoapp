@@ -357,12 +357,23 @@ export function useUploadPhoto() {
           event_id: eventId || null,
           location_lat: locationLat,
           location_lng: locationLng,
-          location_name: locationName,
           is_shared: isShared ?? true,
         })
         .select()
         .single();
       if (error) throw error;
+
+      // Geocoding en segundo plano (después de insertar, no bloquea)
+      if (loc && data?.id) {
+        (async () => {
+          const name = await reverseGeocode(loc.lat, loc.lng);
+          if (name) {
+            await supabase.from('photos')
+              .update({ location_name: name })
+              .eq('id', data.id);
+          }
+        })().catch(() => {});
+      }
 
       if (tagIds && tagIds.length > 0 && data) {
         const { error: tagError } = await supabase
