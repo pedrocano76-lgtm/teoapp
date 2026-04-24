@@ -314,12 +314,10 @@ export function useUploadPhoto() {
       // Extract location
       let locationLat: number | null = null;
       let locationLng: number | null = null;
-      let locationName: string | null = null;
       const loc = await getExifLocation(file);
       if (loc) {
         locationLat = loc.lat;
         locationLng = loc.lng;
-        locationName = await reverseGeocode(loc.lat, loc.lng);
       }
 
       const ext = 'jpg'; // we always re-encode to JPEG
@@ -359,12 +357,23 @@ export function useUploadPhoto() {
           event_id: eventId || null,
           location_lat: locationLat,
           location_lng: locationLng,
-          location_name: locationName,
           is_shared: isShared ?? true,
         })
         .select()
         .single();
       if (error) throw error;
+
+      // Geocoding en segundo plano (después de insertar, no bloquea)
+      if (loc && data?.id) {
+        (async () => {
+          const name = await reverseGeocode(loc.lat, loc.lng);
+          if (name) {
+            await supabase.from('photos')
+              .update({ location_name: name })
+              .eq('id', data.id);
+          }
+        })().catch(() => {});
+      }
 
       if (tagIds && tagIds.length > 0 && data) {
         const { error: tagError } = await supabase
