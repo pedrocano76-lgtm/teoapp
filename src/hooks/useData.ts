@@ -318,16 +318,6 @@ export function useUploadPhoto() {
       if (loc) {
         locationLat = loc.lat;
         locationLng = loc.lng;
-        // Geocoding en segundo plano, no esperamos
-        reverseGeocode(loc.lat, loc.lng).then(name => {
-          if (name && data?.id) {
-            supabase.from('photos')
-              .update({ location_name: name })
-              .eq('id', data.id)
-              .then(() => {})
-              .catch(() => {});
-          }
-        }).catch(() => {});
       }
 
       const ext = 'jpg'; // we always re-encode to JPEG
