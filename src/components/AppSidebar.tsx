@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Baby, Settings, Users, LogOut, ChevronDown, Home, Cloud } from 'lucide-react';
+import { Baby, Settings, Users, LogOut, ChevronDown, Home, Cloud, Copy } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -26,9 +26,10 @@ interface AppSidebarProps {
   children: Child[];
   onSelectChild: (id: string | null) => void;
   selectedChildId: string | null;
+  duplicateFinderSlot?: ReactNode;
 }
 
-export function AppSidebar({ children: childrenList, onSelectChild, selectedChildId }: AppSidebarProps) {
+export function AppSidebar({ children: childrenList, onSelectChild, selectedChildId, duplicateFinderSlot }: AppSidebarProps) {
   const { user, signOut } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -37,7 +38,7 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
       <SidebarHeader className="p-4">
         <button onClick={() => onSelectChild(null)} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <span className="text-2xl">📸</span>
-          <span className="text-lg font-heading font-bold text-sidebar-foreground group-data-[collapsible=icon]:hidden">Little Moments</span>
+          <span className="text-lg font-heading font-bold text-sidebar-foreground group-data-[collapsible=icon]:hidden">Live Memories</span>
         </button>
       </SidebarHeader>
 
@@ -121,6 +122,11 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
             </CollapsibleTrigger>
             <CollapsibleContent>
               <SidebarGroupContent>
+                {duplicateFinderSlot && (
+                  <div className="px-2 pb-2 group-data-[collapsible=icon]:hidden">
+                    {duplicateFinderSlot}
+                  </div>
+                )}
                 <SettingsPanel />
               </SidebarGroupContent>
             </CollapsibleContent>

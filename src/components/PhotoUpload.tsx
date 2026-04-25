@@ -13,15 +13,16 @@ import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TagSelector } from './TagSelector';
-import { CalendarIcon, AlertTriangle, Loader2, Check, X } from 'lucide-react';
+import { CalendarIcon, AlertTriangle, Loader2, Check, X, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PhotoUploadProps {
   children: { id: string; name: string }[];
   defaultChildId?: string;
+  asFab?: boolean;
 }
 
-export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
+export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProps) {
   const [open, setOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState(defaultChildId || '');
   const [caption, setCaption] = useState('');
@@ -165,9 +166,19 @@ export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          📷 Añadir fotos
-        </Button>
+        {asFab ? (
+          <Button
+            size="icon"
+            className="h-14 w-14 rounded-full shadow-lg [&_svg]:size-6"
+            aria-label="Añadir fotos"
+          >
+            <Camera />
+          </Button>
+        ) : (
+          <Button className="gap-2">
+            📷 Añadir fotos
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
