@@ -89,6 +89,34 @@ async function attachSignedUrls(rows: any[]): Promise<any[]> {
 }
 
 /**
+ * Background prefetch of signed URLs for the next page. Fire-and-forget:
+ * fetches just storage paths and pre-warms the localStorage cache so that
+ * when the user scrolls, attachSignedUrls resolves instantly from cache.
+ */
+async function prefetchNextPageUrls(childId: string | undefined, nextPageIndex: number): Promise<void> {
+  try {
+    const from = nextPageIndex * PHOTOS_PAGE_SIZE;
+    const to = from + PHOTOS_PAGE_SIZE - 1;
+    let query = supabase
+      .from('photos')
+      .select('storage_path, thumbnail_path')
+      .order('taken_at', { ascending: false })
+      .range(from, to);
+    if (childId) query = query.eq('child_id', childId);
+    const { data, error } = await query;
+    if (error || !data) return;
+    const paths: string[] = [];
+    for (const row of data) {
+      if (row.storage_path) paths.push(row.storage_path);
+      if (row.thumbnail_path) paths.push(row.thumbnail_path);
+    }
+    if (paths.length > 0) await signPathsWithCache(paths);
+  } catch {
+    // Silently ignore — this is a background optimization
+  }
+}
+
+/**
  * Paginated photos with infinite scroll. Each page is sorted by taken_at DESC
  * (newest first) so we can stream the most recent photos in first.
  */
@@ -109,6 +137,8 @@ export function usePhotosInfinite(childId?: string) {
       const { data, error } = await query;
       if (error) throw error;
       const withUrls = await attachSignedUrls(data ?? []);
+      // Fire and forget — pre-warm cache for next page
+      prefetchNextPageUrls(childId, (pageParam as number) + 1).catch(() => {});
       return { rows: withUrls, page: pageParam as number };
     },
     getNextPageParam: (lastPage) => {
