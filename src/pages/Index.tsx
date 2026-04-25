@@ -195,24 +195,32 @@ const Index = () => {
         )}
 
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <header className="relative overflow-hidden">
-            <div className="absolute inset-0">
-              <img src={heroPattern} alt="" className="w-full h-full object-cover opacity-30" width={1920} height={1080} />
-              <div className="absolute inset-0 bg-gradient-to-b from-background/30 to-background" />
-            </div>
-            <div className="relative container mx-auto px-4 pt-6 pb-4">
-              <div className="flex items-center gap-3">
-                {!isGuest && <SidebarTrigger className="shrink-0" />}
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground truncate">Little Moments</h1>
-                  <p className="text-muted-foreground mt-0.5 text-sm md:text-base">Cada sonrisa, cada paso — atesorados para siempre ✨</p>
-                </div>
+          {/* Slim header */}
+          <header className="relative h-12 border-b border-border/50">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 opacity-100 pointer-events-none" />
+            <div className="relative h-full container mx-auto px-3 flex items-center gap-2">
+              <SidebarTrigger className="shrink-0 h-8 w-8" />
+              <h1 className="flex-1 text-center text-base font-heading font-semibold text-foreground truncate">
+                Live Memories
+              </h1>
+              <div className="flex items-center gap-1 shrink-0">
+                <FilterDropdown
+                  sortOrder={sortOrder}
+                  onSortChange={setSortOrder}
+                  tags={tags}
+                  selectedTagId={selectedTagId}
+                  onTagSelect={setSelectedTagId}
+                  events={filteredEvents}
+                  selectedEventId={selectedEventId}
+                  onEventSelect={setSelectedEventId}
+                  locations={uniqueLocations}
+                  selectedLocation={selectedLocation}
+                  onLocationSelect={setSelectedLocation}
+                />
                 {!isGuest && <NotificationBell />}
                 {isGuest && (
-                  <Button variant="ghost" size="sm" className="text-muted-foreground gap-1.5" onClick={signOut}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={signOut} aria-label="Salir">
                     <LogOut className="h-4 w-4" />
-                    <span className="hidden sm:inline">Salir</span>
                   </Button>
                 )}
               </div>
@@ -228,55 +236,16 @@ const Index = () => {
             />
           )}
 
-          {/* Controls */}
-          <div className="container mx-auto px-4 py-4 space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-wrap">
-                {children.length > 1 && (
-                  <ChildSelector
-                    children={children}
-                    selectedId={selectedChildId}
-                    onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagId(null); setSelectedLocation(null); }}
-                  />
-                )}
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {canEdit && children.length > 0 && (
-                  <PhotoUpload
-                    children={children.map(c => ({ id: c.id, name: c.name }))}
-                    defaultChildId={selectedChildId ?? undefined}
-                  />
-                )}
-                {canEdit && filteredPhotos.length > 0 && (
-                  <>
-                    <Button
-                      variant={selectionMode ? "default" : "outline"}
-                      size="sm"
-                      className="gap-1.5"
-                      onClick={() => selectionMode ? exitSelectionMode() : setSelectionMode(true)}
-                    >
-                      <CheckSquare className="h-3.5 w-3.5" />
-                      {selectionMode ? 'Cancelar selección' : 'Seleccionar'}
-                    </Button>
-                    <DuplicateFinder photos={filteredPhotos} children={children} />
-                  </>
-                )}
-                <FilterDropdown
-                  sortOrder={sortOrder}
-                  onSortChange={setSortOrder}
-                  tags={tags}
-                  selectedTagId={selectedTagId}
-                  onTagSelect={setSelectedTagId}
-                  events={filteredEvents}
-                  selectedEventId={selectedEventId}
-                  onEventSelect={setSelectedEventId}
-                  locations={uniqueLocations}
-                  selectedLocation={selectedLocation}
-                  onLocationSelect={setSelectedLocation}
-                />
-              </div>
+          {/* Compact child pill selector (multi-child only) */}
+          {children.length > 1 && (
+            <div className="container mx-auto px-3 pt-2">
+              <ChildSelector
+                children={children}
+                selectedId={selectedChildId}
+                onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagId(null); setSelectedLocation(null); }}
+              />
             </div>
-          </div>
+          )}
 
           {/* Content */}
           <main className="container mx-auto px-4 pb-16 flex-1">
