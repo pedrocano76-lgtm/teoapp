@@ -262,7 +262,7 @@ const Index = () => {
             ) : children.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-5xl mb-4">👶</p>
-                <h2 className="text-2xl font-heading font-bold text-foreground mb-2">¡Bienvenido a Little Moments!</h2>
+                <h2 className="text-2xl font-heading font-bold text-foreground mb-2">¡Bienvenido a Live Memories!</h2>
                 {isGuest ? (
                   <p className="text-muted-foreground mb-6">Aún no hay fotos compartidas contigo.</p>
                 ) : (
@@ -351,6 +351,17 @@ const Index = () => {
             </div>
           </footer>
         </div>
+
+        {/* Floating action button — upload */}
+        {canEdit && children.length > 0 && (
+          <div className="fixed bottom-6 right-4 z-50">
+            <PhotoUpload
+              children={children.map(c => ({ id: c.id, name: c.name }))}
+              defaultChildId={selectedChildId ?? undefined}
+              asFab
+            />
+          </div>
+        )}
       </div>
     </SidebarProvider>
   );
