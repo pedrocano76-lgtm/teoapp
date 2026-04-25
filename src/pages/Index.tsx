@@ -190,6 +190,11 @@ const Index = () => {
               exitSelectionMode();
             }}
             selectedChildId={selectedChildId}
+            duplicateFinderSlot={
+              canEdit && filteredPhotos.length > 0 ? (
+                <DuplicateFinder photos={filteredPhotos} children={children} />
+              ) : undefined
+            }
           />
         )}
 
