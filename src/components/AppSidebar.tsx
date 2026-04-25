@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Baby, Settings, Users, LogOut, ChevronDown, Home, Cloud } from 'lucide-react';
+import { Baby, Settings, Users, LogOut, ChevronDown, Home, Cloud, Copy } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -26,9 +26,10 @@ interface AppSidebarProps {
   children: Child[];
   onSelectChild: (id: string | null) => void;
   selectedChildId: string | null;
+  duplicateFinderSlot?: ReactNode;
 }
 
-export function AppSidebar({ children: childrenList, onSelectChild, selectedChildId }: AppSidebarProps) {
+export function AppSidebar({ children: childrenList, onSelectChild, selectedChildId, duplicateFinderSlot }: AppSidebarProps) {
   const { user, signOut } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
