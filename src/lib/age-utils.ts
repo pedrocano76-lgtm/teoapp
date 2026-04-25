@@ -9,22 +9,27 @@ export function getAge(birthDate: Date, atDate: Date = new Date()): string {
   const days = daysBetween(birthDate, atDate);
 
   if (days < 0) return 'Antes de nacer';
-  if (days < 7) return `${days} day${days !== 1 ? 's' : ''} old`;
+  if (days < 7) return `${days} ${days === 1 ? 'día' : 'días'}`;
   if (days < 30) {
     const weeks = Math.floor(days / 7);
-    return `${weeks} week${weeks !== 1 ? 's' : ''} old`;
+    return `${weeks} ${weeks === 1 ? 'semana' : 'semanas'}`;
   }
   if (days < 365) {
     const months = Math.floor(days / 30.44);
-    return `${months} month${months !== 1 ? 's' : ''} old`;
+    const remainingDays = days - Math.floor(months * 30.44);
+    const weeks = Math.floor(remainingDays / 7);
+    if (weeks > 0) {
+      return `${months} ${months === 1 ? 'mes' : 'meses'} y ${weeks} ${weeks === 1 ? 'semana' : 'semanas'}`;
+    }
+    return `${months} ${months === 1 ? 'mes' : 'meses'}`;
   }
 
   const years = Math.floor(days / 365.25);
   const remainingMonths = Math.floor((days - years * 365.25) / 30.44);
   if (remainingMonths > 0) {
-    return `${years} year${years !== 1 ? 's' : ''}, ${remainingMonths} month${remainingMonths !== 1 ? 's' : ''}`;
+    return `${years} ${years === 1 ? 'año' : 'años'} y ${remainingMonths} ${remainingMonths === 1 ? 'mes' : 'meses'}`;
   }
-  return `${years} year${years !== 1 ? 's' : ''} old`;
+  return `${years} ${years === 1 ? 'año' : 'años'}`;
 }
 
 export function getAgeMonths(birthDate: Date, atDate: Date = new Date()): number {
@@ -49,7 +54,7 @@ export function getTimelineGroupLabel(birthDate: Date, photoDate: Date): string 
   if (days < 0) return '⏳ Antes de nacer';
   if (days < 7) return '🍼 Primera semana';
   if (weeks < 4) return `🍼 Semana ${weeks + 1}`;
-  if (months < 24) return `🌱 ${months + 1} ${months === 0 ? 'mes' : 'meses'}`;
+  if (months < 24) return `🌱 ${months} ${months === 1 ? 'mes' : 'meses'}`;
   const years = Math.floor(months / 12);
   return `🎂 ${years} año${years !== 1 ? 's' : ''}`;
 }
