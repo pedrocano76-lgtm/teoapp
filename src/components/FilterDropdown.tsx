@@ -175,7 +175,7 @@ export function FilterDropdown({
             size="sm"
             className="w-full text-muted-foreground"
             onClick={() => {
-              onSortChange('asc');
+              onSortChange('desc');
               onTagSelect(null);
               onEventSelect(null);
               onLocationSelect(null);
