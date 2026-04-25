@@ -248,7 +248,7 @@ const Index = () => {
           )}
 
           {/* Content */}
-          <main className="container mx-auto px-4 pb-16 flex-1">
+          <main className="container mx-auto px-3 pt-2 pb-24 flex-1">
             {/* Pending cloud imports */}
             {hasPendingImports && (
               <div className="mb-8">
