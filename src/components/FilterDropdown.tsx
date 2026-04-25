@@ -28,7 +28,7 @@ export function FilterDropdown({
 }: FilterDropdownProps) {
   const [open, setOpen] = useState(false);
   const uniqueEvents = Array.from(new Map(events.map(e => [e.name, e])).values());
-  const hasFilters = selectedTagId || selectedEventId || selectedLocation || sortOrder === 'desc';
+  const hasFilters = selectedTagId || selectedEventId || selectedLocation || sortOrder === 'asc';
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -175,7 +175,7 @@ export function FilterDropdown({
             size="sm"
             className="w-full text-muted-foreground"
             onClick={() => {
-              onSortChange('asc');
+              onSortChange('desc');
               onTagSelect(null);
               onEventSelect(null);
               onLocationSelect(null);
