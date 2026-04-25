@@ -122,6 +122,11 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
             </CollapsibleTrigger>
             <CollapsibleContent>
               <SidebarGroupContent>
+                {duplicateFinderSlot && (
+                  <div className="px-2 pb-2 group-data-[collapsible=icon]:hidden">
+                    {duplicateFinderSlot}
+                  </div>
+                )}
                 <SettingsPanel />
               </SidebarGroupContent>
             </CollapsibleContent>
