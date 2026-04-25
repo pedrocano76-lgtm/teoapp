@@ -13,15 +13,16 @@ import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TagSelector } from './TagSelector';
-import { CalendarIcon, AlertTriangle, Loader2, Check, X } from 'lucide-react';
+import { CalendarIcon, AlertTriangle, Loader2, Check, X, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PhotoUploadProps {
   children: { id: string; name: string }[];
   defaultChildId?: string;
+  asFab?: boolean;
 }
 
-export function PhotoUpload({ children, defaultChildId }: PhotoUploadProps) {
+export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProps) {
   const [open, setOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState(defaultChildId || '');
   const [caption, setCaption] = useState('');
