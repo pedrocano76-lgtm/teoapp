@@ -98,6 +98,14 @@ const Index = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
 
+  // Show "Seleccionar" icon only when user is near the top of the page
+  const [atTop, setAtTop] = useState(true);
+  useEffect(() => {
+    const onScroll = () => setAtTop(window.scrollY < 80);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const children = useMemo(() => (childrenData || []).map(mapChild), [childrenData]);
   const photos = useMemo(() => {
     const allRows = (photosPages?.pages || []).flatMap(p => p.rows);
