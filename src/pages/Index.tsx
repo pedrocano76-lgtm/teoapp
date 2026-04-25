@@ -19,7 +19,6 @@ import { BulkActionsToolbar } from '@/components/BulkActionsToolbar';
 import { DuplicateFinder } from '@/components/DuplicateFinder';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { supabase } from '@/integrations/supabase/client';
-import heroPattern from '@/assets/hero-pattern.jpg';
 import type { Child, Photo, Event, Tag } from '@/lib/types';
 
 function mapChild(row: any): Child {
