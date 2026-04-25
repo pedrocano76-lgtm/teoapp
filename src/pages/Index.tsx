@@ -248,14 +248,29 @@ const Index = () => {
             />
           )}
 
-          {/* Compact child pill selector (multi-child only) */}
-          {children.length > 1 && (
-            <div className="container mx-auto px-3 pt-2">
-              <ChildSelector
-                children={children}
-                selectedId={selectedChildId}
-                onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagId(null); setSelectedLocation(null); }}
-              />
+          {/* Compact child pill selector + select toggle */}
+          {(children.length > 1 || (canEdit && filteredPhotos.length > 0)) && (
+            <div className="container mx-auto px-3 pt-2 flex items-center gap-2">
+              {children.length > 1 && (
+                <div className="flex-1 min-w-0 overflow-x-auto">
+                  <ChildSelector
+                    children={children}
+                    selectedId={selectedChildId}
+                    onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagId(null); setSelectedLocation(null); }}
+                  />
+                </div>
+              )}
+              {canEdit && filteredPhotos.length > 0 && (atTop || selectionMode) && (
+                <Button
+                  variant={selectionMode ? 'default' : 'ghost'}
+                  size="icon"
+                  className="h-8 w-8 shrink-0 ml-auto"
+                  onClick={() => selectionMode ? exitSelectionMode() : setSelectionMode(true)}
+                  aria-label={selectionMode ? 'Cancelar selección' : 'Seleccionar'}
+                >
+                  <CheckSquare className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           )}
 
