@@ -37,7 +37,7 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
       <SidebarHeader className="p-4">
         <button onClick={() => onSelectChild(null)} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <span className="text-2xl">📸</span>
-          <span className="text-lg font-heading font-bold text-sidebar-foreground group-data-[collapsible=icon]:hidden">Little Moments</span>
+          <span className="text-lg font-heading font-bold text-sidebar-foreground group-data-[collapsible=icon]:hidden">Live Memories</span>
         </button>
       </SidebarHeader>
 
