@@ -80,12 +80,12 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
             onTouchEnd={handleTouchEnd}
           >
             {/* Close & Edit */}
-            <div className="absolute top-3 right-3 z-50 flex gap-1">
+            <div className="absolute top-3 right-3 z-50 flex gap-2">
               {canEdit && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-white hover:text-white hover:bg-white/20"
+                  className="text-white bg-black/60 hover:bg-black/80 hover:text-white rounded-full p-2 shadow-md"
                   onClick={() => setEditOpen(true)}
                 >
                   <Pencil className="h-5 w-5" />
@@ -94,7 +94,7 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white hover:text-white hover:bg-white/20"
+                className="text-white bg-black/60 hover:bg-black/80 hover:text-white rounded-full p-2 shadow-md"
                 onClick={() => onOpenChange(false)}
               >
                 <X className="h-5 w-5" />
