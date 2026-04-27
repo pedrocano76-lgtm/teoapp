@@ -144,7 +144,17 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
     }
   };
 
-  const handleSave = async () => {
+  const handleSelectFromAlbum = async (storagePath: string) => {
+    if (!child) return;
+    try {
+      setProfilePhotoPath(storagePath);
+      await updateChild.mutateAsync({ childId: child.id, profilePhotoPath: storagePath });
+      setAlbumPickerOpen(false);
+      toast({ title: 'Foto actualizada' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
     if (!child) return;
     try {
       await updateChild.mutateAsync({
