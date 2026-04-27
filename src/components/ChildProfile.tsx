@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { format } from 'date-fns';
-import { CalendarIcon, Camera, Plus, Trash2, Loader2 } from 'lucide-react';
+import { CalendarIcon, Camera, Plus, Trash2, Loader2, Image as ImageIcon, Upload } from 'lucide-react';
 import { Child, ActivityType } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -12,6 +12,7 @@ import {
   useDeleteActivity,
   useBirthdayNotificationSettings,
   useUpdateBirthdayNotificationSettings,
+  usePhotosInfinite,
 } from '@/hooks/useData';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
