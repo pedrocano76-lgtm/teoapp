@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useChildren, usePhotosInfinite, useEvents, useTags } from '@/hooks/useData';
+import { useChildren, usePhotosInfinite, useEvents, useTags, useActivities } from '@/hooks/useData';
 import { useUserRole } from '@/hooks/useUserRole';
 import { usePendingImports } from '@/hooks/useCloudSync';
 import { ChildSelector } from '@/components/ChildSelector';
