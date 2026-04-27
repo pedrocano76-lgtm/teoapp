@@ -130,7 +130,7 @@ export function usePhotosInfinite(childId?: string) {
       const to = from + PHOTOS_PAGE_SIZE - 1;
       let query = supabase
         .from('photos')
-        .select('*, events(name, icon, color)')
+        .select('*, events(name, icon, color), photo_tags(tag_id, tags(id, name, icon, color, is_predefined))')
         .order('taken_at', { ascending: false })
         .range(from, to);
       if (childId) query = query.eq('child_id', childId);
