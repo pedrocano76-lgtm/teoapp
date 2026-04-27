@@ -4,6 +4,28 @@ export interface Child {
   birthDate: Date;
   avatarUrl?: string;
   color: 'primary' | 'sage' | 'lavender' | 'peach' | 'sky';
+  ownerId?: string;
+  fullName?: string;
+  profilePhotoPath?: string;
+}
+
+export type ActivityType = 'sport' | 'hobby' | 'other';
+
+export interface Activity {
+  id: string;
+  childId: string;
+  name: string;
+  type: ActivityType;
+  icon?: string;
+  createdAt: Date;
+}
+
+export interface BirthdayNotificationSettings {
+  id?: string;
+  userId: string;
+  childId: string;
+  notifySameDay: boolean;
+  notifyDayBefore: boolean;
 }
 
 export interface Photo {
