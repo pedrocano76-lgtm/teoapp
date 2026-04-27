@@ -288,7 +288,7 @@ const Index = () => {
                   <ChildSelector
                     children={children}
                     selectedId={selectedChildId}
-                    onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagId(null); setSelectedLocation(null); }}
+                    onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagId(null); setSelectedLocation(null); setSelectedActivityId(null); }}
                   />
                 </div>
               )}
