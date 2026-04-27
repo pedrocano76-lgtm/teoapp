@@ -87,6 +87,17 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
   const [notifSameDay, setNotifSameDay] = useState(true);
   const [notifDayBefore, setNotifDayBefore] = useState(false);
 
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
+  const [albumPickerOpen, setAlbumPickerOpen] = useState(false);
+
+  // Photos for "elegir del álbum" — only fetched when picker dialog opens
+  const { data: photosPages, isLoading: photosLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    usePhotosInfinite(albumPickerOpen ? child?.id : undefined);
+  const albumPhotos = useMemo(() => {
+    if (!albumPickerOpen) return [] as Array<{ id: string; storage_path: string; thumbnail_signed_url?: string; signed_url?: string }>;
+    return (photosPages?.pages || []).flatMap((p: any) => p.rows);
+  }, [photosPages, albumPickerOpen]);
+
   const updateChild = useUpdateChild();
   const uploadPhoto = useUploadChildProfilePhoto();
   const { data: signedPhotoUrl } = useSignedProfilePhotoUrl(profilePhotoPath);
