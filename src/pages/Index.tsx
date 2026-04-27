@@ -338,15 +338,34 @@ const Index = () => {
               </div>
             ) : filteredPhotos.length === 0 ? (
               <div className="text-center py-20">
-                <p className="text-4xl mb-4">📷</p>
-                <p className="text-muted-foreground text-lg">Aún no hay fotos</p>
-                {canEdit && (
+                {selectedActivity ? (
                   <>
-                    <p className="text-muted-foreground text-sm mt-1 mb-4">Sube tus primeras fotos para iniciar la línea de tiempo</p>
-                    <PhotoUpload
-                      children={children.map(c => ({ id: c.id, name: c.name }))}
-                      defaultChildId={selectedChildId ?? undefined}
-                    />
+                    <p className="text-4xl mb-4">{selectedActivity.icon || '🏷️'}</p>
+                    <p className="text-muted-foreground text-lg">
+                      No hay fotos etiquetadas con '{selectedActivity.name}' aún
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4"
+                      onClick={() => setSelectedActivityId(null)}
+                    >
+                      Quitar filtro
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-4xl mb-4">📷</p>
+                    <p className="text-muted-foreground text-lg">Aún no hay fotos</p>
+                    {canEdit && (
+                      <>
+                        <p className="text-muted-foreground text-sm mt-1 mb-4">Sube tus primeras fotos para iniciar la línea de tiempo</p>
+                        <PhotoUpload
+                          children={children.map(c => ({ id: c.id, name: c.name }))}
+                          defaultChildId={selectedChildId ?? undefined}
+                        />
+                      </>
+                    )}
                   </>
                 )}
               </div>
