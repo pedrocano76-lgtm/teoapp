@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useChildren, usePhotosInfinite, useEvents, useTags } from '@/hooks/useData';
+import { useChildren, usePhotosInfinite, useEvents, useTags, useActivities } from '@/hooks/useData';
 import { useUserRole } from '@/hooks/useUserRole';
 import { usePendingImports } from '@/hooks/useCloudSync';
 import { ChildSelector } from '@/components/ChildSelector';
@@ -35,6 +35,18 @@ function mapChild(row: any): Child {
 }
 
 function mapPhoto(row: any): Photo {
+  const tags: Tag[] = Array.isArray(row.photo_tags)
+    ? row.photo_tags
+        .map((pt: any) => pt.tags)
+        .filter(Boolean)
+        .map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          icon: t.icon,
+          color: t.color,
+          isPredefined: t.is_predefined,
+        }))
+    : [];
   return {
     id: row.id,
     url: row.signed_url || '',
@@ -49,6 +61,7 @@ function mapPhoto(row: any): Photo {
     storagePath: row.storage_path,
     thumbnailPath: row.thumbnail_path ?? null,
     isShared: row.is_shared ?? true,
+    tags,
   };
 }
 
@@ -95,7 +108,14 @@ const Index = () => {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  const { data: activitiesData = [] } = useActivities(selectedChildId ?? undefined);
+  const activities = activitiesData as Array<{ id: string; name: string; icon: string | null }>;
+  const selectedActivity = selectedActivityId
+    ? activities.find(a => a.id === selectedActivityId) ?? null
+    : null;
 
   // Selection mode
   const [selectionMode, setSelectionMode] = useState(false);
@@ -141,10 +161,16 @@ const Index = () => {
     if (selectedLocation) {
       result = result.filter(p => p.locationName === selectedLocation);
     }
+    if (selectedActivity) {
+      const activityName = selectedActivity.name.trim().toLowerCase();
+      result = result.filter(p =>
+        (p.tags || []).some(t => t.name.trim().toLowerCase() === activityName)
+      );
+    }
     return result.sort((a, b) =>
       sortOrder === 'asc' ? a.date.getTime() - b.date.getTime() : b.date.getTime() - a.date.getTime()
     );
-  }, [selectedChildId, selectedEventId, selectedLocation, sortOrder, photos, events]);
+  }, [selectedChildId, selectedEventId, selectedLocation, selectedActivity, sortOrder, photos, events]);
 
   const uniqueLocations = useMemo(() => {
     const locs = new Set<string>();
@@ -198,6 +224,7 @@ const Index = () => {
               setSelectedEventId(null);
               setSelectedTagId(null);
               setSelectedLocation(null);
+              setSelectedActivityId(null);
               exitSelectionMode();
             }}
             selectedChildId={selectedChildId}
@@ -230,6 +257,9 @@ const Index = () => {
                   locations={uniqueLocations}
                   selectedLocation={selectedLocation}
                   onLocationSelect={setSelectedLocation}
+                  selectedChildId={selectedChildId}
+                  selectedActivityId={selectedActivityId}
+                  onActivitySelect={setSelectedActivityId}
                 />
                 {!isGuest && <NotificationBell />}
                 {isGuest && (
@@ -258,7 +288,7 @@ const Index = () => {
                   <ChildSelector
                     children={children}
                     selectedId={selectedChildId}
-                    onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagId(null); setSelectedLocation(null); }}
+                    onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagId(null); setSelectedLocation(null); setSelectedActivityId(null); }}
                   />
                 </div>
               )}
@@ -308,15 +338,34 @@ const Index = () => {
               </div>
             ) : filteredPhotos.length === 0 ? (
               <div className="text-center py-20">
-                <p className="text-4xl mb-4">📷</p>
-                <p className="text-muted-foreground text-lg">Aún no hay fotos</p>
-                {canEdit && (
+                {selectedActivity ? (
                   <>
-                    <p className="text-muted-foreground text-sm mt-1 mb-4">Sube tus primeras fotos para iniciar la línea de tiempo</p>
-                    <PhotoUpload
-                      children={children.map(c => ({ id: c.id, name: c.name }))}
-                      defaultChildId={selectedChildId ?? undefined}
-                    />
+                    <p className="text-4xl mb-4">{selectedActivity.icon || '🏷️'}</p>
+                    <p className="text-muted-foreground text-lg">
+                      No hay fotos etiquetadas con '{selectedActivity.name}' aún
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4"
+                      onClick={() => setSelectedActivityId(null)}
+                    >
+                      Quitar filtro
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-4xl mb-4">📷</p>
+                    <p className="text-muted-foreground text-lg">Aún no hay fotos</p>
+                    {canEdit && (
+                      <>
+                        <p className="text-muted-foreground text-sm mt-1 mb-4">Sube tus primeras fotos para iniciar la línea de tiempo</p>
+                        <PhotoUpload
+                          children={children.map(c => ({ id: c.id, name: c.name }))}
+                          defaultChildId={selectedChildId ?? undefined}
+                        />
+                      </>
+                    )}
                   </>
                 )}
               </div>
