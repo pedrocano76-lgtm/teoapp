@@ -35,6 +35,18 @@ function mapChild(row: any): Child {
 }
 
 function mapPhoto(row: any): Photo {
+  const tags: Tag[] = Array.isArray(row.photo_tags)
+    ? row.photo_tags
+        .map((pt: any) => pt.tags)
+        .filter(Boolean)
+        .map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          icon: t.icon,
+          color: t.color,
+          isPredefined: t.is_predefined,
+        }))
+    : [];
   return {
     id: row.id,
     url: row.signed_url || '',
@@ -49,6 +61,7 @@ function mapPhoto(row: any): Photo {
     storagePath: row.storage_path,
     thumbnailPath: row.thumbnail_path ?? null,
     isShared: row.is_shared ?? true,
+    tags,
   };
 }
 
