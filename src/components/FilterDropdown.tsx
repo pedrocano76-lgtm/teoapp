@@ -218,6 +218,7 @@ export function FilterDropdown({
               onTagSelect(null);
               onEventSelect(null);
               onLocationSelect(null);
+              onActivitySelect?.(null);
             }}
           >
             Limpiar filtros
