@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { SlidersHorizontal, ArrowUpDown, MapPin } from 'lucide-react';
 import { Tag, Event } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { useActivities } from '@/hooks/useData';
 
 interface FilterDropdownProps {
   sortOrder: 'asc' | 'desc';
@@ -18,6 +19,9 @@ interface FilterDropdownProps {
   locations: string[];
   selectedLocation: string | null;
   onLocationSelect: (loc: string | null) => void;
+  selectedChildId?: string | null;
+  selectedActivityId?: string | null;
+  onActivitySelect?: (id: string | null) => void;
 }
 
 export function FilterDropdown({
@@ -25,10 +29,13 @@ export function FilterDropdown({
   tags, selectedTagId, onTagSelect,
   events, selectedEventId, onEventSelect,
   locations, selectedLocation, onLocationSelect,
+  selectedChildId, selectedActivityId, onActivitySelect,
 }: FilterDropdownProps) {
   const [open, setOpen] = useState(false);
   const uniqueEvents = Array.from(new Map(events.map(e => [e.name, e])).values());
-  const hasFilters = selectedTagId || selectedEventId || selectedLocation || sortOrder === 'asc';
+  const { data: activitiesData = [] } = useActivities(selectedChildId ?? undefined);
+  const activities = activitiesData as Array<{ id: string; name: string; type: string; icon: string | null }>;
+  const hasFilters = selectedTagId || selectedEventId || selectedLocation || selectedActivityId || sortOrder === 'asc';
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
