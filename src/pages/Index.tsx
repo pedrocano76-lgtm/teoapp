@@ -257,6 +257,9 @@ const Index = () => {
                   locations={uniqueLocations}
                   selectedLocation={selectedLocation}
                   onLocationSelect={setSelectedLocation}
+                  selectedChildId={selectedChildId}
+                  selectedActivityId={selectedActivityId}
+                  onActivitySelect={setSelectedActivityId}
                 />
                 {!isGuest && <NotificationBell />}
                 {isGuest && (
