@@ -108,7 +108,14 @@ const Index = () => {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  const { data: activitiesData = [] } = useActivities(selectedChildId ?? undefined);
+  const activities = activitiesData as Array<{ id: string; name: string; icon: string | null }>;
+  const selectedActivity = selectedActivityId
+    ? activities.find(a => a.id === selectedActivityId) ?? null
+    : null;
 
   // Selection mode
   const [selectionMode, setSelectionMode] = useState(false);
