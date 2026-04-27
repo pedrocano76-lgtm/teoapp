@@ -107,7 +107,39 @@ export function FilterDropdown({
           </div>
         )}
 
-        {/* Tags */}
+        {/* Activities */}
+        {selectedChildId && activities.length > 0 && onActivitySelect && (
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actividades</Label>
+            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+              <button
+                onClick={() => onActivitySelect(null)}
+                className={cn(
+                  'px-2.5 py-1 rounded-full text-xs font-medium transition-all',
+                  !selectedActivityId ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                )}
+              >
+                Todas
+              </button>
+              {activities.map(activity => (
+                <button
+                  key={activity.id}
+                  onClick={() => onActivitySelect(selectedActivityId === activity.id ? null : activity.id)}
+                  className={cn(
+                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all',
+                    selectedActivityId === activity.id
+                      ? 'bg-accent text-accent-foreground shadow-sm'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  )}
+                >
+                  {activity.icon && <span>{activity.icon}</span>}
+                  {activity.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {tags.length > 0 && (
           <div className="space-y-2">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Etiquetas</Label>
