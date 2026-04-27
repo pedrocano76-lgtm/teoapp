@@ -161,7 +161,7 @@ export function usePhotos(childId?: string) {
     queryFn: async () => {
       let query = supabase
         .from('photos')
-        .select('*, events(name, icon, color)')
+        .select('*, events(name, icon, color), photo_tags(tag_id, tags(id, name, icon, color, is_predefined))')
         .order('taken_at', { ascending: true });
       if (childId) query = query.eq('child_id', childId);
       const { data, error } = await query;
