@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { format } from 'date-fns';
-import { CalendarIcon, Camera, Plus, Trash2, Loader2 } from 'lucide-react';
+import { CalendarIcon, Camera, Plus, Trash2, Loader2, Image as ImageIcon, Upload } from 'lucide-react';
 import { Child, ActivityType } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -12,6 +12,7 @@ import {
   useDeleteActivity,
   useBirthdayNotificationSettings,
   useUpdateBirthdayNotificationSettings,
+  usePhotosInfinite,
 } from '@/hooks/useData';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -36,6 +37,13 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 interface ChildProfileProps {
   child: Child | null;
@@ -79,6 +87,17 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
   const [notifSameDay, setNotifSameDay] = useState(true);
   const [notifDayBefore, setNotifDayBefore] = useState(false);
 
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
+  const [albumPickerOpen, setAlbumPickerOpen] = useState(false);
+
+  // Photos for "elegir del álbum" — only fetched when picker dialog opens
+  const { data: photosPages, isLoading: photosLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    usePhotosInfinite(albumPickerOpen ? child?.id : undefined);
+  const albumPhotos = useMemo(() => {
+    if (!albumPickerOpen) return [] as Array<{ id: string; storage_path: string; thumbnail_signed_url?: string; signed_url?: string }>;
+    return (photosPages?.pages || []).flatMap((p: any) => p.rows);
+  }, [photosPages, albumPickerOpen]);
+
   const updateChild = useUpdateChild();
   const uploadPhoto = useUploadChildProfilePhoto();
   const { data: signedPhotoUrl } = useSignedProfilePhotoUrl(profilePhotoPath);
@@ -119,6 +138,18 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
       const path = await uploadPhoto.mutateAsync({ file, childId: child.id });
       setProfilePhotoPath(path);
       await updateChild.mutateAsync({ childId: child.id, profilePhotoPath: path });
+      toast({ title: 'Foto actualizada' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleSelectFromAlbum = async (storagePath: string) => {
+    if (!child) return;
+    try {
+      setProfilePhotoPath(storagePath);
+      await updateChild.mutateAsync({ childId: child.id, profilePhotoPath: storagePath });
+      setAlbumPickerOpen(false);
       toast({ title: 'Foto actualizada' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -191,31 +222,54 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
 
         {/* Profile photo */}
         <div className="flex flex-col items-center py-6">
-          <button
-            type="button"
-            onClick={() => canEdit && fileInputRef.current?.click()}
-            disabled={!canEdit || uploadPhoto.isPending}
-            className={cn(
-              'relative w-28 h-28 rounded-full overflow-hidden flex items-center justify-center text-3xl font-semibold shadow-sm',
-              colorBgMap[child.color],
-              canEdit && 'cursor-pointer hover:opacity-90 transition-opacity'
-            )}
-          >
-            {signedPhotoUrl ? (
-              <img src={signedPhotoUrl} alt={child.name} className="w-full h-full object-cover" />
-            ) : (
-              <span>{child.name[0]}</span>
-            )}
-            {canEdit && (
-              <span className="absolute bottom-0 right-0 bg-background border border-border rounded-full p-1.5 shadow-sm">
-                {uploadPhoto.isPending ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Camera className="h-3.5 w-3.5" />
+          <Popover open={photoMenuOpen} onOpenChange={setPhotoMenuOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                disabled={!canEdit || uploadPhoto.isPending}
+                className={cn(
+                  'relative w-28 h-28 rounded-full overflow-hidden flex items-center justify-center text-3xl font-semibold shadow-sm',
+                  colorBgMap[child.color],
+                  canEdit && 'cursor-pointer hover:opacity-90 transition-opacity'
                 )}
-              </span>
+              >
+                {signedPhotoUrl ? (
+                  <img src={signedPhotoUrl} alt={child.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span>{child.name[0]}</span>
+                )}
+                {canEdit && (
+                  <span className="absolute bottom-0 right-0 bg-background border border-border rounded-full p-1.5 shadow-sm">
+                    {uploadPhoto.isPending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Camera className="h-3.5 w-3.5" />
+                    )}
+                  </span>
+                )}
+              </button>
+            </PopoverTrigger>
+            {canEdit && (
+              <PopoverContent align="center" className="w-56 p-1">
+                <button
+                  type="button"
+                  onClick={() => { setPhotoMenuOpen(false); setAlbumPickerOpen(true); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-accent transition-colors text-left"
+                >
+                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                  Elegir del álbum
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPhotoMenuOpen(false); fileInputRef.current?.click(); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-accent transition-colors text-left"
+                >
+                  <Upload className="h-4 w-4 text-muted-foreground" />
+                  Subir foto nueva
+                </button>
+              </PopoverContent>
             )}
-          </button>
+          </Popover>
           <input
             ref={fileInputRef}
             type="file"
@@ -224,6 +278,69 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
             onChange={handlePhotoChange}
           />
         </div>
+
+        {/* Album picker dialog */}
+        <Dialog open={albumPickerOpen} onOpenChange={setAlbumPickerOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="font-heading">Elegir del álbum</DialogTitle>
+              <DialogDescription>
+                Selecciona una foto existente de {child.name} para usarla como foto de perfil.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="max-h-[60vh] overflow-y-auto">
+              {photosLoading ? (
+                <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Cargando fotos...
+                </div>
+              ) : albumPhotos.length === 0 ? (
+                <p className="text-center py-12 text-muted-foreground text-sm">
+                  Aún no hay fotos en el álbum.
+                </p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {albumPhotos.map((photo: any) => {
+                      const url = photo.thumbnail_signed_url || photo.signed_url;
+                      const isSelected = profilePhotoPath === photo.storage_path;
+                      return (
+                        <button
+                          key={photo.id}
+                          type="button"
+                          onClick={() => handleSelectFromAlbum(photo.storage_path)}
+                          className={cn(
+                            'relative aspect-square overflow-hidden rounded-lg border-2 transition-all hover:opacity-90',
+                            isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent'
+                          )}
+                        >
+                          {url ? (
+                            <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="w-full h-full bg-muted" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {hasNextPage && (
+                    <div className="flex justify-center pt-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => fetchNextPage()}
+                        disabled={isFetchingNextPage}
+                      >
+                        {isFetchingNextPage ? (
+                          <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> Cargando...</>
+                        ) : 'Cargar más'}
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Editable fields */}
         <div className="space-y-4">
