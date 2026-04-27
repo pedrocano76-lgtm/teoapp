@@ -425,3 +425,168 @@ export function useUploadPhoto() {
     },
   });
 }
+
+// ---------- Child profile / avatar ----------
+
+export function useUpdateChild() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      childId,
+      name,
+      fullName,
+      birthDate,
+      profilePhotoPath,
+    }: {
+      childId: string;
+      name?: string;
+      fullName?: string | null;
+      birthDate?: string;
+      profilePhotoPath?: string | null;
+    }) => {
+      const updates: any = {};
+      if (name !== undefined) updates.name = name;
+      if (fullName !== undefined) updates.full_name = fullName;
+      if (birthDate !== undefined) updates.birth_date = birthDate;
+      if (profilePhotoPath !== undefined) updates.profile_photo_path = profilePhotoPath;
+      const { error } = await supabase.from('children').update(updates).eq('id', childId);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['children'] }),
+  });
+}
+
+export function useUploadChildProfilePhoto() {
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({ file, childId }: { file: File; childId: string }) => {
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `profiles/${user!.id}/${childId}_${Date.now()}.${ext}`;
+      const { error } = await supabase.storage
+        .from('photos')
+        .upload(path, file, { contentType: file.type || 'image/jpeg', upsert: true, cacheControl: '31536000' });
+      if (error) throw error;
+      return path;
+    },
+  });
+}
+
+export function useSignedProfilePhotoUrl(path?: string | null) {
+  return useQuery({
+    queryKey: ['profile-photo-url', path],
+    queryFn: async () => {
+      if (!path) return null;
+      const { data, error } = await supabase.storage.from('photos').createSignedUrl(path, 3600);
+      if (error) return null;
+      return data.signedUrl;
+    },
+    enabled: !!path,
+  });
+}
+
+// ---------- Activities ----------
+
+export function useActivities(childId?: string) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['activities', childId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('activities')
+        .select('*')
+        .eq('child_id', childId!)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user && !!childId,
+  });
+}
+
+export function useAddActivity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      childId,
+      name,
+      type,
+      icon,
+    }: {
+      childId: string;
+      name: string;
+      type: 'sport' | 'hobby' | 'other';
+      icon?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from('activities')
+        .insert({ child_id: childId, name, type, icon: icon ?? null })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_d, vars) => queryClient.invalidateQueries({ queryKey: ['activities', vars.childId] }),
+  });
+}
+
+export function useDeleteActivity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ activityId }: { activityId: string; childId: string }) => {
+      const { error } = await supabase.from('activities').delete().eq('id', activityId);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => queryClient.invalidateQueries({ queryKey: ['activities', vars.childId] }),
+  });
+}
+
+// ---------- Birthday notification settings ----------
+
+export function useBirthdayNotificationSettings(childId?: string) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['birthday-notif', user?.id, childId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('birthday_notification_settings')
+        .select('*')
+        .eq('user_id', user!.id)
+        .eq('child_id', childId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user && !!childId,
+  });
+}
+
+export function useUpdateBirthdayNotificationSettings() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({
+      childId,
+      notifySameDay,
+      notifyDayBefore,
+    }: {
+      childId: string;
+      notifySameDay: boolean;
+      notifyDayBefore: boolean;
+    }) => {
+      const { error } = await supabase
+        .from('birthday_notification_settings')
+        .upsert(
+          {
+            user_id: user!.id,
+            child_id: childId,
+            notify_same_day: notifySameDay,
+            notify_day_before: notifyDayBefore,
+          },
+          { onConflict: 'user_id,child_id' }
+        );
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) =>
+      queryClient.invalidateQueries({ queryKey: ['birthday-notif', user?.id, vars.childId] }),
+  });
+}

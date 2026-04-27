@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Child } from '@/lib/types';
 import { getAge } from '@/lib/age-utils';
 import { cn } from '@/lib/utils';
+import { ChildProfile } from './ChildProfile';
+import { useSignedProfilePhotoUrl } from '@/hooks/useData';
 
 interface ChildHeaderProps {
   child: Child;
@@ -16,18 +19,34 @@ const avatarMap: Record<Child['color'], string> = {
 };
 
 export function ChildHeader({ child, photoCount }: ChildHeaderProps) {
+  const [open, setOpen] = useState(false);
+  const { data: photoUrl } = useSignedProfilePhotoUrl(child.profilePhotoPath);
+
   return (
-    <div className="flex items-center gap-2.5 py-2.5 mb-3 border-b border-border/60">
-      <div className={cn(
-        'w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0',
-        avatarMap[child.color]
-      )}>
-        {child.name[0]}
+    <>
+      <div className="flex items-center gap-2.5 py-2.5 mb-3 border-b border-border/60">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+        >
+          <div className={cn(
+            'w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0 overflow-hidden',
+            avatarMap[child.color]
+          )}>
+            {photoUrl ? (
+              <img src={photoUrl} alt={child.name} className="w-full h-full object-cover" />
+            ) : (
+              child.name[0]
+            )}
+          </div>
+          <span className="font-medium text-foreground text-sm tracking-tight">{child.name}</span>
+        </button>
+        <span className="text-xs text-muted-foreground truncate">
+          · {getAge(child.birthDate)} · {photoCount} {photoCount === 1 ? 'foto' : 'fotos'}
+        </span>
       </div>
-      <span className="font-medium text-foreground text-sm tracking-tight">{child.name}</span>
-      <span className="text-xs text-muted-foreground truncate">
-        · {getAge(child.birthDate)} · {photoCount} {photoCount === 1 ? 'foto' : 'fotos'}
-      </span>
-    </div>
+      <ChildProfile child={child} open={open} onOpenChange={setOpen} />
+    </>
   );
 }
