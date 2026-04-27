@@ -28,6 +28,9 @@ function mapChild(row: any): Child {
     birthDate: new Date(row.birth_date),
     avatarUrl: row.avatar_url ?? undefined,
     color: row.color as Child['color'],
+    ownerId: row.owner_id ?? undefined,
+    fullName: row.full_name ?? undefined,
+    profilePhotoPath: row.profile_photo_path ?? undefined,
   };
 }
 
