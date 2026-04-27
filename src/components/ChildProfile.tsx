@@ -155,6 +155,8 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
   };
+
+  const handleSave = async () => {
     if (!child) return;
     try {
       await updateChild.mutateAsync({
