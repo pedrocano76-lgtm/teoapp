@@ -161,10 +161,16 @@ const Index = () => {
     if (selectedLocation) {
       result = result.filter(p => p.locationName === selectedLocation);
     }
+    if (selectedActivity) {
+      const activityName = selectedActivity.name.trim().toLowerCase();
+      result = result.filter(p =>
+        (p.tags || []).some(t => t.name.trim().toLowerCase() === activityName)
+      );
+    }
     return result.sort((a, b) =>
       sortOrder === 'asc' ? a.date.getTime() - b.date.getTime() : b.date.getTime() - a.date.getTime()
     );
-  }, [selectedChildId, selectedEventId, selectedLocation, sortOrder, photos, events]);
+  }, [selectedChildId, selectedEventId, selectedLocation, selectedActivity, sortOrder, photos, events]);
 
   const uniqueLocations = useMemo(() => {
     const locs = new Set<string>();
