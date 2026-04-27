@@ -14,8 +14,14 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ['Playfair Display', 'serif'],
-        body: ['Nunito', 'sans-serif'],
+        heading: ['Fraunces', 'Inter', 'system-ui', 'serif'],
+        body: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+      },
+      boxShadow: {
+        xs: 'var(--shadow-xs)',
+        soft: 'var(--shadow-sm)',
+        elevated: 'var(--shadow-md)',
+        floating: 'var(--shadow-lg)',
       },
       colors: {
         border: "hsl(var(--border))",
