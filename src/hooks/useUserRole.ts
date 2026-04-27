@@ -17,9 +17,9 @@ export function useUserRole() {
 
       if (ownChildren && ownChildren.length > 0) return 'owner' as const;
 
-      // Check family_shares for this user
-      const { data: shares } = await supabase
-        .from('family_shares')
+      // Check memberships for this user (uses safe view that excludes invite_code)
+      const { data: shares } = await (supabase as any)
+        .from('my_family_memberships')
         .select('role')
         .eq('shared_with_user_id', user!.id);
 

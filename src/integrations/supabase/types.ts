@@ -493,7 +493,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      my_family_memberships: {
+        Row: {
+          can_edit: boolean | null
+          created_at: string | null
+          family_owner_id: string | null
+          id: string | null
+          relationship: string | null
+          role: string | null
+          shared_by: string | null
+          shared_with_email: string | null
+          shared_with_user_id: string | null
+        }
+        Insert: {
+          can_edit?: boolean | null
+          created_at?: string | null
+          family_owner_id?: string | null
+          id?: string | null
+          relationship?: string | null
+          role?: string | null
+          shared_by?: string | null
+          shared_with_email?: string | null
+          shared_with_user_id?: string | null
+        }
+        Update: {
+          can_edit?: boolean | null
+          created_at?: string | null
+          family_owner_id?: string | null
+          id?: string | null
+          relationship?: string | null
+          role?: string | null
+          shared_by?: string | null
+          shared_with_email?: string | null
+          shared_with_user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_access_child: { Args: { child_uuid: string }; Returns: boolean }
