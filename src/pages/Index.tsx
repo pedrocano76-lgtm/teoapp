@@ -224,6 +224,7 @@ const Index = () => {
               setSelectedEventId(null);
               setSelectedTagId(null);
               setSelectedLocation(null);
+              setSelectedActivityId(null);
               exitSelectionMode();
             }}
             selectedChildId={selectedChildId}
