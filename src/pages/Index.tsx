@@ -208,11 +208,10 @@ const Index = () => {
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Slim header */}
-          <header className="relative h-12 border-b border-border/50">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 opacity-100 pointer-events-none" />
-            <div className="relative h-full container mx-auto px-3 flex items-center gap-2">
+          <header className="sticky top-0 z-40 h-12 border-b border-border/60 glass">
+            <div className="h-full container mx-auto px-3 flex items-center gap-2">
               <SidebarTrigger className="shrink-0 h-8 w-8" />
-              <h1 className="flex-1 text-center text-base font-heading font-semibold text-foreground truncate">
+              <h1 className="flex-1 text-center text-[15px] font-heading font-semibold tracking-tight text-foreground truncate">
                 Live Memories
               </h1>
               <div className="flex items-center gap-1 shrink-0">

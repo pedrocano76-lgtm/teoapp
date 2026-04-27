@@ -119,11 +119,20 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-heading">Little Moments</CardTitle>
-          <CardDescription>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Soft ambient gradient — barely there */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-40 -left-40 w-[480px] h-[480px] rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -bottom-40 -right-32 w-[420px] h-[420px] rounded-full bg-sky/20 blur-3xl" />
+      </div>
+
+      <Card className="w-full max-w-md border-border/60 shadow-elevated rounded-2xl">
+        <CardHeader className="text-center pb-4">
+          <div className="mx-auto mb-3 h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-lg font-heading font-semibold">
+            ✦
+          </div>
+          <CardTitle className="text-3xl font-heading tracking-tight">Live Memories</CardTitle>
+          <CardDescription className="mt-1">
             {inviteCode
               ? '¡Te han invitado a un álbum familiar! Crea tu cuenta para unirte.'
               : isLogin
