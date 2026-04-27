@@ -14,15 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          child_id: string
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          type: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          type: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      birthday_notification_settings: {
+        Row: {
+          child_id: string
+          created_at: string
+          id: string
+          notify_day_before: boolean
+          notify_same_day: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          id?: string
+          notify_day_before?: boolean
+          notify_same_day?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          id?: string
+          notify_day_before?: boolean
+          notify_same_day?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "birthday_notification_settings_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       children: {
         Row: {
           avatar_url: string | null
           birth_date: string
           color: string
           created_at: string
+          full_name: string | null
           id: string
           name: string
           owner_id: string
+          profile_photo_path: string | null
           updated_at: string
         }
         Insert: {
@@ -30,9 +105,11 @@ export type Database = {
           birth_date: string
           color?: string
           created_at?: string
+          full_name?: string | null
           id?: string
           name: string
           owner_id: string
+          profile_photo_path?: string | null
           updated_at?: string
         }
         Update: {
@@ -40,9 +117,11 @@ export type Database = {
           birth_date?: string
           color?: string
           created_at?: string
+          full_name?: string | null
           id?: string
           name?: string
           owner_id?: string
+          profile_photo_path?: string | null
           updated_at?: string
         }
         Relationships: []
