@@ -13,7 +13,6 @@ import { LogOut, CheckSquare, Loader2 } from 'lucide-react';
 import { FilterDropdown } from '@/components/FilterDropdown';
 import { NotificationBell } from '@/components/NotificationBell';
 import { AppSidebar } from '@/components/AppSidebar';
-import { PendingImportsReview } from '@/components/PendingImportsReview';
 import { BulkActionsToolbar } from '@/components/BulkActionsToolbar';
 import { DuplicateFinder } from '@/components/DuplicateFinder';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
