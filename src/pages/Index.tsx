@@ -100,8 +100,6 @@ const Index = () => {
   const { data: eventsData } = useEvents();
   const { data: tagsData } = useTags();
   const { isGuest, canEdit } = useUserRole();
-  const { data: pendingImportsData } = usePendingImports();
-  const hasPendingImports = !isGuest && (pendingImportsData || []).length > 0;
 
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
