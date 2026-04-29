@@ -1,6 +1,6 @@
 import { useState, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Baby, Settings, Users, LogOut, ChevronDown, Home, Cloud, Copy } from 'lucide-react';
+import { Baby, Settings, Users, LogOut, ChevronDown, Home, Copy } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -19,7 +19,6 @@ import { AddChildDialog } from './AddChildDialog';
 import { ChildrenManager } from './ChildrenManager';
 import { SettingsPanel } from './SettingsPanel';
 import { FamilySection } from './FamilySection';
-import { CloudSyncSettings } from './CloudSyncSettings';
 import { Child } from '@/lib/types';
 
 interface AppSidebarProps {
@@ -92,24 +91,7 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
           </SidebarGroup>
         </Collapsible>
 
-        {/* Cloud Sync - only for specific family */}
-        {user?.email === 'pedrocano76@gmail.com' && (
-          <Collapsible>
-            <SidebarGroup>
-              <CollapsibleTrigger asChild>
-                <SidebarGroupLabel className="cursor-pointer flex items-center justify-between">
-                  <span className="flex items-center gap-1.5"><Cloud className="h-3.5 w-3.5" /> Nube</span>
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </SidebarGroupLabel>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarGroupContent>
-                  <CloudSyncSettings />
-                </SidebarGroupContent>
-              </CollapsibleContent>
-            </SidebarGroup>
-          </Collapsible>
-        )}
+
 
         {/* Settings */}
         <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>

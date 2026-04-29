@@ -2,7 +2,6 @@ import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useChildren, usePhotosInfinite, useEvents, useTags, useActivities } from '@/hooks/useData';
 import { useUserRole } from '@/hooks/useUserRole';
-import { usePendingImports } from '@/hooks/useCloudSync';
 import { ChildSelector } from '@/components/ChildSelector';
 import { Timeline } from '@/components/Timeline';
 import { AllChildrenTimeline } from '@/components/AllChildrenTimeline';
@@ -14,7 +13,6 @@ import { LogOut, CheckSquare, Loader2 } from 'lucide-react';
 import { FilterDropdown } from '@/components/FilterDropdown';
 import { NotificationBell } from '@/components/NotificationBell';
 import { AppSidebar } from '@/components/AppSidebar';
-import { PendingImportsReview } from '@/components/PendingImportsReview';
 import { BulkActionsToolbar } from '@/components/BulkActionsToolbar';
 import { DuplicateFinder } from '@/components/DuplicateFinder';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -102,8 +100,6 @@ const Index = () => {
   const { data: eventsData } = useEvents();
   const { data: tagsData } = useTags();
   const { isGuest, canEdit } = useUserRole();
-  const { data: pendingImportsData } = usePendingImports();
-  const hasPendingImports = !isGuest && (pendingImportsData || []).length > 0;
 
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
@@ -308,12 +304,6 @@ const Index = () => {
 
           {/* Content */}
           <main className="container mx-auto px-3 pt-2 pb-24 flex-1">
-            {/* Pending cloud imports */}
-            {hasPendingImports && (
-              <div className="mb-8">
-                <PendingImportsReview />
-              </div>
-            )}
             {childrenLoading ? (
               <div className="text-center py-20">
                 <p className="text-muted-foreground">Cargando...</p>
