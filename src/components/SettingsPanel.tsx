@@ -40,6 +40,13 @@ export function SettingsPanel() {
       if (data) {
         setEnabled(data.enabled);
         setFrequency(data.inactivity_days as Frequency);
+      } else {
+        // Crear fila por defecto para que el cron y el envío manual encuentren al usuario
+        await supabase.from('reminder_settings').insert({
+          user_id: auth.user.id,
+          enabled: true,
+          inactivity_days: 5,
+        });
       }
       setLoading(false);
     })();
