@@ -22,6 +22,16 @@ interface PhotoRow {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  let force = false;
+  let onlyUserId: string | null = null;
+  if (req.method === "POST") {
+    try {
+      const body = await req.json();
+      force = body?.force === true;
+      onlyUserId = typeof body?.user_id === "string" ? body.user_id : null;
+    } catch (_) { /* sin body */ }
+  }
+
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -33,11 +43,13 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // 1) Cargar todos los settings habilitados
-    const { data: settings, error: sErr } = await supabase
+    // 1) Cargar settings habilitados (filtrados si onlyUserId)
+    let q = supabase
       .from("reminder_settings")
       .select("user_id, inactivity_days, last_reminder_sent_at")
       .eq("enabled", true);
+    if (onlyUserId) q = q.eq("user_id", onlyUserId);
+    const { data: settings, error: sErr } = await q;
     if (sErr) throw sErr;
 
     const now = new Date();
@@ -45,8 +57,8 @@ Deno.serve(async (req) => {
 
     for (const s of settings ?? []) {
       try {
-        // No reenviar si ya se envió uno hace menos de inactivity_days
-        if (s.last_reminder_sent_at) {
+        // No reenviar si ya se envió uno hace menos de inactivity_days (salvo force)
+        if (!force && s.last_reminder_sent_at) {
           const diffDays = (now.getTime() - new Date(s.last_reminder_sent_at).getTime()) / 86400000;
           if (diffDays < s.inactivity_days) {
             results.push({ user_id: s.user_id, status: "skipped_recent" });
@@ -84,7 +96,7 @@ Deno.serve(async (req) => {
           ? Math.floor((now.getTime() - referenceDate.getTime()) / 86400000)
           : Infinity;
 
-        if (daysSince < s.inactivity_days) {
+        if (!force && daysSince < s.inactivity_days) {
           results.push({ user_id: s.user_id, status: "active" });
           continue;
         }

@@ -40,6 +40,13 @@ export function SettingsPanel() {
       if (data) {
         setEnabled(data.enabled);
         setFrequency(data.inactivity_days as Frequency);
+      } else {
+        // Crear fila por defecto para que el cron y el envío manual encuentren al usuario
+        await supabase.from('reminder_settings').insert({
+          user_id: auth.user.id,
+          enabled: true,
+          inactivity_days: 5,
+        });
       }
       setLoading(false);
     })();
@@ -71,7 +78,7 @@ export function SettingsPanel() {
 
   const sendTest = async () => {
     setSending(true);
-    const { error } = await supabase.functions.invoke('send-photo-reminders', { body: {} });
+    const { error } = await supabase.functions.invoke('send-photo-reminders', { body: { force: true } });
     setSending(false);
     if (error) toast.error('Error al enviar recordatorios');
     else toast.success('Recordatorios procesados');
