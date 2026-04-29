@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
           ? Math.floor((now.getTime() - referenceDate.getTime()) / 86400000)
           : Infinity;
 
-        if (daysSince < s.inactivity_days) {
+        if (!force && daysSince < s.inactivity_days) {
           results.push({ user_id: s.user_id, status: "active" });
           continue;
         }
