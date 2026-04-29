@@ -22,6 +22,16 @@ interface PhotoRow {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  let force = false;
+  let onlyUserId: string | null = null;
+  if (req.method === "POST") {
+    try {
+      const body = await req.json();
+      force = body?.force === true;
+      onlyUserId = typeof body?.user_id === "string" ? body.user_id : null;
+    } catch (_) { /* sin body */ }
+  }
+
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
