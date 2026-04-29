@@ -1,1 +1,4 @@
 project_id = "ccqmucxgsrgpgpsiwiqc"
+
+[functions.send-photo-reminders]
+verify_jwt = false
