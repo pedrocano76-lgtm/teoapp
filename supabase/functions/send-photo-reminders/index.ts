@@ -57,8 +57,8 @@ Deno.serve(async (req) => {
 
     for (const s of settings ?? []) {
       try {
-        // No reenviar si ya se envió uno hace menos de inactivity_days
-        if (s.last_reminder_sent_at) {
+        // No reenviar si ya se envió uno hace menos de inactivity_days (salvo force)
+        if (!force && s.last_reminder_sent_at) {
           const diffDays = (now.getTime() - new Date(s.last_reminder_sent_at).getTime()) / 86400000;
           if (diffDays < s.inactivity_days) {
             results.push({ user_id: s.user_id, status: "skipped_recent" });
