@@ -304,12 +304,6 @@ const Index = () => {
 
           {/* Content */}
           <main className="container mx-auto px-3 pt-2 pb-24 flex-1">
-            {/* Pending cloud imports */}
-            {hasPendingImports && (
-              <div className="mb-8">
-                <PendingImportsReview />
-              </div>
-            )}
             {childrenLoading ? (
               <div className="text-center py-20">
                 <p className="text-muted-foreground">Cargando...</p>
