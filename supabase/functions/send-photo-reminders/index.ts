@@ -43,11 +43,13 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // 1) Cargar todos los settings habilitados
-    const { data: settings, error: sErr } = await supabase
+    // 1) Cargar settings habilitados (filtrados si onlyUserId)
+    let q = supabase
       .from("reminder_settings")
       .select("user_id, inactivity_days, last_reminder_sent_at")
       .eq("enabled", true);
+    if (onlyUserId) q = q.eq("user_id", onlyUserId);
+    const { data: settings, error: sErr } = await q;
     if (sErr) throw sErr;
 
     const now = new Date();
