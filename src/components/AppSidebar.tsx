@@ -1,6 +1,6 @@
 import { useState, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Baby, Settings, Users, LogOut, ChevronDown, Home, Cloud, Copy } from 'lucide-react';
+import { Baby, Settings, Users, LogOut, ChevronDown, Home, Copy } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
