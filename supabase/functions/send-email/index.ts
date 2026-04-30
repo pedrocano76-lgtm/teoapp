@@ -77,6 +77,10 @@ Deno.serve(async (req) => {
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    console.log("send-email env check", {
+      hasLovableApiKey: !!LOVABLE_API_KEY,
+      hasResendApiKey: !!RESEND_API_KEY,
+    });
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurado");
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY no configurado");
 
