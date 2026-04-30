@@ -2,3 +2,6 @@ project_id = "ccqmucxgsrgpgpsiwiqc"
 
 [functions.send-photo-reminders]
 verify_jwt = false
+
+[functions.send-birthday-notifications]
+verify_jwt = false
