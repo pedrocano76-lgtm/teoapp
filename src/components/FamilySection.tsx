@@ -255,7 +255,9 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
         {lastInviteCode ? (
           <div className="space-y-3 text-center">
             <p className="text-sm text-muted-foreground">
-              ¡Invitación creada! Comparte este código:
+              {emailSent
+                ? `¡Invitación enviada por email a ${lastEmail}! También puedes compartir el enlace manualmente:`
+                : '¡Invitación creada! Comparte este código:'}
             </p>
             <div className="bg-muted rounded-lg p-4">
               <p className="text-2xl font-mono font-bold tracking-widest text-foreground">
