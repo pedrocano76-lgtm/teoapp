@@ -464,6 +464,7 @@ export type Database = {
     Functions: {
       can_access_child: { Args: { child_uuid: string }; Returns: boolean }
       can_edit_child: { Args: { child_uuid: string }; Returns: boolean }
+      is_guest_of_child: { Args: { child_uuid: string }; Returns: boolean }
       is_parent_of_child: { Args: { child_uuid: string }; Returns: boolean }
     }
     Enums: {
