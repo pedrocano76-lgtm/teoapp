@@ -228,6 +228,7 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
     setOpen(isOpen);
     if (!isOpen) {
       setLastInviteCode('');
+      setEmailSent(false);
       setCodeCopied(false);
     }
   };
