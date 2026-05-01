@@ -23,10 +23,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Disparar notificación de primer acceso (idempotente en backend)
+          setTimeout(() => {
+            supabase.functions.invoke('notify-share-access', { body: {} }).catch(() => {});
+          }, 0);
+        }
       }
     );
 
