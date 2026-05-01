@@ -3,7 +3,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Sun, Moon, Monitor, Bell, Mail } from 'lucide-react';
+import { Sun, Moon, Monitor, Bell, Mail, Cake } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -16,6 +16,7 @@ export function SettingsPanel() {
   const [frequency, setFrequency] = useState<Frequency>(5);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [testingBirthday, setTestingBirthday] = useState(false);
 
   const themeOptions = [
     { value: 'light' as const, label: 'Claro', icon: Sun },
@@ -84,6 +85,23 @@ export function SettingsPanel() {
     else toast.success('Recordatorios procesados');
   };
 
+  const testBirthdayEmails = async () => {
+    setTestingBirthday(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-birthday-notifications', { body: {} });
+      if (error) throw error;
+      const sent = (data as any)?.sent ?? 0;
+      const errs = (data as any)?.errors?.length ?? 0;
+      toast.success(`Cumpleaños procesados: ${sent} enviados${errs ? `, ${errs} errores` : ''}`);
+      console.log('birthday-notifications result', data);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(`Error: ${msg}`);
+    } finally {
+      setTestingBirthday(false);
+    }
+  };
+
   return (
     <div className="space-y-6 p-4">
       <div className="space-y-2">
@@ -148,6 +166,26 @@ export function SettingsPanel() {
             </Button>
           </>
         )}
+      </div>
+
+      <div className="space-y-2 border-t pt-4">
+        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+          <Cake className="h-3.5 w-3.5" />
+          Pruebas (temporal)
+        </Label>
+        <p className="text-xs text-muted-foreground">
+          Ejecuta manualmente la función de cumpleaños sin esperar al cron diario.
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full gap-2"
+          onClick={testBirthdayEmails}
+          disabled={testingBirthday}
+        >
+          <Cake className="h-3.5 w-3.5" />
+          {testingBirthday ? 'Procesando…' : 'Probar emails de cumpleaños'}
+        </Button>
       </div>
     </div>
   );
