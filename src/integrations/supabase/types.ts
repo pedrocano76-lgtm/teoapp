@@ -169,6 +169,7 @@ export type Database = {
           can_edit: boolean
           created_at: string
           family_owner_id: string
+          first_access_notified_at: string | null
           id: string
           invite_code: string | null
           relationship: string | null
@@ -181,6 +182,7 @@ export type Database = {
           can_edit?: boolean
           created_at?: string
           family_owner_id: string
+          first_access_notified_at?: string | null
           id?: string
           invite_code?: string | null
           relationship?: string | null
@@ -193,6 +195,7 @@ export type Database = {
           can_edit?: boolean
           created_at?: string
           family_owner_id?: string
+          first_access_notified_at?: string | null
           id?: string
           invite_code?: string | null
           relationship?: string | null

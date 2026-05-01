@@ -1,0 +1,1 @@
+ALTER TABLE public.family_shares ADD COLUMN IF NOT EXISTS first_access_notified_at timestamp with time zone;
