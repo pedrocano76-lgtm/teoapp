@@ -16,7 +16,6 @@ export function SettingsPanel() {
   const [frequency, setFrequency] = useState<Frequency>(5);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [testingBirthday, setTestingBirthday] = useState(false);
 
   const themeOptions = [
     { value: 'light' as const, label: 'Claro', icon: Sun },
