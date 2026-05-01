@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Auth: require a valid Supabase user JWT
+    // Auth: allow service-role calls (from other edge functions) to bypass user JWT check
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -31,18 +31,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } },
-    );
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: authErr } = await supabase.auth.getUser(token);
-    if (authErr || !userData?.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const isServiceRole = token === SERVICE_ROLE;
+
+    if (!isServiceRole) {
+      // Frontend call: validate user JWT
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } },
+      );
+      const { data: userData, error: authErr } = await supabase.auth.getUser(token);
+      if (authErr || !userData?.user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const body = await req.json().catch(() => null);
