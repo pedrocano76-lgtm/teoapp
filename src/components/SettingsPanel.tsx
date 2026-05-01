@@ -3,7 +3,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Sun, Moon, Monitor, Bell, Mail, Cake } from 'lucide-react';
+import { Sun, Moon, Monitor, Bell, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
