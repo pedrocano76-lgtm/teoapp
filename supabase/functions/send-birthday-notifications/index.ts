@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ ok: true, sent, skipped, errors, ranAt: now.toISOString() }),
+      JSON.stringify({ ok: true, testMode, sent, skipped, errors, ranAt: now.toISOString() }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
