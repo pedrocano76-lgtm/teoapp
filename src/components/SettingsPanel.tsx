@@ -85,6 +85,23 @@ export function SettingsPanel() {
     else toast.success('Recordatorios procesados');
   };
 
+  const testBirthdayEmails = async () => {
+    setTestingBirthday(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-birthday-notifications', { body: {} });
+      if (error) throw error;
+      const sent = (data as any)?.sent ?? 0;
+      const errs = (data as any)?.errors?.length ?? 0;
+      toast.success(`Cumpleaños procesados: ${sent} enviados${errs ? `, ${errs} errores` : ''}`);
+      console.log('birthday-notifications result', data);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(`Error: ${msg}`);
+    } finally {
+      setTestingBirthday(false);
+    }
+  };
+
   return (
     <div className="space-y-6 p-4">
       <div className="space-y-2">
