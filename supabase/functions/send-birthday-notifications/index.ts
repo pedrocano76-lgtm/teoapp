@@ -78,26 +78,44 @@ Deno.serve(async (req) => {
       const birth = new Date(child.birth_date + "T00:00:00Z");
       const isToday = isSameMonthDay(birth, today);
       const isTomorrow = isSameMonthDay(birth, tomorrow);
-      if (!isToday && !isTomorrow) {
+
+      if (!testMode && !isToday && !isTomorrow) {
         skipped++;
         continue;
       }
-      const when: "today" | "tomorrow" = isToday ? "today" : "tomorrow";
-      const referenceDate = isToday ? today : tomorrow;
+
+      // In test mode, force "today" semantics regardless of actual date
+      const when: "today" | "tomorrow" = testMode ? "today" : (isToday ? "today" : "tomorrow");
+      const referenceDate = testMode ? today : (isToday ? today : tomorrow);
       const age = calcAge(birth, referenceDate);
 
-      const { data: settings, error: settingsErr } = await admin
-        .from("birthday_notification_settings")
-        .select("user_id, notify_same_day, notify_day_before")
-        .eq("child_id", child.id);
-      if (settingsErr) {
-        errors.push({ childId: child.id, reason: settingsErr.message });
-        continue;
-      }
+      let userIds: string[] = [];
 
-      const userIds = (settings ?? [])
-        .filter((s) => (isToday ? s.notify_same_day : s.notify_day_before))
-        .map((s) => s.user_id);
+      if (testMode) {
+        // Send only to the child's owner, regardless of settings
+        const { data: childRow, error: ownerErr } = await admin
+          .from("children")
+          .select("owner_id")
+          .eq("id", child.id)
+          .maybeSingle();
+        if (ownerErr || !childRow?.owner_id) {
+          errors.push({ childId: child.id, reason: `owner lookup: ${ownerErr?.message ?? "no owner"}` });
+          continue;
+        }
+        userIds = [childRow.owner_id];
+      } else {
+        const { data: settings, error: settingsErr } = await admin
+          .from("birthday_notification_settings")
+          .select("user_id, notify_same_day, notify_day_before")
+          .eq("child_id", child.id);
+        if (settingsErr) {
+          errors.push({ childId: child.id, reason: settingsErr.message });
+          continue;
+        }
+        userIds = (settings ?? [])
+          .filter((s) => (isToday ? s.notify_same_day : s.notify_day_before))
+          .map((s) => s.user_id);
+      }
 
       for (const userId of userIds) {
         const { data: userRes, error: userErr } = await admin.auth.admin.getUserById(userId);
