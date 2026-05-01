@@ -168,25 +168,6 @@ export function SettingsPanel() {
         )}
       </div>
 
-      <div className="space-y-2 border-t pt-4">
-        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-          <Cake className="h-3.5 w-3.5" />
-          Pruebas (temporal)
-        </Label>
-        <p className="text-xs text-muted-foreground">
-          Ejecuta manualmente la función de cumpleaños sin esperar al cron diario.
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full gap-2"
-          onClick={testBirthdayEmails}
-          disabled={testingBirthday}
-        >
-          <Cake className="h-3.5 w-3.5" />
-          {testingBirthday ? 'Procesando…' : 'Probar emails de cumpleaños'}
-        </Button>
-      </div>
     </div>
   );
 }
