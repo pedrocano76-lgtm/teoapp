@@ -46,6 +46,20 @@ Deno.serve(async (req) => {
     const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
+    // Detect test mode from query string or JSON body
+    let testMode = false;
+    try {
+      const url = new URL(req.url);
+      if (url.searchParams.get("test") === "true") testMode = true;
+    } catch (_) { /* ignore */ }
+    if (!testMode && req.method === "POST") {
+      try {
+        const cloned = req.clone();
+        const body = await cloned.json().catch(() => null);
+        if (body && (body.test === true || body.test === "true")) testMode = true;
+      } catch (_) { /* ignore */ }
+    }
+
     const now = new Date();
     const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     const tomorrow = new Date(today);
