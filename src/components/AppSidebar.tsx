@@ -20,6 +20,7 @@ import { ChildrenManager } from './ChildrenManager';
 import { SettingsPanel } from './SettingsPanel';
 import { FamilySection } from './FamilySection';
 import { Child } from '@/lib/types';
+import { BrandLogo, BrandWordmark } from './Brand';
 
 interface AppSidebarProps {
   children: Child[];
@@ -36,8 +37,8 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
         <button onClick={() => onSelectChild(null)} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <span className="text-2xl">📸</span>
-          <span className="text-lg font-heading font-bold text-sidebar-foreground group-data-[collapsible=icon]:hidden">Live Memories</span>
+          <BrandLogo size={26} />
+          <BrandWordmark className="text-lg group-data-[collapsible=icon]:hidden" style={{ fontSize: 18, lineHeight: 1 }} />
         </button>
       </SidebarHeader>
 
