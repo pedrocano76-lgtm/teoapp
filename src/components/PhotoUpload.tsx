@@ -176,7 +176,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
           </Button>
         ) : (
           <Button className="gap-2">
-            📷 Añadir fotos
+            <Camera className="h-4 w-4" /> Añadir fotos
           </Button>
         )}
       </DialogTrigger>
@@ -227,10 +227,10 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
               {files.length === 0 && (
                 <Button
                   variant="default"
-                  className="w-full sm:hidden"
+                  className="w-full sm:hidden gap-2"
                   onClick={() => cameraInputRef.current?.click()}
                 >
-                  📷 Cámara
+                  <Camera className="h-4 w-4" /> Cámara
                 </Button>
               )}
             </div>
