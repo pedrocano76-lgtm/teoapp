@@ -6,52 +6,52 @@
 
 @layer base {
   :root {
-    /* Minimal Apple-like — near-white surfaces, deep neutral text, single soft coral accent */
-    --background: 0 0% 99%;
-    --foreground: 220 13% 12%;
+    /* memorydrawer — warm cream + terracotta */
+    --background: 37 39% 94%;
+    --foreground: 26 30% 22%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 13% 12%;
+    --card-foreground: 26 30% 22%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 13% 12%;
+    --popover-foreground: 26 30% 22%;
 
-    /* Soft coral accent */
-    --primary: 8 75% 62%;
+    /* Terracotta accent */
+    --primary: 23 50% 57%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 13% 20%;
+    --secondary: 29 41% 88%;
+    --secondary-foreground: 30 36% 35%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 29 41% 92%;
+    --muted-foreground: 30 15% 42%;
 
-    --accent: 220 14% 96%;
-    --accent-foreground: 220 13% 20%;
+    --accent: 29 41% 88%;
+    --accent-foreground: 30 36% 35%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --success: 145 55% 42%;
+    --success: 120 30% 33%;
     --success-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 8 75% 62%;
+    --border: 36 24% 84%;
+    --input: 36 24% 84%;
+    --ring: 23 50% 57%;
 
-    --radius: 1rem;
+    --radius: 0.625rem;
 
-    --sidebar-background: 0 0% 99%;
-    --sidebar-foreground: 220 9% 35%;
-    --sidebar-primary: 8 75% 62%;
+    --sidebar-background: 29 41% 88%;
+    --sidebar-foreground: 26 30% 22%;
+    --sidebar-primary: 23 50% 57%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 220 13% 20%;
-    --sidebar-border: 220 13% 93%;
-    --sidebar-ring: 8 75% 62%;
+    --sidebar-accent: 37 39% 94%;
+    --sidebar-accent-foreground: 26 30% 22%;
+    --sidebar-border: 36 24% 84%;
+    --sidebar-ring: 23 50% 57%;
 
     /* Subtle child color tokens — used as muted dots/avatars */
-    --sage: 152 30% 70%;
-    --sage-foreground: 152 30% 22%;
+    --sage: 122 18% 62%;
+    --sage-foreground: 120 30% 25%;
     --lavender: 250 35% 78%;
     --lavender-foreground: 250 30% 25%;
     --peach: 18 75% 78%;
@@ -59,14 +59,18 @@
     --sky: 205 60% 75%;
     --sky-foreground: 205 50% 22%;
 
-    --font-heading: 'Fraunces', 'Inter', system-ui, -apple-system, serif;
-    --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-heading: Georgia, 'Times New Roman', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
     /* Soft elevation tokens */
-    --shadow-xs: 0 1px 2px 0 hsl(220 13% 12% / 0.04);
-    --shadow-sm: 0 1px 3px 0 hsl(220 13% 12% / 0.06), 0 1px 2px -1px hsl(220 13% 12% / 0.04);
-    --shadow-md: 0 4px 16px -4px hsl(220 13% 12% / 0.08);
-    --shadow-lg: 0 12px 32px -8px hsl(220 13% 12% / 0.12);
+    --shadow-xs: 0 1px 2px 0 hsl(26 30% 22% / 0.04);
+    --shadow-sm: 0 1px 3px 0 hsl(26 30% 22% / 0.06), 0 1px 2px -1px hsl(26 30% 22% / 0.04);
+    --shadow-md: 0 4px 16px -4px hsl(26 30% 22% / 0.08);
+    --shadow-lg: 0 12px 32px -8px hsl(26 30% 22% / 0.12);
+
+    /* Activity tag green tokens */
+    --tag-green-bg: 120 18% 92%;
+    --tag-green-fg: 120 30% 33%;
   }
 
   .dark {
