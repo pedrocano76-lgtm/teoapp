@@ -345,7 +345,14 @@ const Index = () => {
                   </>
                 ) : (
                   <>
-                    <p className="text-4xl mb-4">📷</p>
+                    <div className="mx-auto mb-4 inline-flex items-center justify-center" style={{ width: 48, height: 48, borderRadius: 6, background: '#C8845A' }}>
+                      <svg width="32" height="32" viewBox="0 0 22 22" fill="none">
+                        <rect x="2" y="5" width="18" height="13" rx="2" stroke="white" strokeWidth="1.6" />
+                        <line x1="2" y1="9" x2="20" y2="9" stroke="white" strokeWidth="1.6" />
+                        <line x1="7" y1="5" x2="7" y2="9" stroke="white" strokeWidth="1.6" />
+                        <circle cx="11" cy="14" r="2" fill="white" />
+                      </svg>
+                    </div>
                     <p className="text-muted-foreground text-lg">Aún no hay fotos</p>
                     {canEdit && (
                       <>
