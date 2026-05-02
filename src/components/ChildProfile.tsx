@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { CalendarIcon, Camera, Plus, Trash2, Loader2, Image as ImageIcon, Upload } from 'lucide-react';
 import { Child, ActivityType } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
@@ -376,7 +377,7 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {birthDate ? format(birthDate, 'PPP') : <span>Selecciona una fecha</span>}
+                  {birthDate ? format(birthDate, 'PPP', { locale: es }) : <span>Selecciona una fecha</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
