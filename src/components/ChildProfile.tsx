@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { useLocale } from '@/hooks/useLocale';
 import { CalendarIcon, Camera, Plus, Trash2, Loader2, Image as ImageIcon, Upload } from 'lucide-react';
 import { Child, ActivityType } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
