@@ -218,9 +218,9 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="font-heading">Perfil de {child.name}</SheetTitle>
+          <SheetTitle className="font-heading">{t('child.profileTitle', { name: child.name })}</SheetTitle>
           <SheetDescription>
-            {canEdit ? 'Edita los detalles, actividades y notificaciones.' : 'Información del perfil y notificaciones.'}
+            {canEdit ? t('child.profileDescEdit') : t('child.profileDescView')}
           </SheetDescription>
         </SheetHeader>
 
@@ -380,7 +380,7 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {birthDate ? format(birthDate, 'PPP', { locale: es }) : <span>Selecciona una fecha</span>}
+                  {birthDate ? format(birthDate, 'PPP', { locale: dateFnsLocale }) : <span>{t('child.selectDate')}</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -414,7 +414,7 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{a.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {activityTypeLabels[a.type as ActivityType]}
+                    {t(activityTypeKey[a.type as ActivityType])}
                   </p>
                 </div>
                 {canEdit && (
