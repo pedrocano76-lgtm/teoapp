@@ -1,4 +1,5 @@
 import { useState, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { Baby, Settings, Users, LogOut, ChevronDown, Home, Copy } from 'lucide-react';
 import {
@@ -31,6 +32,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ children: childrenList, onSelectChild, selectedChildId, duplicateFinderSlot }: AppSidebarProps) {
   const { user, signOut } = useAuth();
+  const { t } = useTranslation();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
@@ -49,7 +51,7 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
             <SidebarMenuItem>
               <SidebarMenuButton onClick={() => onSelectChild(null)} isActive={!selectedChildId}>
                 <Home className="h-4 w-4" />
-                <span>Inicio</span>
+                <span>{t('nav.home')}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -60,7 +62,7 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
           <SidebarGroup>
             <CollapsibleTrigger asChild>
               <SidebarGroupLabel className="cursor-pointer flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Familia</span>
+                <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {t('nav.family')}</span>
                 <ChevronDown className="h-3.5 w-3.5" />
               </SidebarGroupLabel>
             </CollapsibleTrigger>
@@ -77,7 +79,7 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
           <SidebarGroup>
             <CollapsibleTrigger asChild>
               <SidebarGroupLabel className="cursor-pointer flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><Baby className="h-3.5 w-3.5" /> Hijos</span>
+                <span className="flex items-center gap-1.5"><Baby className="h-3.5 w-3.5" /> {t('nav.children')}</span>
                 <ChevronDown className="h-3.5 w-3.5" />
               </SidebarGroupLabel>
             </CollapsibleTrigger>
@@ -99,7 +101,7 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
           <SidebarGroup>
             <CollapsibleTrigger asChild>
               <SidebarGroupLabel className="cursor-pointer flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><Settings className="h-3.5 w-3.5" /> Configuración</span>
+                <span className="flex items-center gap-1.5"><Settings className="h-3.5 w-3.5" /> {t('nav.settings')}</span>
                 <ChevronDown className="h-3.5 w-3.5" />
               </SidebarGroupLabel>
             </CollapsibleTrigger>
@@ -123,7 +125,7 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
         </div>
         <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground" onClick={signOut}>
           <LogOut className="h-4 w-4" />
-          <span className="group-data-[collapsible=icon]:hidden">Cerrar sesión</span>
+          <span className="group-data-[collapsible=icon]:hidden">{t('nav.signOut')}</span>
         </Button>
       </SidebarFooter>
     </Sidebar>
