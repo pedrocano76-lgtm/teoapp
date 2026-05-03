@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/hooks/useTheme';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { toast } from 'sonner';
 type Frequency = 3 | 5 | 7;
 
 export function SettingsPanel() {
+  const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
   const [enabled, setEnabled] = useState(true);
   const [frequency, setFrequency] = useState<Frequency>(5);
@@ -18,9 +20,9 @@ export function SettingsPanel() {
   const [sending, setSending] = useState(false);
 
   const themeOptions = [
-    { value: 'light' as const, label: 'Claro', icon: Sun },
-    { value: 'dark' as const, label: 'Oscuro', icon: Moon },
-    { value: 'system' as const, label: 'Sistema', icon: Monitor },
+    { value: 'light' as const, label: t('settings.themeLight'), icon: Sun },
+    { value: 'dark' as const, label: t('settings.themeDark'), icon: Moon },
+    { value: 'system' as const, label: t('settings.themeSystem'), icon: Monitor },
   ];
 
   const freqOptions: Frequency[] = [3, 5, 7];
@@ -41,7 +43,6 @@ export function SettingsPanel() {
         setEnabled(data.enabled);
         setFrequency(data.inactivity_days as Frequency);
       } else {
-        // Crear fila por defecto para que el cron y el envío manual encuentren al usuario
         await supabase.from('reminder_settings').insert({
           user_id: auth.user.id,
           enabled: true,
@@ -63,7 +64,7 @@ export function SettingsPanel() {
     const { error } = await supabase
       .from('reminder_settings')
       .upsert(payload, { onConflict: 'user_id' });
-    if (error) toast.error('No se pudo guardar');
+    if (error) toast.error(t('settings.saveError'));
   };
 
   const onToggle = (val: boolean) => {
@@ -80,13 +81,13 @@ export function SettingsPanel() {
     setSending(true);
     const { error } = await supabase.functions.invoke('send-photo-reminders', { body: { force: true } });
     setSending(false);
-    if (error) toast.error('Error al enviar recordatorios');
-    else toast.success('Recordatorios procesados');
+    if (error) toast.error(t('settings.remindersError'));
+    else toast.success(t('settings.remindersOk'));
   };
   return (
     <div className="space-y-6 p-4">
       <div className="space-y-2">
-        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tema</Label>
+        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('settings.theme')}</Label>
         <div className="flex gap-2">
           {themeOptions.map(opt => (
             <Button
@@ -107,18 +108,18 @@ export function SettingsPanel() {
         <div className="flex items-center justify-between">
           <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
             <Bell className="h-3.5 w-3.5" />
-            Recordatorios por email
+            {t('settings.emailReminders')}
           </Label>
           <Switch checked={enabled} onCheckedChange={onToggle} disabled={loading} />
         </div>
         <p className="text-xs text-muted-foreground">
-          Te avisamos cuando lleves varios días sin añadir fotos.
+          {t('settings.emailRemindersDesc')}
         </p>
 
         {enabled && (
           <>
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Frecuencia (días sin actividad)</Label>
+              <Label className="text-xs text-muted-foreground">{t('settings.frequency')}</Label>
               <div className="flex gap-2">
                 {freqOptions.map(d => (
                   <Button
@@ -129,7 +130,7 @@ export function SettingsPanel() {
                     onClick={() => onFrequency(d)}
                     disabled={loading}
                   >
-                    {d} días
+                    {t('settings.days', { count: d })}
                   </Button>
                 ))}
               </div>
@@ -143,7 +144,7 @@ export function SettingsPanel() {
               disabled={sending}
             >
               <Mail className="h-3.5 w-3.5" />
-              {sending ? 'Procesando…' : 'Probar ahora'}
+              {sending ? t('settings.processing') : t('settings.testNow')}
             </Button>
           </>
         )}
