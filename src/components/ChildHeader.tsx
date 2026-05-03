@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Child } from '@/lib/types';
 import { getAge } from '@/lib/age-utils';
 import { cn } from '@/lib/utils';
@@ -20,6 +21,7 @@ const avatarMap: Record<Child['color'], string> = {
 
 export function ChildHeader({ child, photoCount }: ChildHeaderProps) {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
   const { data: photoUrl } = useSignedProfilePhotoUrl(child.profilePhotoPath);
 
   return (
@@ -43,7 +45,7 @@ export function ChildHeader({ child, photoCount }: ChildHeaderProps) {
           <span className="font-medium text-foreground text-sm tracking-tight">{child.name}</span>
         </button>
         <span className="text-xs text-muted-foreground truncate">
-          · {getAge(child.birthDate)} · {photoCount} {photoCount === 1 ? 'foto' : 'fotos'}
+          · {getAge(child.birthDate)} · {t('age.photo' + (photoCount === 1 ? '_one' : '_other'), { count: photoCount, defaultValue: photoCount === 1 ? `${photoCount} foto` : `${photoCount} fotos` })}
         </span>
       </div>
       <ChildProfile child={child} open={open} onOpenChange={setOpen} />
