@@ -45,7 +45,7 @@ export function ChildHeader({ child, photoCount }: ChildHeaderProps) {
           <span className="font-medium text-foreground text-sm tracking-tight">{child.name}</span>
         </button>
         <span className="text-xs text-muted-foreground truncate">
-          · {getAge(child.birthDate)} · {t('age.photo' + (photoCount === 1 ? '_one' : '_other'), { count: photoCount, defaultValue: photoCount === 1 ? `${photoCount} foto` : `${photoCount} fotos` })}
+          · {getAge(child.birthDate)} · {t('photos.count', { count: photoCount })}
         </span>
       </div>
       <ChildProfile child={child} open={open} onOpenChange={setOpen} />

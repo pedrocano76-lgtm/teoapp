@@ -136,6 +136,10 @@
     "photo": "Foto",
     "counter": "{{current}} / {{total}}"
   },
+  "photos": {
+    "count_one": "{{count}} foto",
+    "count_other": "{{count}} fotos"
+  },
   "age": {
     "beforeBirth": "Antes de nacer",
     "day_one": "{{count}} día",
