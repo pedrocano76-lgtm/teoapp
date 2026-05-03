@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -8,19 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 
-const ALL_RELATIONSHIPS = [
-  'Padre',
-  'Madre',
-  'Abuelo/a',
-  'Tío/a',
-  'Primo/a',
-  'Bisabuelo/a',
-  'Padrino/Madrina',
-  'Hermano/a',
-  'Otro',
+const RELATIONSHIP_KEYS = [
+  'father','mother','grandparent','uncle','cousin','greatGrandparent','godparent','sibling','other',
 ];
 
 export default function Auth() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const inviteCode = searchParams.get('invite') || '';
   const inviteEmail = searchParams.get('email') || '';
@@ -51,7 +45,7 @@ export default function Auth() {
         if (error) throw error;
       } else {
         if (!relationship) {
-          toast({ title: 'Error', description: 'Selecciona tu parentesco', variant: 'destructive' });
+          toast({ title: t('common.error'), description: t('auth.selectRelationshipError'), variant: 'destructive' });
           setLoading(false);
           return;
         }
@@ -65,13 +59,13 @@ export default function Auth() {
         });
         if (error) throw error;
         toast({
-          title: 'Revisa tu email',
-          description: 'Te hemos enviado un enlace de confirmación para verificar tu cuenta.',
+          title: t('auth.checkEmail'),
+          description: t('auth.confirmationSent'),
         });
       }
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: t('common.error'),
         description: error.message,
         variant: 'destructive',
       });
@@ -80,47 +74,8 @@ export default function Auth() {
     }
   };
 
-  const handleResendConfirmation = async () => {
-    if (!email) {
-      toast({
-        title: 'Falta el email',
-        description: 'Introduce tu email para reenviar la confirmación.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setResendingConfirmation(true);
-
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: 'Email reenviado',
-        description: 'Te hemos vuelto a enviar el enlace de confirmación.',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'No se pudo reenviar',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setResendingConfirmation(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Soft ambient gradient — barely there */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-40 -left-40 w-[480px] h-[480px] rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute -bottom-40 -right-32 w-[420px] h-[420px] rounded-full bg-sky/20 blur-3xl" />
@@ -141,10 +96,10 @@ export default function Auth() {
           </CardTitle>
           <CardDescription className="mt-1">
             {inviteCode
-              ? '¡Te han invitado a un álbum familiar! Crea tu cuenta para unirte.'
+              ? t('auth.invitedTitle')
               : isLogin
-                ? 'Bienvenido de nuevo. Inicia sesión en tu álbum.'
-                : 'Crea una cuenta para empezar el álbum familiar.'}
+                ? t('auth.loginSubtitle')
+                : t('auth.signupSubtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -152,23 +107,23 @@ export default function Auth() {
             {!isLogin && (
               <>
                 <div className="space-y-1">
-                  <Label className="text-sm">Tu nombre</Label>
+                  <Label className="text-sm">{t('auth.yourName')}</Label>
                   <Input
-                    placeholder="Nombre completo"
+                    placeholder={t('auth.fullNamePlaceholder')}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required={!isLogin}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-sm">¿Quién eres?</Label>
+                  <Label className="text-sm">{t('auth.whoAreYou')}</Label>
                   <Select value={relationship} onValueChange={setRelationship}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecciona tu parentesco" />
+                      <SelectValue placeholder={t('auth.selectRelationship')} />
                     </SelectTrigger>
                     <SelectContent>
-                      {ALL_RELATIONSHIPS.map(r => (
-                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                      {RELATIONSHIP_KEYS.map(k => (
+                        <SelectItem key={k} value={t(`relationships.${k}`)}>{t(`relationships.${k}`)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -177,30 +132,30 @@ export default function Auth() {
             )}
             <Input
               type="email"
-              placeholder="Email"
+              placeholder={t('auth.email')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
             <Input
               type="password"
-              placeholder="Contraseña"
+              placeholder={t('auth.password')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
             />
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Cargando...' : isLogin ? 'Iniciar sesión' : 'Crear cuenta'}
+              {loading ? t('auth.loading') : isLogin ? t('auth.login') : t('auth.signup')}
             </Button>
           </form>
           <p className="text-center text-sm text-muted-foreground mt-4">
-            {isLogin ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
+            {isLogin ? t('auth.noAccount') : t('auth.hasAccount')}
             <button
               onClick={() => setIsLogin(!isLogin)}
               className="text-primary font-semibold hover:underline"
             >
-              {isLogin ? 'Regístrate' : 'Inicia sesión'}
+              {isLogin ? t('auth.signUpLink') : t('auth.loginLink')}
             </button>
           </p>
         </CardContent>

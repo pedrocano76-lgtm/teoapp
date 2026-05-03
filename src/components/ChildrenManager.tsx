@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Child } from '@/lib/types';
 import { getAge } from '@/lib/age-utils';
 import { cn } from '@/lib/utils';
@@ -52,7 +53,8 @@ function ChildRow({ child, onSelectChild }: { child: Child; onSelectChild: (id: 
 }
 
 export function ChildrenManager({ children, onSelectChild }: ChildrenManagerProps) {
-  if (children.length === 0) return <p className="text-sm text-muted-foreground px-4">No hay hijos añadidos.</p>;
+  const { t } = useTranslation();
+  if (children.length === 0) return <p className="text-sm text-muted-foreground px-4">{t('child.noChildren', { defaultValue: 'No hay hijos añadidos.' })}</p>;
 
   return (
     <div className="space-y-1 px-2">

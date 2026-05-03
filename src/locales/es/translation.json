@@ -1,0 +1,162 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "saveChanges": "Guardar cambios",
+    "saving": "Guardando...",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "add": "Añadir",
+    "optional": "Opcional",
+    "error": "Error",
+    "name": "Nombre",
+    "loadMore": "Cargar más",
+    "loadingMore": "Cargando..."
+  },
+  "nav": {
+    "home": "Inicio",
+    "family": "Familia",
+    "children": "Hijos",
+    "settings": "Configuración",
+    "signOut": "Cerrar sesión",
+    "exit": "Salir"
+  },
+  "footer": {
+    "tagline": "Hecho con 💕 para familias que crecen"
+  },
+  "empty": {
+    "welcomeTitle": "¡Bienvenido a memorydrawer!",
+    "guestNoPhotos": "Aún no hay fotos compartidas contigo.",
+    "ownerNoChildren": "Empieza añadiendo a tu primer hijo para crear su álbum de fotos.",
+    "loadingPhotos": "Cargando fotos...",
+    "loadingMorePhotos": "Cargando más fotos...",
+    "noPhotos": "Aún no hay fotos",
+    "noPhotosHint": "Sube tus primeras fotos para iniciar la línea de tiempo",
+    "noPhotosForActivity": "No hay fotos etiquetadas con '{{activity}}' aún",
+    "removeFilter": "Quitar filtro"
+  },
+  "selection": {
+    "select": "Seleccionar",
+    "cancel": "Cancelar selección"
+  },
+  "auth": {
+    "invitedTitle": "¡Te han invitado a un álbum familiar! Crea tu cuenta para unirte.",
+    "loginSubtitle": "Bienvenido de nuevo. Inicia sesión en tu álbum.",
+    "signupSubtitle": "Crea una cuenta para empezar el álbum familiar.",
+    "yourName": "Tu nombre",
+    "fullNamePlaceholder": "Nombre completo",
+    "whoAreYou": "¿Quién eres?",
+    "selectRelationship": "Selecciona tu parentesco",
+    "email": "Email",
+    "password": "Contraseña",
+    "login": "Iniciar sesión",
+    "signup": "Crear cuenta",
+    "loading": "Cargando...",
+    "noAccount": "¿No tienes cuenta? ",
+    "hasAccount": "¿Ya tienes cuenta? ",
+    "signUpLink": "Regístrate",
+    "loginLink": "Inicia sesión",
+    "checkEmail": "Revisa tu email",
+    "confirmationSent": "Te hemos enviado un enlace de confirmación para verificar tu cuenta.",
+    "selectRelationshipError": "Selecciona tu parentesco",
+    "missingEmail": "Falta el email",
+    "missingEmailDesc": "Introduce tu email para reenviar la confirmación.",
+    "resent": "Email reenviado",
+    "resentDesc": "Te hemos vuelto a enviar el enlace de confirmación.",
+    "resendError": "No se pudo reenviar"
+  },
+  "relationships": {
+    "father": "Padre",
+    "mother": "Madre",
+    "grandparent": "Abuelo/a",
+    "uncle": "Tío/a",
+    "cousin": "Primo/a",
+    "greatGrandparent": "Bisabuelo/a",
+    "godparent": "Padrino/Madrina",
+    "sibling": "Hermano/a",
+    "other": "Otro"
+  },
+  "child": {
+    "addChild": "👶 Añadir hijo/a",
+    "addChildTitle": "Añadir hijo/a",
+    "addChildDesc": "Introduce el nombre, fecha de nacimiento y color del álbum.",
+    "namePlaceholder": "Nombre del niño/a",
+    "adding": "Añadiendo...",
+    "added": "🎉 ¡Añadido!",
+    "addedDesc": "{{name}} se ha añadido a tu álbum.",
+    "profileTitle": "Perfil de {{name}}",
+    "profileDescEdit": "Edita los detalles, actividades y notificaciones.",
+    "profileDescView": "Información del perfil y notificaciones.",
+    "displayName": "Nombre",
+    "fullName": "Nombre completo",
+    "birthDate": "Fecha de nacimiento",
+    "selectDate": "Selecciona una fecha",
+    "photoUpdated": "Foto actualizada",
+    "profileSaved": "✨ Perfil guardado",
+    "chooseFromAlbum": "Elegir del álbum",
+    "uploadNewPhoto": "Subir foto nueva",
+    "chooseFromAlbumDesc": "Selecciona una foto existente de {{name}} para usarla como foto de perfil.",
+    "noPhotosYet": "Aún no hay fotos en el álbum.",
+    "loadingPhotos": "Cargando fotos...",
+    "noChildren": "No hay hijos añadidos."
+  },
+  "activities": {
+    "title": "Actividades",
+    "none": "Aún no hay actividades.",
+    "namePlaceholder": "Nombre de la actividad",
+    "sport": "Deporte",
+    "hobby": "Afición",
+    "other": "Otro",
+    "sportEmoji": "⚽ Deporte",
+    "hobbyEmoji": "🎨 Afición",
+    "otherEmoji": "✨ Otro"
+  },
+  "notifications": {
+    "title": "Notificaciones de cumpleaños",
+    "sameDay": "El mismo día",
+    "dayBefore": "El día anterior"
+  },
+  "settings": {
+    "theme": "Tema",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "themeSystem": "Sistema",
+    "emailReminders": "Recordatorios por email",
+    "emailRemindersDesc": "Te avisamos cuando lleves varios días sin añadir fotos.",
+    "frequency": "Frecuencia (días sin actividad)",
+    "days": "{{count}} días",
+    "testNow": "Probar ahora",
+    "processing": "Procesando…",
+    "saveError": "No se pudo guardar",
+    "remindersError": "Error al enviar recordatorios",
+    "remindersOk": "Recordatorios procesados"
+  },
+  "lightbox": {
+    "photo": "Foto",
+    "counter": "{{current}} / {{total}}"
+  },
+  "photos": {
+    "count_one": "{{count}} foto",
+    "count_other": "{{count}} fotos"
+  },
+  "age": {
+    "beforeBirth": "Antes de nacer",
+    "day_one": "{{count}} día",
+    "day_other": "{{count}} días",
+    "week_one": "{{count}} semana",
+    "week_other": "{{count}} semanas",
+    "month_one": "{{count}} mes",
+    "month_other": "{{count}} meses",
+    "year_one": "{{count}} año",
+    "year_other": "{{count}} años",
+    "monthsAndWeeks": "{{months}} y {{weeks}}",
+    "yearsAndMonths": "{{years}} y {{months}}",
+    "firstWeek": "🍼 Primera semana",
+    "weekN": "🍼 Semana {{n}}",
+    "groupMonths": "🌱 {{value}}",
+    "groupYears": "🎂 {{value}}",
+    "preBirthGroup": "⏳ Antes de nacer"
+  }
+}

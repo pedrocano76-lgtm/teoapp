@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useChildren, usePhotosInfinite, useEvents, useTags, useActivities } from '@/hooks/useData';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -86,6 +87,7 @@ function mapTag(row: any): Tag {
 
 const Index = () => {
   const { signOut } = useAuth();
+  const { t } = useTranslation();
   const { data: childrenData, isLoading: childrenLoading } = useChildren();
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
 
@@ -259,7 +261,7 @@ const Index = () => {
                 />
                 {!isGuest && <NotificationBell />}
                 {isGuest && (
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={signOut} aria-label="Salir">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={signOut} aria-label={t('nav.exit')}>
                     <LogOut className="h-4 w-4" />
                   </Button>
                 )}
@@ -294,7 +296,7 @@ const Index = () => {
                   size="icon"
                   className="h-8 w-8 shrink-0 ml-auto"
                   onClick={() => selectionMode ? exitSelectionMode() : setSelectionMode(true)}
-                  aria-label={selectionMode ? 'Cancelar selección' : 'Seleccionar'}
+                  aria-label={selectionMode ? t('selection.cancel') : t('selection.select')}
                 >
                   <CheckSquare className="h-4 w-4" />
                 </Button>
@@ -306,17 +308,17 @@ const Index = () => {
           <main className="container mx-auto px-3 pt-2 pb-24 flex-1">
             {childrenLoading ? (
               <div className="text-center py-20">
-                <p className="text-muted-foreground">Cargando...</p>
+                <p className="text-muted-foreground">{t('common.loading')}</p>
               </div>
             ) : children.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-5xl mb-4">👶</p>
-                <h2 className="text-2xl font-heading font-bold text-foreground mb-2">¡Bienvenido a memorydrawer!</h2>
+                <h2 className="text-2xl font-heading font-bold text-foreground mb-2">{t('empty.welcomeTitle')}</h2>
                 {isGuest ? (
-                  <p className="text-muted-foreground mb-6">Aún no hay fotos compartidas contigo.</p>
+                  <p className="text-muted-foreground mb-6">{t('empty.guestNoPhotos')}</p>
                 ) : (
                   <>
-                    <p className="text-muted-foreground mb-6">Empieza añadiendo a tu primer hijo para crear su álbum de fotos.</p>
+                    <p className="text-muted-foreground mb-6">{t('empty.ownerNoChildren')}</p>
                     <AddChildDialog />
                   </>
                 )}
@@ -324,7 +326,7 @@ const Index = () => {
             ) : photosLoading ? (
               <div className="text-center py-20 flex flex-col items-center gap-3">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                <p className="text-muted-foreground">Cargando fotos...</p>
+                <p className="text-muted-foreground">{t('empty.loadingPhotos')}</p>
               </div>
             ) : filteredPhotos.length === 0 ? (
               <div className="text-center py-20">
@@ -332,7 +334,7 @@ const Index = () => {
                   <>
                     <p className="text-4xl mb-4">{selectedActivity.icon || '🏷️'}</p>
                     <p className="text-muted-foreground text-lg">
-                      No hay fotos etiquetadas con '{selectedActivity.name}' aún
+                      {t('empty.noPhotosForActivity', { activity: selectedActivity.name })}
                     </p>
                     <Button
                       variant="outline"
@@ -340,7 +342,7 @@ const Index = () => {
                       className="mt-4"
                       onClick={() => setSelectedActivityId(null)}
                     >
-                      Quitar filtro
+                      {t('empty.removeFilter')}
                     </Button>
                   </>
                 ) : (
@@ -353,10 +355,10 @@ const Index = () => {
                         <circle cx="11" cy="14" r="2" fill="white" />
                       </svg>
                     </div>
-                    <p className="text-muted-foreground text-lg">Aún no hay fotos</p>
+                    <p className="text-muted-foreground text-lg">{t('empty.noPhotos')}</p>
                     {canEdit && (
                       <>
-                        <p className="text-muted-foreground text-sm mt-1 mb-4">Sube tus primeras fotos para iniciar la línea de tiempo</p>
+                        <p className="text-muted-foreground text-sm mt-1 mb-4">{t('empty.noPhotosHint')}</p>
                         <PhotoUpload
                           children={children.map(c => ({ id: c.id, name: c.name }))}
                           defaultChildId={selectedChildId ?? undefined}
@@ -409,7 +411,7 @@ const Index = () => {
                     {isFetchingNextPage ? (
                       <div className="flex items-center gap-2 text-muted-foreground text-sm">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Cargando más fotos...
+                        {t('empty.loadingMorePhotos')}
                       </div>
                     ) : (
                       <div className="h-4" />
@@ -422,7 +424,7 @@ const Index = () => {
 
           <footer className="border-t border-border py-4">
             <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-              Hecho con 💕 para familias que crecen
+              {t('footer.tagline')}
             </div>
           </footer>
         </div>

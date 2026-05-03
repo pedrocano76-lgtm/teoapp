@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAddChild } from '@/hooks/useData';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ const colors = [
 ];
 
 export function AddChildDialog() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
@@ -26,13 +28,13 @@ export function AddChildDialog() {
     e.preventDefault();
     try {
       await addChild.mutateAsync({ name, birth_date: birthDate, color });
-      toast({ title: '🎉 ¡Añadido!', description: `${name} se ha añadido a tu álbum.` });
+      toast({ title: t('child.added'), description: t('child.addedDesc', { name }) });
       setOpen(false);
       setName('');
       setBirthDate('');
       setColor('primary');
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: t('common.error'), description: error.message, variant: 'destructive' });
     }
   };
 
@@ -40,17 +42,17 @@ export function AddChildDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
-          👶 Añadir hijo/a
+          {t('child.addChild')}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="font-heading">Añadir hijo/a</DialogTitle>
-          <DialogDescription>Introduce el nombre, fecha de nacimiento y color del álbum.</DialogDescription>
+          <DialogTitle className="font-heading">{t('child.addChildTitle')}</DialogTitle>
+          <DialogDescription>{t('child.addChildDesc')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            placeholder="Nombre del niño/a"
+            placeholder={t('child.namePlaceholder')}
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -72,7 +74,7 @@ export function AddChildDialog() {
             </SelectContent>
           </Select>
           <Button type="submit" className="w-full" disabled={addChild.isPending}>
-            {addChild.isPending ? 'Añadiendo...' : 'Añadir hijo/a'}
+            {addChild.isPending ? t('child.adding') : t('child.addChildTitle')}
           </Button>
         </form>
       </DialogContent>

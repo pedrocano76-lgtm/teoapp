@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Photo, Child } from '@/lib/types';
 import { getAgeLabel } from '@/lib/age-utils';
+import { useLocale } from '@/hooks/useLocale';
 import { cn } from '@/lib/utils';
 import { MapPin, Pencil, Check } from 'lucide-react';
 import { PhotoEditDialog } from '@/components/PhotoEditDialog';
@@ -18,8 +19,9 @@ interface PhotoCardProps {
 export function PhotoCard({ photo, child, onClick, selectionMode, isSelected, onToggleSelect }: PhotoCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const { canEdit } = useUserRole();
+  const { intlLocale } = useLocale();
   const ageLabel = getAgeLabel(child.birthDate, photo.date);
-  const fullDate = photo.date.toLocaleDateString('es-ES', {
+  const fullDate = photo.date.toLocaleDateString(intlLocale, {
     weekday: 'short',
     day: 'numeric',
     month: 'long',

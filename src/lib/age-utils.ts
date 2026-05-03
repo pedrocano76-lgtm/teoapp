@@ -1,3 +1,5 @@
+import i18n from '@/i18n';
+
 // Compare dates ignoring time-of-day to avoid timezone issues with date-only birth_date
 function daysBetween(from: Date, to: Date): number {
   const a = new Date(from.getFullYear(), from.getMonth(), from.getDate());
@@ -5,31 +7,39 @@ function daysBetween(from: Date, to: Date): number {
   return Math.floor((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+const t = (key: string, opts?: any) => i18n.t(key, opts) as string;
+
 export function getAge(birthDate: Date, atDate: Date = new Date()): string {
   const days = daysBetween(birthDate, atDate);
 
-  if (days < 0) return 'Antes de nacer';
-  if (days < 7) return `${days} ${days === 1 ? 'día' : 'días'}`;
+  if (days < 0) return t('age.beforeBirth');
+  if (days < 7) return t('age.day', { count: days });
   if (days < 30) {
     const weeks = Math.floor(days / 7);
-    return `${weeks} ${weeks === 1 ? 'semana' : 'semanas'}`;
+    return t('age.week', { count: weeks });
   }
   if (days < 365) {
     const months = Math.floor(days / 30.44);
     const remainingDays = days - Math.floor(months * 30.44);
     const weeks = Math.floor(remainingDays / 7);
     if (weeks > 0) {
-      return `${months} ${months === 1 ? 'mes' : 'meses'} y ${weeks} ${weeks === 1 ? 'semana' : 'semanas'}`;
+      return t('age.monthsAndWeeks', {
+        months: t('age.month', { count: months }),
+        weeks: t('age.week', { count: weeks }),
+      });
     }
-    return `${months} ${months === 1 ? 'mes' : 'meses'}`;
+    return t('age.month', { count: months });
   }
 
   const years = Math.floor(days / 365.25);
   const remainingMonths = Math.floor((days - years * 365.25) / 30.44);
   if (remainingMonths > 0) {
-    return `${years} ${years === 1 ? 'año' : 'años'} y ${remainingMonths} ${remainingMonths === 1 ? 'mes' : 'meses'}`;
+    return t('age.yearsAndMonths', {
+      years: t('age.year', { count: years }),
+      months: t('age.month', { count: remainingMonths }),
+    });
   }
-  return `${years} ${years === 1 ? 'año' : 'años'}`;
+  return t('age.year', { count: years });
 }
 
 export function getAgeMonths(birthDate: Date, atDate: Date = new Date()): number {
@@ -51,12 +61,12 @@ export function getTimelineGroupLabel(birthDate: Date, photoDate: Date): string 
   const weeks = getAgeWeeks(birthDate, photoDate);
   const months = getAgeMonths(birthDate, photoDate);
 
-  if (days < 0) return '⏳ Antes de nacer';
-  if (days < 7) return '🍼 Primera semana';
-  if (weeks < 4) return `🍼 Semana ${weeks + 1}`;
-  if (months < 24) return `🌱 ${months} ${months === 1 ? 'mes' : 'meses'}`;
+  if (days < 0) return t('age.preBirthGroup');
+  if (days < 7) return t('age.firstWeek');
+  if (weeks < 4) return t('age.weekN', { n: weeks + 1 });
+  if (months < 24) return t('age.groupMonths', { value: t('age.month', { count: months }) });
   const years = Math.floor(months / 12);
-  return `🎂 ${years} año${years !== 1 ? 's' : ''}`;
+  return t('age.groupYears', { value: t('age.year', { count: years }) });
 }
 
 export function getTimelineGroupKey(birthDate: Date, photoDate: Date): string {
@@ -73,31 +83,4 @@ export function getTimelineGroupKey(birthDate: Date, photoDate: Date): string {
 
 export function getAgeLabel(birthDate: Date, photoDate: Date): string {
   return getAge(birthDate, photoDate);
-}
-
-export function groupPhotosByAge(
-  photos: { date: Date }[],
-  birthDate: Date
-): Map<string, typeof photos> {
-  const groups = new Map<string, typeof photos>();
-
-  for (const photo of photos) {
-    const months = getAgeMonths(birthDate, photo.date);
-    let label: string;
-
-    if (months < 1) label = 'Newborn';
-    else if (months < 12) label = `${months} month${months !== 1 ? 's' : ''}`;
-    else {
-      const years = Math.floor(months / 12);
-      const rem = months % 12;
-      label = rem > 0
-        ? `${years} year${years !== 1 ? 's' : ''} ${rem} month${rem !== 1 ? 's' : ''}`
-        : `${years} year${years !== 1 ? 's' : ''}`;
-    }
-
-    if (!groups.has(label)) groups.set(label, []);
-    groups.get(label)!.push(photo);
-  }
-
-  return groups;
 }
