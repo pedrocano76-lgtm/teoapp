@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X, MapPin, Pencil } from 'lucide-react';
 import { Photo, Child } from '@/lib/types';
 import { getAgeLabel } from '@/lib/age-utils';
+import { useLocale } from '@/hooks/useLocale';
 import { PhotoEditDialog } from '@/components/PhotoEditDialog';
 import { useUserRole } from '@/hooks/useUserRole';
 
@@ -18,6 +20,8 @@ interface PhotoLightboxProps {
 export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChange }: PhotoLightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [editOpen, setEditOpen] = useState(false);
+  const { t } = useTranslation();
+  const { intlLocale } = useLocale();
   const { canEdit } = useUserRole();
   const touchStartX = useRef<number | null>(null);
 
@@ -63,7 +67,7 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
   if (!photo) return null;
   const child = children.find(c => c.id === photo.childId);
 
-  const fullDate = photo.date.toLocaleDateString('es-ES', {
+  const fullDate = photo.date.toLocaleDateString(intlLocale, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -126,7 +130,7 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
             {/* Image */}
             <img
               src={photo.url}
-              alt={photo.caption || 'Foto'}
+              alt={photo.caption || t('lightbox.photo')}
               className="max-w-full max-h-[80vh] object-contain select-none"
               draggable={false}
             />

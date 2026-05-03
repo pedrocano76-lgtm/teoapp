@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Photo, Child } from '@/lib/types';
 import { getAge, getTimelineGroupLabel, getTimelineGroupKey } from '@/lib/age-utils';
+import { useLocale } from '@/hooks/useLocale';
 import { PhotoCard } from './PhotoCard';
 import { PhotoLightbox } from './PhotoLightbox';
 
@@ -15,6 +16,7 @@ interface TimelineProps {
 
 export function Timeline({ photos, child, sortOrder = 'asc', selectionMode, selectedIds, onToggleSelect }: TimelineProps) {
   const [lightboxIndex, setLightboxIndex] = useState(-1);
+  const { intlLocale } = useLocale();
   const groups = new Map<string, { label: string; photos: Photo[]; date: Date }>();
   const sortedPhotos = [...photos].sort((a, b) =>
     sortOrder === 'asc' ? a.date.getTime() - b.date.getTime() : b.date.getTime() - a.date.getTime()
@@ -40,7 +42,7 @@ export function Timeline({ photos, child, sortOrder = 'asc', selectionMode, sele
     <>
       <div className="space-y-10">
         {Array.from(groups.entries()).map(([key, { label, photos: groupPhotos, date }]) => {
-          const dateLabel = date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+          const dateLabel = date.toLocaleDateString(intlLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
           const ageLabel = getAge(child.birthDate, date);
 
           return (
