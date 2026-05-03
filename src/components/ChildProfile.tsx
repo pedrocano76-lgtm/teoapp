@@ -61,15 +61,17 @@ const colorBgMap: Record<Child['color'], string> = {
   sky: 'bg-sky/30 text-sky-foreground',
 };
 
-const activityTypeLabels: Record<ActivityType, string> = {
-  sport: 'Deporte',
-  hobby: 'Afición',
-  other: 'Otro',
+const activityTypeKey: Record<ActivityType, string> = {
+  sport: 'activities.sport',
+  hobby: 'activities.hobby',
+  other: 'activities.other',
 };
 
 const emojiSuggestions = ['⚽', '🏀', '🎾', '🏊', '🚴', '🎨', '🎵', '🎹', '📚', '🧩', '🩰', '🥋', '🏃', '🎮', '🌳'];
 
 export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
+  const { t } = useTranslation();
+  const { dateFnsLocale } = useLocale();
   const { user } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
