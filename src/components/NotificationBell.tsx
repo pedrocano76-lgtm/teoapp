@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNotifications, useUnreadCount, useMarkNotificationsRead } from '@/hooks/useNotifications';
+import { useLocale } from '@/hooks/useLocale';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Bell, Cloud, Check } from 'lucide-react';
@@ -9,6 +10,7 @@ export function NotificationBell() {
   const { data: notifications } = useNotifications();
   const unreadCount = useUnreadCount();
   const markRead = useMarkNotificationsRead();
+  const { intlLocale } = useLocale();
   const [open, setOpen] = useState(false);
 
   const items = notifications || [];
@@ -54,7 +56,7 @@ export function NotificationBell() {
                   <div className="min-w-0">
                     <p className="text-xs">{n.message}</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {new Date(n.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      {new Date(n.created_at).toLocaleDateString(intlLocale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>
