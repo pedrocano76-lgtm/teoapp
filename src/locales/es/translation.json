@@ -99,7 +99,8 @@
     "uploadNewPhoto": "Subir foto nueva",
     "chooseFromAlbumDesc": "Selecciona una foto existente de {{name}} para usarla como foto de perfil.",
     "noPhotosYet": "Aún no hay fotos en el álbum.",
-    "loadingPhotos": "Cargando fotos..."
+    "loadingPhotos": "Cargando fotos...",
+    "noChildren": "No hay hijos añadidos."
   },
   "activities": {
     "title": "Actividades",

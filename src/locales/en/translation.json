@@ -99,7 +99,8 @@
     "uploadNewPhoto": "Upload new photo",
     "chooseFromAlbumDesc": "Select an existing photo of {{name}} to use as profile picture.",
     "noPhotosYet": "No photos in the album yet.",
-    "loadingPhotos": "Loading photos..."
+    "loadingPhotos": "Loading photos...",
+    "noChildren": "No children added."
   },
   "activities": {
     "title": "Activities",
