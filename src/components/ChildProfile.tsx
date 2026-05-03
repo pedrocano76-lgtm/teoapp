@@ -142,9 +142,9 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
       const path = await uploadPhoto.mutateAsync({ file, childId: child.id });
       setProfilePhotoPath(path);
       await updateChild.mutateAsync({ childId: child.id, profilePhotoPath: path });
-      toast({ title: 'Foto actualizada' });
+      toast({ title: t('child.photoUpdated') });
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
     }
   };
 
@@ -154,9 +154,9 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
       setProfilePhotoPath(storagePath);
       await updateChild.mutateAsync({ childId: child.id, profilePhotoPath: storagePath });
       setAlbumPickerOpen(false);
-      toast({ title: 'Foto actualizada' });
+      toast({ title: t('child.photoUpdated') });
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
     }
   };
 
@@ -169,9 +169,9 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
         fullName: fullName || null,
         birthDate: birthDate ? format(birthDate, 'yyyy-MM-dd') : undefined,
       });
-      toast({ title: '✨ Perfil guardado' });
+      toast({ title: t('child.profileSaved') });
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
     }
   };
 
@@ -188,7 +188,7 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
       setNewActivityIcon('');
       setNewActivityType('sport');
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
     }
   };
 
@@ -196,7 +196,7 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
     try {
       await deleteActivity.mutateAsync({ activityId, childId: child.id });
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
     }
   };
 
@@ -210,7 +210,7 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
         notifyDayBefore: dayBefore,
       });
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
     }
   };
 
@@ -261,7 +261,7 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-accent transition-colors text-left"
                 >
                   <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                  Elegir del álbum
+                  {t('child.chooseFromAlbum')}
                 </button>
                 <button
                   type="button"
@@ -269,7 +269,7 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-accent transition-colors text-left"
                 >
                   <Upload className="h-4 w-4 text-muted-foreground" />
-                  Subir foto nueva
+                  {t('child.uploadNewPhoto')}
                 </button>
               </PopoverContent>
             )}
@@ -287,19 +287,19 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
         <Dialog open={albumPickerOpen} onOpenChange={setAlbumPickerOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle className="font-heading">Elegir del álbum</DialogTitle>
+              <DialogTitle className="font-heading">{t('child.chooseFromAlbum')}</DialogTitle>
               <DialogDescription>
-                Selecciona una foto existente de {child.name} para usarla como foto de perfil.
+                {t('child.chooseFromAlbumDesc', { name: child.name })}
               </DialogDescription>
             </DialogHeader>
             <div className="max-h-[60vh] overflow-y-auto">
               {photosLoading ? (
                 <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Cargando fotos...
+                  <Loader2 className="h-4 w-4 animate-spin" /> {t('child.loadingPhotos')}
                 </div>
               ) : albumPhotos.length === 0 ? (
                 <p className="text-center py-12 text-muted-foreground text-sm">
-                  Aún no hay fotos en el álbum.
+                  {t('child.noPhotosYet')}
                 </p>
               ) : (
                 <>
@@ -335,8 +335,8 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
                         disabled={isFetchingNextPage}
                       >
                         {isFetchingNextPage ? (
-                          <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> Cargando...</>
-                        ) : 'Cargar más'}
+                          <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> {t('common.loading')}</>
+                        ) : t('common.loadMore')}
                       </Button>
                     </div>
                   )}
@@ -349,7 +349,7 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
         {/* Editable fields */}
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="display-name">Nombre</Label>
+            <Label htmlFor="display-name">{t('child.displayName')}</Label>
             <Input
               id="display-name"
               value={name}
@@ -358,17 +358,17 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="full-name">Nombre completo</Label>
+            <Label htmlFor="full-name">{t('child.fullName')}</Label>
             <Input
               id="full-name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               disabled={!canEdit}
-              placeholder="Opcional"
+              placeholder={t('common.optional')}
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Fecha de nacimiento</Label>
+            <Label>{t('child.birthDate')}</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -400,10 +400,10 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
 
         {/* Activities */}
         <div className="space-y-3">
-          <h3 className="font-heading text-base">Actividades</h3>
+          <h3 className="font-heading text-base">{t('activities.title')}</h3>
           <div className="space-y-1.5">
             {activities.length === 0 && (
-              <p className="text-sm text-muted-foreground">Aún no hay actividades.</p>
+              <p className="text-sm text-muted-foreground">{t('activities.none')}</p>
             )}
             {activities.map((a: any) => (
               <div
@@ -435,7 +435,7 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
             <div className="space-y-2 pt-2 border-t border-border/60">
               <div className="flex gap-2">
                 <Input
-                  placeholder="Nombre de la actividad"
+                  placeholder={t('activities.namePlaceholder')}
                   value={newActivityName}
                   onChange={(e) => setNewActivityName(e.target.value)}
                   className="flex-1"
@@ -454,9 +454,9 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="sport">⚽ Deporte</SelectItem>
-                    <SelectItem value="hobby">🎨 Afición</SelectItem>
-                    <SelectItem value="other">✨ Otro</SelectItem>
+                    <SelectItem value="sport">{t('activities.sportEmoji')}</SelectItem>
+                    <SelectItem value="hobby">{t('activities.hobbyEmoji')}</SelectItem>
+                    <SelectItem value="other">{t('activities.otherEmoji')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button
@@ -464,7 +464,7 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
                   disabled={!newActivityName.trim() || addActivity.isPending}
                   className="gap-1"
                 >
-                  <Plus className="h-4 w-4" /> Añadir
+                  <Plus className="h-4 w-4" /> {t('common.add')}
                 </Button>
               </div>
               <div className="flex flex-wrap gap-1">
@@ -487,9 +487,9 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
 
         {/* Birthday notifications */}
         <div className="space-y-3">
-          <h3 className="font-heading text-base">Notificaciones de cumpleaños</h3>
+          <h3 className="font-heading text-base">{t('notifications.title')}</h3>
           <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2.5">
-            <Label htmlFor="notif-same-day" className="font-normal text-sm">El mismo día</Label>
+            <Label htmlFor="notif-same-day" className="font-normal text-sm">{t('notifications.sameDay')}</Label>
             <Switch
               id="notif-same-day"
               checked={notifSameDay}
@@ -497,7 +497,7 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
             />
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2.5">
-            <Label htmlFor="notif-day-before" className="font-normal text-sm">El día anterior</Label>
+            <Label htmlFor="notif-day-before" className="font-normal text-sm">{t('notifications.dayBefore')}</Label>
             <Switch
               id="notif-day-before"
               checked={notifDayBefore}
@@ -514,7 +514,7 @@ export function ChildProfile({ child, open, onOpenChange }: ChildProfileProps) {
               disabled={updateChild.isPending}
               className="w-full"
             >
-              {updateChild.isPending ? 'Guardando...' : 'Guardar cambios'}
+              {updateChild.isPending ? t('common.saving') : t('common.saveChanges')}
             </Button>
           </div>
         )}
