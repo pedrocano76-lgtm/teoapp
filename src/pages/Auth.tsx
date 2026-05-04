@@ -161,6 +161,9 @@ export default function Auth() {
           </p>
         </CardContent>
       </Card>
+      <div className="mt-4 flex justify-center">
+        <LanguageToggle />
+      </div>
     </div>
   );
 }
