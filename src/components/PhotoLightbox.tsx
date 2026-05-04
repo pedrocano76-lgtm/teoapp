@@ -77,7 +77,7 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
   return (
     <>
       <Dialog open={open && !editOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-foreground/95 backdrop-blur-xl overflow-hidden [&>button]:hidden">
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-black backdrop-blur-xl overflow-hidden [&>button]:hidden">
           <div
             className="relative flex flex-col items-center justify-center h-[95vh]"
             onTouchStart={handleTouchStart}
