@@ -33,6 +33,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTimeout(() => {
             supabase.functions.invoke('notify-share-access', { body: {} }).catch(() => {});
           }, 0);
+          // Cargar locale del perfil y aplicarlo
+          setTimeout(async () => {
+            const { data } = await supabase
+              .from('profiles')
+              .select('locale')
+              .eq('user_id', session.user.id)
+              .maybeSingle();
+            const loc = (data as any)?.locale;
+            if (loc === 'es' || loc === 'en') {
+              if (!i18n.language?.startsWith(loc)) await i18n.changeLanguage(loc);
+            }
+          }, 0);
         }
       }
     );
