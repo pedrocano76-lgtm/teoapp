@@ -77,7 +77,7 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
   return (
     <>
       <Dialog open={open && !editOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-foreground/95 backdrop-blur-xl overflow-hidden [&>button]:hidden">
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-black backdrop-blur-xl overflow-hidden [&>button]:hidden">
           <div
             className="relative flex flex-col items-center justify-center h-[95vh]"
             onTouchStart={handleTouchStart}
@@ -136,7 +136,7 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
             />
 
             {/* Info bar */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/80 to-transparent p-4 pt-12 text-primary-foreground">
+            <div className="absolute bottom-0 left-0 right-0 bg-gray-50 dark:bg-zinc-900 text-gray-900 dark:text-white p-4 border-t border-gray-200 dark:border-zinc-800">
               <div className="flex items-center justify-between">
                 <div>
                   {child && <p className="text-sm font-semibold">{child.name} · {getAgeLabel(child.birthDate, photo.date)}</p>}
