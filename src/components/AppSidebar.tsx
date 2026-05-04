@@ -22,6 +22,7 @@ import { SettingsPanel } from './SettingsPanel';
 import { FamilySection } from './FamilySection';
 import { Child } from '@/lib/types';
 import { BrandLogo, BrandWordmark } from './Brand';
+import { LanguageToggle } from './LanguageToggle';
 
 interface AppSidebarProps {
   children: Child[];
@@ -120,8 +121,9 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-sidebar-border">
-        <div className="group-data-[collapsible=icon]:hidden">
-          <p className="text-xs text-muted-foreground truncate mb-2">{user?.email}</p>
+        <div className="group-data-[collapsible=icon]:hidden space-y-2 mb-2">
+          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+          <LanguageToggle />
         </div>
         <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground" onClick={signOut}>
           <LogOut className="h-4 w-4" />

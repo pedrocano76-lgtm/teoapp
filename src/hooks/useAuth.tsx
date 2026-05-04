@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
+import i18n from '@/i18n';
 
 interface AuthContextType {
   user: User | null;
@@ -32,14 +33,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTimeout(() => {
             supabase.functions.invoke('notify-share-access', { body: {} }).catch(() => {});
           }, 0);
+          // Cargar locale del perfil y aplicarlo
+          setTimeout(async () => {
+            const { data } = await supabase
+              .from('profiles')
+              .select('locale')
+              .eq('user_id', session.user.id)
+              .maybeSingle();
+            const loc = (data as any)?.locale;
+            if (loc === 'es' || loc === 'en') {
+              if (!i18n.language?.startsWith(loc)) await i18n.changeLanguage(loc);
+            }
+          }, 0);
         }
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      if (session?.user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('locale')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        const loc = (data as any)?.locale;
+        if ((loc === 'es' || loc === 'en') && !i18n.language?.startsWith(loc)) {
+          await i18n.changeLanguage(loc);
+        }
+      }
     });
 
     return () => subscription.unsubscribe();

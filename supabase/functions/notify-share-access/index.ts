@@ -12,27 +12,64 @@ const corsHeaders = {
 
 const APP_URL = "https://memorydrawer.app";
 
-function buildWelcomeHtml(ownerName: string, childNames: string[]) {
-  const names = formatNames(childNames);
+type Lang = 'es' | 'en';
+
+const T = {
+  es: {
+    welcomeTitle: 'Te han compartido un álbum 💛',
+    welcomeBody: (owner: string, names: string) => `<strong>${owner}</strong> te ha compartido los recuerdos de <strong>${names}</strong>.`,
+    welcomeCta: 'Entra para ver las fotos y revivir cada momento.',
+    open: 'Abrir Memory Drawer',
+    welcomeFooter: 'Recibes este email porque aceptaste una invitación familiar.',
+    ownerTitle: 'Nuevo familiar en el álbum 👀',
+    ownerBody: (viewer: string, child: string) => `<strong>${viewer}</strong> ha empezado a ver las fotos de <strong>${child}</strong>.`,
+    ownerCta: 'Aprovecha para añadir nuevos recuerdos al cajón.',
+    ownerFooter: 'Recibes este email porque eres padre o madre en este álbum.',
+    welcomeSubject: (owner: string, names: string) => `${owner} te ha compartido los recuerdos de ${names}`,
+    ownerSubject: (viewer: string, child: string) => `${viewer} ha empezado a ver las fotos de ${child}`,
+    join: (a: string, b: string) => `${a} y ${b}`,
+    joinLast: ' y ',
+  },
+  en: {
+    welcomeTitle: 'An album has been shared with you 💛',
+    welcomeBody: (owner: string, names: string) => `<strong>${owner}</strong> has shared the memories of <strong>${names}</strong> with you.`,
+    welcomeCta: 'Sign in to see the photos and relive every moment.',
+    open: 'Open Memory Drawer',
+    welcomeFooter: 'You are receiving this email because you accepted a family invitation.',
+    ownerTitle: 'New family member in the album 👀',
+    ownerBody: (viewer: string, child: string) => `<strong>${viewer}</strong> has started viewing photos of <strong>${child}</strong>.`,
+    ownerCta: 'Add new memories to the drawer.',
+    ownerFooter: 'You are receiving this email because you are a parent in this album.',
+    welcomeSubject: (owner: string, names: string) => `${owner} shared the memories of ${names} with you`,
+    ownerSubject: (viewer: string, child: string) => `${viewer} started viewing photos of ${child}`,
+    join: (a: string, b: string) => `${a} and ${b}`,
+    joinLast: ' and ',
+  },
+} as const;
+
+function buildWelcomeHtml(lang: Lang, ownerName: string, childNames: string[]) {
+  const t = T[lang];
+  const names = formatNames(lang, childNames);
   return `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,Inter,Arial,sans-serif;background:#faf8f6;margin:0;padding:24px;color:#1c1c1e;">
     <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:16px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-      <h1 style="font-size:22px;margin:0 0 12px;color:#1c1c1e;">Te han compartido un álbum 💛</h1>
-      <p style="font-size:16px;line-height:1.5;margin:0 0 20px;color:#3a3a3c;"><strong>${escapeHtml(ownerName)}</strong> te ha compartido los recuerdos de <strong>${escapeHtml(names)}</strong>.</p>
-      <p style="font-size:15px;line-height:1.5;margin:0 0 28px;color:#3a3a3c;">Entra para ver las fotos y revivir cada momento.</p>
-      <a href="${APP_URL}" style="display:inline-block;background:#FF7A6B;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:600;font-size:15px;">Abrir Memory Drawer</a>
-      <p style="font-size:12px;color:#8e8e93;margin:32px 0 0;">Recibes este email porque aceptaste una invitación familiar.</p>
+      <h1 style="font-size:22px;margin:0 0 12px;color:#1c1c1e;">${t.welcomeTitle}</h1>
+      <p style="font-size:16px;line-height:1.5;margin:0 0 20px;color:#3a3a3c;">${t.welcomeBody(escapeHtml(ownerName), escapeHtml(names))}</p>
+      <p style="font-size:15px;line-height:1.5;margin:0 0 28px;color:#3a3a3c;">${t.welcomeCta}</p>
+      <a href="${APP_URL}" style="display:inline-block;background:#FF7A6B;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:600;font-size:15px;">${t.open}</a>
+      <p style="font-size:12px;color:#8e8e93;margin:32px 0 0;">${t.welcomeFooter}</p>
     </div>
   </body></html>`;
 }
 
-function buildOwnerHtml(viewerName: string, childName: string) {
+function buildOwnerHtml(lang: Lang, viewerName: string, childName: string) {
+  const t = T[lang];
   return `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,Inter,Arial,sans-serif;background:#faf8f6;margin:0;padding:24px;color:#1c1c1e;">
     <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:16px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-      <h1 style="font-size:22px;margin:0 0 12px;color:#1c1c1e;">Nuevo familiar en el álbum 👀</h1>
-      <p style="font-size:16px;line-height:1.5;margin:0 0 20px;color:#3a3a3c;"><strong>${escapeHtml(viewerName)}</strong> ha empezado a ver las fotos de <strong>${escapeHtml(childName)}</strong>.</p>
-      <p style="font-size:15px;line-height:1.5;margin:0 0 28px;color:#3a3a3c;">Aprovecha para añadir nuevos recuerdos al cajón.</p>
-      <a href="${APP_URL}" style="display:inline-block;background:#FF7A6B;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:600;font-size:15px;">Abrir Memory Drawer</a>
-      <p style="font-size:12px;color:#8e8e93;margin:32px 0 0;">Recibes este email porque eres padre o madre en este álbum.</p>
+      <h1 style="font-size:22px;margin:0 0 12px;color:#1c1c1e;">${t.ownerTitle}</h1>
+      <p style="font-size:16px;line-height:1.5;margin:0 0 20px;color:#3a3a3c;">${t.ownerBody(escapeHtml(viewerName), escapeHtml(childName))}</p>
+      <p style="font-size:15px;line-height:1.5;margin:0 0 28px;color:#3a3a3c;">${t.ownerCta}</p>
+      <a href="${APP_URL}" style="display:inline-block;background:#FF7A6B;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:600;font-size:15px;">${t.open}</a>
+      <p style="font-size:12px;color:#8e8e93;margin:32px 0 0;">${t.ownerFooter}</p>
     </div>
   </body></html>`;
 }
@@ -41,11 +78,18 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
-function formatNames(names: string[]) {
+function formatNames(lang: Lang, names: string[]) {
   if (names.length === 0) return "";
   if (names.length === 1) return names[0];
-  if (names.length === 2) return `${names[0]} y ${names[1]}`;
-  return `${names.slice(0, -1).join(", ")} y ${names.at(-1)}`;
+  const sep = T[lang].joinLast;
+  if (names.length === 2) return `${names[0]}${sep}${names[1]}`;
+  return `${names.slice(0, -1).join(", ")}${sep}${names.at(-1)}`;
+}
+
+async function getLocale(admin: any, userId: string): Promise<Lang> {
+  const { data } = await admin.from('profiles').select('locale').eq('user_id', userId).maybeSingle();
+  const loc = data?.locale;
+  return loc === 'es' ? 'es' : loc === 'en' ? 'en' : 'en';
 }
 
 async function sendEmail(serviceRole: string, supabaseUrl: string, payload: { to: string; subject: string; html: string }) {
@@ -144,10 +188,12 @@ Deno.serve(async (req) => {
       if (viewer.email) {
         try {
           const childNames = childList.map((c) => c.name);
+          const viewerLang = await getLocale(admin, viewer.id);
+          const tv = T[viewerLang];
           await sendEmail(SERVICE_ROLE, SUPABASE_URL, {
             to: viewer.email,
-            subject: `${ownerName} te ha compartido los recuerdos de ${formatNames(childNames)}`,
-            html: buildWelcomeHtml(ownerName, childNames),
+            subject: tv.welcomeSubject(ownerName, formatNames(viewerLang, childNames)),
+            html: buildWelcomeHtml(viewerLang, ownerName, childNames),
           });
         } catch (e) {
           errors.push(`welcome ${viewer.email}: ${(e as Error).message}`);
@@ -175,10 +221,12 @@ Deno.serve(async (req) => {
           const email = rUser?.user?.email;
           if (!email) continue;
           try {
+            const rLang = await getLocale(admin, rid);
+            const tr = T[rLang];
             await sendEmail(SERVICE_ROLE, SUPABASE_URL, {
               to: email,
-              subject: `${viewerName} ha empezado a ver las fotos de ${child.name}`,
-              html: buildOwnerHtml(viewerName, child.name),
+              subject: tr.ownerSubject(viewerName, child.name),
+              html: buildOwnerHtml(rLang, viewerName, child.name),
             });
           } catch (e) {
             errors.push(`owner ${email}: ${(e as Error).message}`);
