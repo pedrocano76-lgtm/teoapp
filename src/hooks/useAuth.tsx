@@ -49,10 +49,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      if (session?.user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('locale')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        const loc = (data as any)?.locale;
+        if ((loc === 'es' || loc === 'en') && !i18n.language?.startsWith(loc)) {
+          await i18n.changeLanguage(loc);
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
