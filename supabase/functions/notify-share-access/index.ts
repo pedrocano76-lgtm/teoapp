@@ -188,10 +188,12 @@ Deno.serve(async (req) => {
       if (viewer.email) {
         try {
           const childNames = childList.map((c) => c.name);
+          const viewerLang = await getLocale(admin, viewer.id);
+          const tv = T[viewerLang];
           await sendEmail(SERVICE_ROLE, SUPABASE_URL, {
             to: viewer.email,
-            subject: `${ownerName} te ha compartido los recuerdos de ${formatNames(childNames)}`,
-            html: buildWelcomeHtml(ownerName, childNames),
+            subject: tv.welcomeSubject(ownerName, formatNames(viewerLang, childNames)),
+            html: buildWelcomeHtml(viewerLang, ownerName, childNames),
           });
         } catch (e) {
           errors.push(`welcome ${viewer.email}: ${(e as Error).message}`);
@@ -219,10 +221,12 @@ Deno.serve(async (req) => {
           const email = rUser?.user?.email;
           if (!email) continue;
           try {
+            const rLang = await getLocale(admin, rid);
+            const tr = T[rLang];
             await sendEmail(SERVICE_ROLE, SUPABASE_URL, {
               to: email,
-              subject: `${viewerName} ha empezado a ver las fotos de ${child.name}`,
-              html: buildOwnerHtml(viewerName, child.name),
+              subject: tr.ownerSubject(viewerName, child.name),
+              html: buildOwnerHtml(rLang, viewerName, child.name),
             });
           } catch (e) {
             errors.push(`owner ${email}: ${(e as Error).message}`);
