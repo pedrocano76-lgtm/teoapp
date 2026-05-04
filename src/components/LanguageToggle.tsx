@@ -20,7 +20,7 @@ export function LanguageToggle({ className }: Props) {
     if (code === current) return;
     await i18n.changeLanguage(code);
     if (user) {
-      await supabase.from('profiles').update({ locale: code }).eq('user_id', user.id);
+      await (supabase.from('profiles') as any).update({ locale: code }).eq('user_id', user.id);
     }
   };
 
