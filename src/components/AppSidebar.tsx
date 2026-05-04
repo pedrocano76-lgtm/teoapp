@@ -22,6 +22,7 @@ import { SettingsPanel } from './SettingsPanel';
 import { FamilySection } from './FamilySection';
 import { Child } from '@/lib/types';
 import { BrandLogo, BrandWordmark } from './Brand';
+import { LanguageToggle } from './LanguageToggle';
 
 interface AppSidebarProps {
   children: Child[];
