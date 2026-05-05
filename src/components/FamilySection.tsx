@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,6 +24,7 @@ const GUEST_RELATIONSHIPS = [
 
 export function FamilySection() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const { data: shares } = useQuery({
@@ -45,9 +47,9 @@ export function FamilySection() {
     <div className="space-y-4 px-2">
       <div>
         <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-          <Crown className="h-3 w-3" /> Padres
+          <Crown className="h-3 w-3" /> {t('family.parents')}
         </p>
-        <p className="text-xs text-muted-foreground mb-1">Tú (creador de la cuenta)</p>
+        <p className="text-xs text-muted-foreground mb-1">{t('family.youCreator')}</p>
         {parents.length > 0 && (
           <div className="space-y-1 mb-2">
             {parents.map(p => (
@@ -55,15 +57,15 @@ export function FamilySection() {
             ))}
           </div>
         )}
-        <InviteDialog role="parent" label="Invitar padre/madre" />
+        <InviteDialog role="parent" label={t('family.inviteParent')} />
       </div>
 
       <div>
         <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-          <Eye className="h-3 w-3" /> Invitados
+          <Eye className="h-3 w-3" /> {t('family.guests')}
         </p>
         {guests.length === 0 ? (
-          <p className="text-xs text-muted-foreground mb-2">Sin invitados</p>
+          <p className="text-xs text-muted-foreground mb-2">{t('family.noGuests')}</p>
         ) : (
           <div className="space-y-1 mb-2">
             {guests.map(g => (
@@ -71,7 +73,7 @@ export function FamilySection() {
             ))}
           </div>
         )}
-        <InviteDialog role="guest" label="Invitar familiar" />
+        <InviteDialog role="guest" label={t('family.inviteRelative')} />
       </div>
     </div>
   );
