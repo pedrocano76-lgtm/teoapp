@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,6 +24,7 @@ const GUEST_RELATIONSHIPS = [
 
 export function FamilySection() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const { data: shares } = useQuery({
@@ -45,9 +47,9 @@ export function FamilySection() {
     <div className="space-y-4 px-2">
       <div>
         <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-          <Crown className="h-3 w-3" /> Padres
+          <Crown className="h-3 w-3" /> {t('family.parents')}
         </p>
-        <p className="text-xs text-muted-foreground mb-1">Tú (creador de la cuenta)</p>
+        <p className="text-xs text-muted-foreground mb-1">{t('family.youCreator')}</p>
         {parents.length > 0 && (
           <div className="space-y-1 mb-2">
             {parents.map(p => (
@@ -55,15 +57,15 @@ export function FamilySection() {
             ))}
           </div>
         )}
-        <InviteDialog role="parent" label="Invitar padre/madre" />
+        <InviteDialog role="parent" label={t('family.inviteParent')} />
       </div>
 
       <div>
         <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-          <Eye className="h-3 w-3" /> Invitados
+          <Eye className="h-3 w-3" /> {t('family.guests')}
         </p>
         {guests.length === 0 ? (
-          <p className="text-xs text-muted-foreground mb-2">Sin invitados</p>
+          <p className="text-xs text-muted-foreground mb-2">{t('family.noGuests')}</p>
         ) : (
           <div className="space-y-1 mb-2">
             {guests.map(g => (
@@ -71,7 +73,7 @@ export function FamilySection() {
             ))}
           </div>
         )}
-        <InviteDialog role="guest" label="Invitar familiar" />
+        <InviteDialog role="guest" label={t('family.inviteRelative')} />
       </div>
     </div>
   );
@@ -79,6 +81,7 @@ export function FamilySection() {
 
 function ShareRow({ share }: { share: any }) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const removeShare = useMutation({
@@ -88,23 +91,23 @@ function ShareRow({ share }: { share: any }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['family_shares'] });
-      toast.success('Acceso eliminado');
+      toast.success(t('family.accessRemoved'));
     },
   });
 
   const handleShareCode = async () => {
     if (!share.invite_code) return;
     const inviteUrl = `${window.location.origin}/auth?invite=${share.invite_code}&email=${encodeURIComponent(share.shared_with_email)}`;
-    const text = `¡Únete a nuestro álbum familiar! Regístrate aquí: ${inviteUrl}`;
+    const text = t('family.joinAlbumText', { url: inviteUrl });
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Invitación familiar', text });
+        await navigator.share({ title: t('family.familyInvitation'), text });
         return;
       } catch {}
     }
     await navigator.clipboard.writeText(share.invite_code);
     setCopied(true);
-    toast.success('Código copiado');
+    toast.success(t('family.codeCopied'));
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -118,7 +121,7 @@ function ShareRow({ share }: { share: any }) {
           <span className="text-muted-foreground ml-1">({share.relationship})</span>
         )}
         {isPending && (
-          <span className="text-amber-500 ml-1">(pendiente)</span>
+          <span className="text-amber-500 ml-1">{t('family.pending')}</span>
         )}
       </div>
       <div className="flex items-center gap-0.5">
@@ -128,7 +131,7 @@ function ShareRow({ share }: { share: any }) {
             size="icon"
             className="h-6 w-6 text-muted-foreground hover:text-foreground"
             onClick={handleShareCode}
-            title={`Código: ${share.invite_code}`}
+            title={share.invite_code}
           >
             {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
           </Button>
@@ -148,6 +151,7 @@ function ShareRow({ share }: { share: any }) {
 
 function InviteDialog({ role, label }: { role: string; label: string }) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
@@ -186,7 +190,7 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
         const { error: emailError } = await supabase.functions.invoke('send-email', {
           body: {
             to: normalizedEmail,
-            subject: '¡Te han invitado al álbum familiar de Memorydrawer!',
+            subject: t('family.inviteEmailSubject'),
             html: `
               <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
                 <h2 style="color: #1a1a1a;">¡Tienes una invitación! 📸</h2>
@@ -203,7 +207,7 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
         setEmailSent(true);
       } catch {
         setEmailSent(false);
-        toast.warning('Invitación creada. No se pudo enviar el email automático — comparte el enlace manualmente.');
+        toast.warning(t('family.emailNotSent'));
       }
     },
     onError: (e: any) => toast.error(e.message),
@@ -211,16 +215,16 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
 
   const handleShareCode = async () => {
     const inviteUrl = `${window.location.origin}/auth?invite=${lastInviteCode}&email=${encodeURIComponent(lastEmail)}`;
-    const text = `¡Únete a nuestro álbum familiar! Regístrate aquí: ${inviteUrl}`;
+    const text = t('family.joinAlbumText', { url: inviteUrl });
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Invitación familiar', text });
+        await navigator.share({ title: t('family.familyInvitation'), text });
         return;
       } catch {}
     }
     await navigator.clipboard.writeText(lastInviteCode);
     setCodeCopied(true);
-    toast.success('Código copiado');
+    toast.success(t('family.codeCopied'));
     setTimeout(() => setCodeCopied(false), 2000);
   };
 
@@ -246,9 +250,7 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
         <DialogHeader>
           <DialogTitle>{label}</DialogTitle>
           <DialogDescription>
-            {role === 'parent'
-              ? 'El otro padre/madre tendrá todos los derechos sobre el álbum.'
-              : 'Los invitados solo podrán ver las fotos marcadas como compartidas.'}
+            {role === 'parent' ? t('family.parentDesc') : t('family.guestDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -256,8 +258,8 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
           <div className="space-y-3 text-center">
             <p className="text-sm text-muted-foreground">
               {emailSent
-                ? `¡Invitación enviada por email a ${lastEmail}! También puedes compartir el enlace manualmente:`
-                : '¡Invitación creada! Comparte este código:'}
+                ? t('family.invitationSent', { email: lastEmail })
+                : t('family.invitationCreated')}
             </p>
             <div className="bg-muted rounded-lg p-4">
               <p className="text-2xl font-mono font-bold tracking-widest text-foreground">
@@ -266,21 +268,21 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
             </div>
             <Button onClick={handleShareCode} variant="outline" className="w-full gap-2">
               {codeCopied ? <Check className="h-4 w-4 text-green-500" /> : <Share2 className="h-4 w-4" />}
-              {codeCopied ? 'Copiado' : 'Compartir invitación'}
+              {codeCopied ? t('family.copied') : t('family.shareInvitation')}
             </Button>
             <p className="text-xs text-muted-foreground">
-              Cuando se registre con el email indicado, se enlazará automáticamente a tu familia.
+              {t('family.autoLinkInfo')}
             </p>
             <Button variant="ghost" size="sm" onClick={() => handleClose(false)}>
-              Cerrar
+              {t('common.close')}
             </Button>
           </div>
         ) : (
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label className="text-xs">Email</Label>
+              <Label className="text-xs">{t('family.emailLabel')}</Label>
               <Input
-                placeholder="email@ejemplo.com"
+                placeholder={t('family.emailPlaceholder')}
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 type="email"
@@ -288,10 +290,10 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs">Parentesco</Label>
+              <Label className="text-xs">{t('family.relationship')}</Label>
               <Select value={relationship} onValueChange={setRelationship}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar parentesco" />
+                  <SelectValue placeholder={t('family.selectRelationship')} />
                 </SelectTrigger>
                 <SelectContent>
                   {options.map(r => (
@@ -301,7 +303,7 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
               </Select>
               {relationship === 'Otro' && (
                 <Input
-                  placeholder="Parentesco personalizado"
+                  placeholder={t('family.customRelationship')}
                   value={customRelationship}
                   onChange={e => setCustomRelationship(e.target.value)}
                   className="mt-1"
@@ -314,7 +316,7 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
               disabled={!email.trim() || addShare.isPending}
               className="w-full"
             >
-              Crear invitación
+              {t('family.createInvitation')}
             </Button>
           </div>
         )}
