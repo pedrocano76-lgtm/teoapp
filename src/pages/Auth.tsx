@@ -36,6 +36,22 @@ export default function Auth() {
     }
   }, [inviteCode, inviteEmail]);
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast({ title: t('common.error'), description: t('auth.enterEmailFirst', 'Please enter your email first'), variant: 'destructive' });
+      return;
+    }
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast({ title: t('auth.resetEmailSent', 'Email sent'), description: t('auth.resetEmailSentDesc', 'Check your inbox for the reset link.') });
+    } catch (error: any) {
+      toast({ title: t('common.error'), description: error.message, variant: 'destructive' });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -146,6 +162,18 @@ export default function Auth() {
               required
               minLength={6}
             />
+            {isLogin && (
+              <div className="flex justify-end -mt-2">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-xs hover:underline"
+                  style={{ color: '#C8845A' }}
+                >
+                  {t('auth.forgotPassword', '¿Olvidaste tu contraseña?')}
+                </button>
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? t('auth.loading') : isLogin ? t('auth.login') : t('auth.signup')}
             </Button>
