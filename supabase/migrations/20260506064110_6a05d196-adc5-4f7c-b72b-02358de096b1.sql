@@ -1,0 +1,1 @@
+ALTER TABLE public.reminder_settings ADD COLUMN IF NOT EXISTS birthdays_enabled boolean NOT NULL DEFAULT true;
