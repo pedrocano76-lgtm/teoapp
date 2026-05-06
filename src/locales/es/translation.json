@@ -151,11 +151,17 @@
     "dayBefore": "El día anterior"
   },
   "settings": {
+    "appearance": "Apariencia",
+    "notifications": "Notificaciones",
+    "tools": "Herramientas",
+    "language": "Idioma",
     "theme": "Tema",
     "themeLight": "Claro",
     "themeDark": "Oscuro",
     "themeSystem": "Sistema",
-    "emailReminders": "Recordatorios por email",
+    "birthdayReminders": "Recordatorios de cumpleaños",
+    "birthdayRemindersDesc": "Recibe un email antes del cumpleaños de cada hijo/a.",
+    "emailReminders": "Recordatorios de inactividad",
     "emailRemindersDesc": "Te avisamos cuando lleves varios días sin añadir fotos.",
     "frequency": "Frecuencia (días sin actividad)",
     "days": "{{count}} días",
@@ -163,7 +169,9 @@
     "processing": "Procesando…",
     "saveError": "No se pudo guardar",
     "remindersError": "Error al enviar recordatorios",
-    "remindersOk": "Recordatorios procesados"
+    "remindersOk": "Recordatorios procesados",
+    "findDuplicates": "Buscar duplicados",
+    "findDuplicatesDesc": "Analiza tu biblioteca para encontrar fotos visualmente idénticas."
   },
   "lightbox": {
     "photo": "Foto",
