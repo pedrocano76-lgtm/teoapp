@@ -43,7 +43,7 @@ export default function Auth() {
     }
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: 'https://memorydrawer.app/reset-password',
       });
       if (error) throw error;
       toast({ title: t('auth.resetEmailSent', 'Email sent'), description: t('auth.resetEmailSentDesc', 'Check your inbox for the reset link.') });
