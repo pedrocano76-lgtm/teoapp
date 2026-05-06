@@ -1,13 +1,12 @@
 import { useState, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
-import { Baby, Settings, Users, LogOut, ChevronDown, Home, Copy } from 'lucide-react';
+import { Settings, Users, LogOut, ChevronDown, Home } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -31,6 +30,15 @@ interface AppSidebarProps {
   duplicateFinderSlot?: ReactNode;
 }
 
+const SectionTitle = ({ children }: { children: ReactNode }) => (
+  <p
+    className="px-3 pt-1 pb-2 text-[10px] font-semibold uppercase tracking-[0.08em] group-data-[collapsible=icon]:hidden"
+    style={{ color: '#9A8A7A' }}
+  >
+    {children}
+  </p>
+);
+
 export function AppSidebar({ children: childrenList, onSelectChild, selectedChildId, duplicateFinderSlot }: AppSidebarProps) {
   const { user, signOut } = useAuth();
   const { t } = useTranslation();
@@ -45,12 +53,17 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
         </button>
       </SidebarHeader>
 
-      <SidebarContent>
-        {/* Home */}
+      <SidebarContent className="gap-2">
+        {/* Section 1 — Navigation */}
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => onSelectChild(null)} isActive={!selectedChildId}>
+              <SidebarMenuButton
+                onClick={() => onSelectChild(null)}
+                isActive={!selectedChildId}
+                className="data-[active=true]:text-white data-[active=true]:hover:text-white"
+                style={!selectedChildId ? { background: '#C8845A', color: '#FFFFFF' } : undefined}
+              >
                 <Home className="h-4 w-4" />
                 <span>{t('nav.home')}</span>
               </SidebarMenuButton>
@@ -58,14 +71,28 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
           </SidebarMenu>
         </SidebarGroup>
 
-        {/* Family (top level) */}
-        <Collapsible defaultOpen>
+        {/* Section 2 — Children */}
+        <SidebarGroup>
+          <SectionTitle>{t('nav.children')}</SectionTitle>
+          <SidebarGroupContent>
+            <ChildrenManager children={childrenList} onSelectChild={onSelectChild} />
+            <div className="px-2 pt-2 group-data-[collapsible=icon]:hidden">
+              <AddChildDialog />
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Section 3 — Family (collapsed by default) */}
+        <Collapsible defaultOpen={false}>
           <SidebarGroup>
             <CollapsibleTrigger asChild>
-              <SidebarGroupLabel className="cursor-pointer flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {t('nav.family')}</span>
-                <ChevronDown className="h-3.5 w-3.5" />
-              </SidebarGroupLabel>
+              <button
+                className="w-full px-3 pt-1 pb-2 text-[10px] font-semibold uppercase tracking-[0.08em] flex items-center justify-between group-data-[collapsible=icon]:hidden hover:opacity-80 transition-opacity"
+                style={{ color: '#9A8A7A' }}
+              >
+                <span className="flex items-center gap-1.5"><Users className="h-3 w-3" /> {t('nav.family')}</span>
+                <ChevronDown className="h-3 w-3 transition-transform data-[state=open]:rotate-180" />
+              </button>
             </CollapsibleTrigger>
             <CollapsibleContent>
               <SidebarGroupContent>
@@ -75,36 +102,17 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
           </SidebarGroup>
         </Collapsible>
 
-        {/* Children */}
-        <Collapsible defaultOpen>
-          <SidebarGroup>
-            <CollapsibleTrigger asChild>
-              <SidebarGroupLabel className="cursor-pointer flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><Baby className="h-3.5 w-3.5" /> {t('nav.children')}</span>
-                <ChevronDown className="h-3.5 w-3.5" />
-              </SidebarGroupLabel>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <ChildrenManager children={childrenList} onSelectChild={onSelectChild} />
-                <div className="px-2 pt-2">
-                  <AddChildDialog />
-                </div>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
-
-
-
-        {/* Settings */}
+        {/* Settings (kept collapsible above footer for content) */}
         <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
           <SidebarGroup>
             <CollapsibleTrigger asChild>
-              <SidebarGroupLabel className="cursor-pointer flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><Settings className="h-3.5 w-3.5" /> {t('nav.settings')}</span>
-                <ChevronDown className="h-3.5 w-3.5" />
-              </SidebarGroupLabel>
+              <button
+                className="w-full px-3 pt-1 pb-2 text-[10px] font-semibold uppercase tracking-[0.08em] flex items-center justify-between group-data-[collapsible=icon]:hidden hover:opacity-80 transition-opacity"
+                style={{ color: '#9A8A7A' }}
+              >
+                <span className="flex items-center gap-1.5"><Settings className="h-3 w-3" /> {t('nav.settings')}</span>
+                <ChevronDown className="h-3 w-3" />
+              </button>
             </CollapsibleTrigger>
             <CollapsibleContent>
               <SidebarGroupContent>
@@ -120,15 +128,33 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
         </Collapsible>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-sidebar-border">
-        <div className="group-data-[collapsible=icon]:hidden space-y-2 mb-2">
-          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+      {/* Section 4 — Footer */}
+      <SidebarFooter
+        className="p-4 mt-auto"
+        style={{ borderTop: '1px solid #E0D8CC' }}
+      >
+        <div className="group-data-[collapsible=icon]:hidden space-y-3 mb-2">
+          <p className="text-xs truncate" style={{ color: '#7A6A5A' }}>{user?.email}</p>
           <LanguageToggle />
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(o => !o)}
+            className="flex items-center gap-2 text-xs hover:opacity-80 transition-opacity w-full"
+            style={{ color: '#7A6A5A' }}
+          >
+            <Settings className="h-3.5 w-3.5" />
+            <span>{t('nav.settings')}</span>
+          </button>
         </div>
-        <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground" onClick={signOut}>
-          <LogOut className="h-4 w-4" />
+        <button
+          type="button"
+          onClick={signOut}
+          className="flex items-center gap-2 text-xs hover:opacity-80 transition-opacity w-full"
+          style={{ color: '#7A6A5A' }}
+        >
+          <LogOut className="h-3.5 w-3.5" />
           <span className="group-data-[collapsible=icon]:hidden">{t('nav.signOut')}</span>
-        </Button>
+        </button>
       </SidebarFooter>
     </Sidebar>
   );
