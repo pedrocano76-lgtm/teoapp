@@ -151,11 +151,17 @@
     "dayBefore": "Day before"
   },
   "settings": {
+    "appearance": "Appearance",
+    "notifications": "Notifications",
+    "tools": "Tools",
+    "language": "Language",
     "theme": "Theme",
     "themeLight": "Light",
     "themeDark": "Dark",
     "themeSystem": "System",
-    "emailReminders": "Email reminders",
+    "birthdayReminders": "Birthday reminders",
+    "birthdayRemindersDesc": "Email me before each child's birthday.",
+    "emailReminders": "Inactivity reminders",
     "emailRemindersDesc": "We'll remind you when you go several days without adding photos.",
     "frequency": "Frequency (days of inactivity)",
     "days": "{{count}} days",
@@ -163,7 +169,9 @@
     "processing": "Processing…",
     "saveError": "Could not save",
     "remindersError": "Error sending reminders",
-    "remindersOk": "Reminders processed"
+    "remindersOk": "Reminders processed",
+    "findDuplicates": "Find duplicates",
+    "findDuplicatesDesc": "Scan your library for visually identical photos and clean them up."
   },
   "lightbox": {
     "photo": "Photo",
