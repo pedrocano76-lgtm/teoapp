@@ -370,6 +370,7 @@ export type Database = {
       }
       reminder_settings: {
         Row: {
+          birthdays_enabled: boolean
           created_at: string
           enabled: boolean
           id: string
@@ -379,6 +380,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          birthdays_enabled?: boolean
           created_at?: string
           enabled?: boolean
           id?: string
@@ -388,6 +390,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          birthdays_enabled?: boolean
           created_at?: string
           enabled?: boolean
           id?: string
