@@ -104,7 +104,11 @@ const Index = () => {
   const { isGuest, canEdit } = useUserRole();
 
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const toggleTag = useCallback((id: string | null) => {
+    if (id === null) { setSelectedTagIds([]); return; }
+    setSelectedTagIds(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
+  }, []);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -159,6 +163,11 @@ const Index = () => {
     if (selectedLocation) {
       result = result.filter(p => p.locationName === selectedLocation);
     }
+    if (selectedTagIds.length > 0) {
+      result = result.filter(p =>
+        (p.tags || []).some(t => selectedTagIds.includes(t.id))
+      );
+    }
     if (selectedActivity) {
       const activityName = selectedActivity.name.trim().toLowerCase();
       result = result.filter(p =>
@@ -168,7 +177,7 @@ const Index = () => {
     return result.sort((a, b) =>
       sortOrder === 'asc' ? a.date.getTime() - b.date.getTime() : b.date.getTime() - a.date.getTime()
     );
-  }, [selectedChildId, selectedEventId, selectedLocation, selectedActivity, sortOrder, photos, events]);
+  }, [selectedChildId, selectedEventId, selectedLocation, selectedActivity, selectedTagIds, sortOrder, photos, events]);
 
   const uniqueLocations = useMemo(() => {
     const locs = new Set<string>();
@@ -220,7 +229,7 @@ const Index = () => {
             onSelectChild={(id) => {
               setSelectedChildId(id);
               setSelectedEventId(null);
-              setSelectedTagId(null);
+              setSelectedTagIds([]);
               setSelectedLocation(null);
               setSelectedActivityId(null);
               exitSelectionMode();
@@ -242,8 +251,8 @@ const Index = () => {
                   sortOrder={sortOrder}
                   onSortChange={setSortOrder}
                   tags={tags}
-                  selectedTagId={selectedTagId}
-                  onTagSelect={setSelectedTagId}
+                  selectedTagIds={selectedTagIds}
+                  onTagToggle={toggleTag}
                   events={filteredEvents}
                   selectedEventId={selectedEventId}
                   onEventSelect={setSelectedEventId}
@@ -281,7 +290,7 @@ const Index = () => {
                   <ChildSelector
                     children={children}
                     selectedId={selectedChildId}
-                    onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagId(null); setSelectedLocation(null); setSelectedActivityId(null); }}
+                    onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagIds([]); setSelectedLocation(null); setSelectedActivityId(null); }}
                   />
                 </div>
               )}

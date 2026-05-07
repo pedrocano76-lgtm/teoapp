@@ -11,8 +11,8 @@ interface FilterDropdownProps {
   sortOrder: 'asc' | 'desc';
   onSortChange: (order: 'asc' | 'desc') => void;
   tags: Tag[];
-  selectedTagId: string | null;
-  onTagSelect: (id: string | null) => void;
+  selectedTagIds: string[];
+  onTagToggle: (id: string | null) => void;
   events: Event[];
   selectedEventId: string | null;
   onEventSelect: (id: string | null) => void;
@@ -26,7 +26,7 @@ interface FilterDropdownProps {
 
 export function FilterDropdown({
   sortOrder, onSortChange,
-  tags, selectedTagId, onTagSelect,
+  tags, selectedTagIds, onTagToggle,
   events, selectedEventId, onEventSelect,
   locations, selectedLocation, onLocationSelect,
   selectedChildId, selectedActivityId, onActivitySelect,
@@ -35,7 +35,7 @@ export function FilterDropdown({
   const uniqueEvents = Array.from(new Map(events.map(e => [e.name, e])).values());
   const { data: activitiesData = [] } = useActivities(selectedChildId ?? undefined);
   const activities = activitiesData as Array<{ id: string; name: string; type: string; icon: string | null }>;
-  const hasFilters = selectedTagId || selectedEventId || selectedLocation || selectedActivityId || sortOrder === 'asc';
+  const hasFilters = selectedTagIds.length > 0 || selectedEventId || selectedLocation || selectedActivityId || sortOrder === 'asc';
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -145,10 +145,10 @@ export function FilterDropdown({
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Etiquetas</Label>
             <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
               <button
-                onClick={() => onTagSelect(null)}
+                onClick={() => onTagToggle(null)}
                 className={cn(
                   'px-2.5 py-1 rounded-full text-xs font-medium transition-all',
-                  !selectedTagId ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  selectedTagIds.length === 0 ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 )}
               >
                 Todos
@@ -156,10 +156,10 @@ export function FilterDropdown({
               {tags.map(tag => (
                 <button
                   key={tag.id}
-                  onClick={() => onTagSelect(selectedTagId === tag.id ? null : tag.id)}
+                  onClick={() => onTagToggle(tag.id)}
                   className={cn(
                     'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all',
-                    selectedTagId === tag.id
+                    selectedTagIds.includes(tag.id)
                       ? 'bg-accent text-accent-foreground shadow-sm'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   )}
@@ -215,7 +215,7 @@ export function FilterDropdown({
             className="w-full text-muted-foreground"
             onClick={() => {
               onSortChange('desc');
-              onTagSelect(null);
+              onTagToggle(null);
               onEventSelect(null);
               onLocationSelect(null);
               onActivitySelect?.(null);
