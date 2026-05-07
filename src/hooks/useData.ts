@@ -187,6 +187,22 @@ export function useEvents(childId?: string) {
   });
 }
 
+export function useAddEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ childId, name, date }: { childId: string; name: string; date?: Date | null }) => {
+      const { data, error } = await supabase
+        .from('events')
+        .insert({ child_id: childId, name, date: date ? date.toISOString().slice(0, 10) : null })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['events'] }),
+  });
+}
+
 export function useTags() {
   const { user } = useAuth();
   return useQuery({

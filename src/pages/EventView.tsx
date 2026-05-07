@@ -1,0 +1,141 @@
+import { useMemo, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { ArrowLeft } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useChildren, useEvents } from '@/hooks/useData';
+import { Button } from '@/components/ui/button';
+import { PhotoCard } from '@/components/PhotoCard';
+import { PhotoLightbox } from '@/components/PhotoLightbox';
+import { useLocale } from '@/hooks/useLocale';
+import type { Photo, Child } from '@/lib/types';
+
+function mapChild(row: any): Child {
+  return {
+    id: row.id,
+    name: row.name,
+    birthDate: new Date(row.birth_date),
+    avatarUrl: row.avatar_url ?? undefined,
+    color: row.color as Child['color'],
+    ownerId: row.owner_id ?? undefined,
+    fullName: row.full_name ?? undefined,
+    profilePhotoPath: row.profile_photo_path ?? undefined,
+  };
+}
+
+export default function EventView() {
+  const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const { intlLocale } = useLocale();
+  const { data: childrenData } = useChildren();
+  const { data: eventsData } = useEvents();
+  const [lightboxIndex, setLightboxIndex] = useState(-1);
+
+  const { data: photosData, isLoading } = useQuery({
+    queryKey: ['event-photos', eventId, user?.id],
+    enabled: !!user && !!eventId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('photos')
+        .select('*, photo_tags(tag_id, tags(id, name, icon, color, is_predefined))')
+        .eq('event_id', eventId!)
+        .order('taken_at', { ascending: true });
+      if (error) throw error;
+      const paths: string[] = [];
+      for (const p of data ?? []) {
+        if (p.storage_path) paths.push(p.storage_path);
+        if (p.thumbnail_path) paths.push(p.thumbnail_path);
+      }
+      const urlMap: Record<string, string> = {};
+      if (paths.length > 0) {
+        const { data: signed } = await supabase.storage.from('photos').createSignedUrls(paths, 3600);
+        for (const s of signed ?? []) {
+          if (s.signedUrl && s.path) urlMap[s.path] = s.signedUrl;
+        }
+      }
+      return (data ?? []).map((row: any): Photo => ({
+        id: row.id,
+        url: urlMap[row.storage_path] || '',
+        thumbnailUrl: row.thumbnail_path ? urlMap[row.thumbnail_path] || urlMap[row.storage_path] || '' : urlMap[row.storage_path] || '',
+        childId: row.child_id,
+        date: new Date(row.taken_at),
+        caption: row.caption ?? undefined,
+        eventId: row.event_id ?? undefined,
+        locationName: row.location_name ?? undefined,
+        locationLat: row.location_lat ?? undefined,
+        locationLng: row.location_lng ?? undefined,
+        storagePath: row.storage_path,
+        thumbnailPath: row.thumbnail_path ?? null,
+        isShared: row.is_shared ?? true,
+        tags: Array.isArray(row.photo_tags)
+          ? row.photo_tags.map((pt: any) => pt.tags).filter(Boolean).map((tg: any) => ({
+              id: tg.id, name: tg.name, icon: tg.icon, color: tg.color, isPredefined: tg.is_predefined,
+            }))
+          : [],
+      }));
+    },
+  });
+
+  const children = useMemo(() => (childrenData || []).map(mapChild), [childrenData]);
+  const childMap = useMemo(() => new Map(children.map(c => [c.id, c])), [children]);
+  const event = useMemo(() => (eventsData || []).find((e: any) => e.id === eventId), [eventsData, eventId]);
+  const photos = photosData ?? [];
+
+  const dateLabel = event?.date
+    ? new Date(event.date).toLocaleDateString(intlLocale, { day: 'numeric', month: 'long', year: 'numeric' })
+    : '';
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-40 h-12 border-b border-border/60 glass">
+        <div className="h-full container mx-auto px-3 flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(-1)} aria-label={t('common.close')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="flex-1 text-center text-[15px] truncate" style={{ fontFamily: 'Georgia, serif', color: '#4A3728' }}>
+            <span style={{ color: '#C8845A' }}>✦</span> {event?.name ?? ''}
+          </h1>
+          <div className="w-8" />
+        </div>
+      </header>
+      <main className="container mx-auto px-3 pt-4 pb-20">
+        {dateLabel && (
+          <p className="text-center text-sm text-muted-foreground mb-4">
+            {dateLabel} · {t('photos.count', { count: photos.length })}
+          </p>
+        )}
+        {isLoading ? (
+          <p className="text-center text-muted-foreground py-10">{t('common.loading')}</p>
+        ) : photos.length === 0 ? (
+          <p className="text-center text-muted-foreground py-10">{t('empty.noPhotos')}</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {photos.map((photo, i) => {
+              const child = childMap.get(photo.childId);
+              if (!child) return null;
+              return (
+                <PhotoCard
+                  key={photo.id}
+                  photo={photo}
+                  child={child}
+                  onClick={() => setLightboxIndex(i)}
+                />
+              );
+            })}
+          </div>
+        )}
+        <PhotoLightbox
+          photos={photos}
+          children={children}
+          initialIndex={lightboxIndex >= 0 ? lightboxIndex : 0}
+          open={lightboxIndex >= 0}
+          onOpenChange={(open) => { if (!open) setLightboxIndex(-1); }}
+        />
+      </main>
+    </div>
+  );
+}

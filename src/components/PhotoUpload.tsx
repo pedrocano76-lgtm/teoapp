@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useUploadPhoto, useEvents } from '@/hooks/useData';
+import { useUploadPhoto, useEvents, useAddEvent } from '@/hooks/useData';
 import { useToast } from '@/hooks/use-toast';
 import { getExifDate } from '@/lib/exif-utils';
 import { Button } from '@/components/ui/button';
@@ -9,12 +10,18 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TagSelector } from './TagSelector';
 import { CalendarIcon, AlertTriangle, Loader2, Check, X, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+
+async function supabaseUpdateEventDate(eventId: string, dateIso: string) {
+  await supabase.from('events').update({ date: dateIso }).eq('id', eventId);
+}
 
 interface PhotoUploadProps {
   children: { id: string; name: string }[];
@@ -23,9 +30,13 @@ interface PhotoUploadProps {
 }
 
 export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState(defaultChildId || '');
   const [caption, setCaption] = useState('');
+  const [isEvent, setIsEvent] = useState(false);
+  const [eventMode, setEventMode] = useState<'new' | 'existing'>('new');
+  const [newEventName, setNewEventName] = useState('');
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
@@ -37,6 +48,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadPhoto = useUploadPhoto();
+  const addEvent = useAddEvent();
   const { toast } = useToast();
   const { data: eventsData } = useEvents(selectedChild || undefined);
 
@@ -105,10 +117,26 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
     setUploading(true);
 
     try {
+      // Resolve event id (create if needed)
+      let eventIdToUse: string | undefined = undefined;
+      if (isEvent) {
+        if (eventMode === 'new' && newEventName.trim()) {
+          const created = await addEvent.mutateAsync({
+            childId: selectedChild,
+            name: newEventName.trim(),
+            date: null,
+          });
+          eventIdToUse = created.id;
+        } else if (eventMode === 'existing' && selectedEventId) {
+          eventIdToUse = selectedEventId;
+        }
+      }
+
       // Upload in parallel batches of 3 to balance speed and bandwidth
       const CONCURRENCY = 3;
       let completed = 0;
       let failed = 0;
+      let earliestDate: Date | null = null;
       for (let i = 0; i < files.length; i += CONCURRENCY) {
         const batch = files.slice(i, i + CONCURRENCY);
         const results = await Promise.allSettled(
@@ -120,11 +148,17 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                 childId: selectedChild,
                 caption: caption || undefined,
                 takenAt: noExifFiles.includes(file.name) && manualDate ? manualDate : undefined,
-                eventId: selectedEventId || undefined,
+                eventId: eventIdToUse,
                 tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
                 isShared,
               });
               setUploadProgress(prev => ({ ...prev, [file.name]: 'done' }));
+              // Track earliest photo date for default event date
+              const exif = await getExifDate(file);
+              const d = exif || manualDate || null;
+              if (d && (!earliestDate || d.getTime() < earliestDate.getTime())) {
+                earliestDate = d;
+              }
             } catch (error) {
               setUploadProgress(prev => ({ ...prev, [file.name]: 'error' }));
               throw error;
@@ -133,6 +167,12 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
         );
         completed += results.filter(r => r.status === 'fulfilled').length;
         failed += results.filter(r => r.status === 'rejected').length;
+      }
+
+      // If new event was created without a date, default it to the earliest photo date
+      if (isEvent && eventMode === 'new' && eventIdToUse && earliestDate) {
+        const iso = (earliestDate as Date).toISOString().slice(0, 10);
+        await supabaseUpdateEventDate(eventIdToUse, iso);
       }
 
       if (failed === 0) {
@@ -147,6 +187,9 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
       setOpen(false);
       setFiles([]);
       setCaption('');
+      setIsEvent(false);
+      setEventMode('new');
+      setNewEventName('');
       setSelectedEventId('');
       setSelectedTagIds([]);
       setIsShared(true);
@@ -319,22 +362,62 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             onChange={(e) => setCaption(e.target.value)}
           />
 
-          {/* Event selector */}
-          {childEvents.length > 0 && (
-            <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Vincular a evento (opcional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sin evento</SelectItem>
-                {childEvents.map((e) => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {e.icon} {e.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          {/* Event toggle + selector */}
+          <div className="space-y-2 rounded-lg border border-border p-3">
+            <div className="flex items-center gap-2">
+              <Checkbox id="is-event" checked={isEvent} onCheckedChange={(v) => setIsEvent(!!v)} />
+              <Label htmlFor="is-event" className="text-sm cursor-pointer">
+                {t('events.isPartOfEvent')}
+              </Label>
+            </div>
+            {isEvent && (
+              <div className="space-y-2 pt-1">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={eventMode === 'new' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setEventMode('new')}
+                  >
+                    {t('events.newEvent')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={eventMode === 'existing' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    disabled={(eventsData || []).length === 0}
+                    onClick={() => setEventMode('existing')}
+                  >
+                    {t('events.existingEvent')}
+                  </Button>
+                </div>
+                {eventMode === 'new' ? (
+                  <Input
+                    placeholder={t('events.eventNamePlaceholder')}
+                    value={newEventName}
+                    onChange={(e) => setNewEventName(e.target.value)}
+                  />
+                ) : (
+                  <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('events.selectEvent')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[...(eventsData || [])]
+                        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                        .map((e) => (
+                          <SelectItem key={e.id} value={e.id}>
+                            {e.icon} {e.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Tag selector */}
           <TagSelector selectedTagIds={selectedTagIds} onToggle={handleToggleTag} />
