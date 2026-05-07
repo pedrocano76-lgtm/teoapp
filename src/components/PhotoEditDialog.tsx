@@ -80,9 +80,8 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
           const created = await addEvent.mutateAsync({
             childId: photo.childId,
             name: newEventName.trim(),
-            icon: '⭐',
-            date: takenAt ? takenAt.toISOString().slice(0, 10) : null,
-          } as any);
+            date: takenAt ?? null,
+          });
           resolvedEventId = created.id;
         } else if (eventMode === 'existing' && eventId) {
           resolvedEventId = eventId;
