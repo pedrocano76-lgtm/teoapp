@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Event } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -8,6 +9,7 @@ interface EventFilterProps {
 }
 
 export function EventFilter({ events, selectedEventId, onSelect }: EventFilterProps) {
+  const { t } = useTranslation();
   const uniqueNames = Array.from(new Map(events.map(e => [e.name, e])).values());
 
   return (
@@ -21,7 +23,7 @@ export function EventFilter({ events, selectedEventId, onSelect }: EventFilterPr
             : 'bg-muted text-muted-foreground hover:bg-muted/80'
         )}
       >
-        {/* i18n */}All
+        {t('common.all')}
       </button>
       {uniqueNames.map((event) => (
         <button
