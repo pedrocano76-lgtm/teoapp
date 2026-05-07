@@ -8,6 +8,10 @@ const corsHeaders = {
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
+
 interface ChildRow {
   id: string;
   name: string;
@@ -129,10 +133,11 @@ Deno.serve(async (req) => {
         const childrenNames = (children as ChildRow[]).map((c) => c.name);
         const albumLabel =
           childrenNames.length === 1
-            ? `el álbum de ${childrenNames[0]}`
+            ? `el álbum de ${escapeHtml(childrenNames[0])}`
             : "tus álbumes";
 
         const daysText = daysSince === Infinity ? "muchos días" : `${daysSince} días`;
+        const safeFirstName = displayName ? escapeHtml(displayName.split(" ")[0]) : "";
 
         const subject = `Llevas ${daysText} sin añadir fotos`;
         const html = `
@@ -141,7 +146,7 @@ Deno.serve(async (req) => {
   <body style="margin:0;padding:0;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1a1a1a;">
     <div style="max-width:560px;margin:0 auto;padding:48px 32px;">
       <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:500;margin:0 0 16px;color:#1a1a1a;">
-        ${displayName ? `Hola ${displayName.split(" ")[0]},` : "Hola,"}
+        ${safeFirstName ? `Hola ${safeFirstName},` : "Hola,"}
       </h1>
       <p style="font-size:17px;line-height:1.6;color:#3a3a3a;margin:0 0 24px;">
         Llevas <strong>${daysText}</strong> sin añadir fotos a ${albumLabel}.
