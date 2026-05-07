@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.send-birthday-notifications]
 verify_jwt = false
+
+[functions.notify-share-access]
+verify_jwt = false
