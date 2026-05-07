@@ -173,6 +173,15 @@
     "findDuplicates": "Buscar duplicados",
     "findDuplicatesDesc": "Analiza tu biblioteca para encontrar fotos visualmente idénticas."
   },
+  "events": {
+    "isPartOfEvent": "Esto es parte de un evento",
+    "newEvent": "Nuevo evento",
+    "existingEvent": "Evento existente",
+    "eventNamePlaceholder": "Nombre del evento",
+    "selectEvent": "Selecciona un evento",
+    "filterTitle": "Eventos",
+    "noEvents": "No hay eventos para este hijo/a"
+  },
   "lightbox": {
     "photo": "Foto",
     "counter": "{{current}} / {{total}}"
