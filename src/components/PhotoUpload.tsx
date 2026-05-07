@@ -12,11 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TagSelector } from './TagSelector';
-import { CalendarIcon, AlertTriangle, Loader2, Check, X, Camera } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { AlertTriangle, Loader2, Check, X, Camera, CalendarClock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 async function supabaseUpdateEventDate(eventId: string, dateIso: string) {
@@ -27,6 +24,27 @@ interface PhotoUploadProps {
   children: { id: string; name: string }[];
   defaultChildId?: string;
   asFab?: boolean;
+}
+
+interface UploadItem {
+  id: string;
+  file: File;
+  previewUrl: string;
+  exifDate: Date | null;
+  manualDate: Date | null;
+}
+
+function toDateInputValue(d: Date | null): string {
+  if (!d) return '';
+  const tz = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+}
+
+function fromDateInputValue(v: string): Date | null {
+  if (!v) return null;
+  const [y, m, d] = v.split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d, 12, 0, 0);
 }
 
 export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProps) {
@@ -40,11 +58,10 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
   const [newEventName, setNewEventName] = useState('');
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-  const [files, setFiles] = useState<File[]>([]);
+  const [items, setItems] = useState<UploadItem[]>([]);
+  const [bulkDateValue, setBulkDateValue] = useState<string>('');
   const [isShared, setIsShared] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [noExifFiles, setNoExifFiles] = useState<string[]>([]);
-  const [manualDate, setManualDate] = useState<Date | undefined>(undefined);
   const [uploadProgress, setUploadProgress] = useState<Record<string, 'pending' | 'uploading' | 'done' | 'error'>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -58,6 +75,14 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
       setSelectedChild(children[0].id);
     }
   }, [children, selectedChild]);
+
+  // Cleanup preview URLs on unmount/clear
+  useEffect(() => {
+    return () => {
+      items.forEach(it => URL.revokeObjectURL(it.previewUrl));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleToggleTag = (tagId: string) => {
     setSelectedTagIds(prev =>
@@ -92,21 +117,66 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
 
     if (validFiles.length === 0) return;
 
-    setFiles(validFiles);
-    setNoExifFiles([]);
-    setManualDate(undefined);
-    setUploadProgress(Object.fromEntries(validFiles.map(f => [f.name, 'pending'])));
+    // Revoke previous URLs
+    items.forEach(it => URL.revokeObjectURL(it.previewUrl));
 
-    const missing: string[] = [];
-    for (const file of validFiles) {
-      const exifDate = await getExifDate(file);
-      if (!exifDate) missing.push(file.name);
-    }
-    if (missing.length > 0) setNoExifFiles(missing);
+    const newItems: UploadItem[] = await Promise.all(
+      validFiles.map(async (file) => {
+        const exifDate = await getExifDate(file);
+        return {
+          id: `${file.name}_${file.size}_${Math.random().toString(36).slice(2, 8)}`,
+          file,
+          previewUrl: URL.createObjectURL(file),
+          exifDate,
+          manualDate: null,
+        };
+      })
+    );
+
+    setItems(newItems);
+    setBulkDateValue('');
+    setUploadProgress(Object.fromEntries(newItems.map(it => [it.id, 'pending'])));
   };
 
+  const setManualDateFor = (id: string, date: Date | null) => {
+    setItems(prev => prev.map(it => (it.id === id ? { ...it, manualDate: date } : it)));
+  };
+
+  const removeItem = (id: string) => {
+    setItems(prev => {
+      const target = prev.find(it => it.id === id);
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter(it => it.id !== id);
+    });
+    setUploadProgress(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const removeAllUnknown = () => {
+    setItems(prev => {
+      const remove = prev.filter(it => !it.exifDate);
+      remove.forEach(it => URL.revokeObjectURL(it.previewUrl));
+      return prev.filter(it => it.exifDate);
+    });
+  };
+
+  const applyBulkDate = (v: string) => {
+    setBulkDateValue(v);
+    const d = fromDateInputValue(v);
+    if (!d) return;
+    setItems(prev => prev.map(it => (it.exifDate ? it : { ...it, manualDate: d })));
+  };
+
+  const readyItems = items.filter(it => it.exifDate);
+  const unknownItems = items.filter(it => !it.exifDate);
+  const uploadableItems = items.filter(it => it.exifDate || it.manualDate);
+  const blockedCount = unknownItems.filter(it => !it.manualDate).length;
+
   const handleUpload = async () => {
-    if (!selectedChild || files.length === 0) return;
+    if (!selectedChild || uploadableItems.length === 0) return;
     setUploading(true);
 
     try {
@@ -128,29 +198,28 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
       let completed = 0;
       let failed = 0;
       let earliestDate: Date | null = null;
-      for (let i = 0; i < files.length; i += CONCURRENCY) {
-        const batch = files.slice(i, i + CONCURRENCY);
+      for (let i = 0; i < uploadableItems.length; i += CONCURRENCY) {
+        const batch = uploadableItems.slice(i, i + CONCURRENCY);
         const results = await Promise.allSettled(
-          batch.map(async (file) => {
-            setUploadProgress(prev => ({ ...prev, [file.name]: 'uploading' }));
+          batch.map(async (it) => {
+            setUploadProgress(prev => ({ ...prev, [it.id]: 'uploading' }));
             try {
+              const dateToUse = it.exifDate || it.manualDate!;
               await uploadPhoto.mutateAsync({
-                file,
+                file: it.file,
                 childId: selectedChild,
                 caption: caption || undefined,
-                takenAt: noExifFiles.includes(file.name) && manualDate ? manualDate : undefined,
+                takenAt: dateToUse,
                 eventId: eventIdToUse,
                 tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
                 isShared,
               });
-              setUploadProgress(prev => ({ ...prev, [file.name]: 'done' }));
-              const exif = await getExifDate(file);
-              const d = exif || manualDate || null;
-              if (d && (!earliestDate || d.getTime() < earliestDate.getTime())) {
-                earliestDate = d;
+              setUploadProgress(prev => ({ ...prev, [it.id]: 'done' }));
+              if (!earliestDate || dateToUse.getTime() < earliestDate.getTime()) {
+                earliestDate = dateToUse;
               }
             } catch (error) {
-              setUploadProgress(prev => ({ ...prev, [file.name]: 'error' }));
+              setUploadProgress(prev => ({ ...prev, [it.id]: 'error' }));
               throw error;
             }
           })
@@ -170,11 +239,12 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
         toast({
           title: t('photoUpload.partialTitle'),
           description: t('photoUpload.partialDesc', { done: completed, failed }),
-          variant: failed === files.length ? 'destructive' : 'default',
+          variant: failed === uploadableItems.length ? 'destructive' : 'default',
         });
       }
       setOpen(false);
-      setFiles([]);
+      items.forEach(it => URL.revokeObjectURL(it.previewUrl));
+      setItems([]);
       setCaption('');
       setIsEvent(false);
       setEventMode('new');
@@ -182,8 +252,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
       setSelectedEventId('');
       setSelectedTagIds([]);
       setIsShared(true);
-      setNoExifFiles([]);
-      setManualDate(undefined);
+      setBulkDateValue('');
       setUploadProgress({});
     } catch (error: any) {
       toast({ title: t('photoUpload.errorTitle'), description: error.message, variant: 'destructive' });
@@ -193,6 +262,45 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
   };
 
   const completedCount = Object.values(uploadProgress).filter(status => status === 'done' || status === 'error').length;
+
+  const renderThumb = (it: UploadItem, opts: { showWarning?: boolean } = {}) => {
+    const status = uploadProgress[it.id];
+    return (
+      <div key={it.id} className="relative h-20 w-20 shrink-0 rounded-lg overflow-hidden bg-muted">
+        <img src={it.previewUrl} alt="" className="w-full h-full object-cover" />
+        {!uploading && (
+          <button
+            type="button"
+            onClick={() => removeItem(it.id)}
+            aria-label={t('common.remove', 'Remove')}
+            className="absolute top-1 right-1 h-5 w-5 rounded-full bg-background/90 text-foreground shadow flex items-center justify-center hover:bg-background"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        )}
+        {opts.showWarning && (
+          <div className="absolute top-1 left-1 rounded-full bg-yellow-500 text-white p-0.5 shadow">
+            <AlertTriangle className="h-3 w-3" />
+          </div>
+        )}
+        {status === 'uploading' && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/60">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          </div>
+        )}
+        {status === 'done' && (
+          <div className="absolute bottom-1 right-1 rounded-full bg-success p-0.5 text-success-foreground shadow-sm">
+            <Check className="h-3 w-3" />
+          </div>
+        )}
+        {status === 'error' && (
+          <div className="absolute bottom-1 right-1 rounded-full bg-destructive p-0.5 text-destructive-foreground shadow-sm">
+            <X className="h-3 w-3" />
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -253,9 +361,9 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                 className="w-full"
                 onClick={() => fileInputRef.current?.click()}
               >
-                {files.length > 0 ? t('photoUpload.filesSelected', { count: files.length }) : t('photoUpload.chooseFiles')}
+                {items.length > 0 ? t('photoUpload.filesSelected', { count: items.length }) : t('photoUpload.chooseFiles')}
               </Button>
-              {files.length === 0 && (
+              {items.length === 0 && (
                 <Button
                   variant="default"
                   className="w-full sm:hidden gap-2"
@@ -265,157 +373,175 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                 </Button>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">{t('photoUpload.fileTypes')}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('photoUpload.fileTypes')}</p>
           </div>
 
-          {files.length > 0 && (
-            <div className="grid grid-cols-4 gap-2">
-              {files.slice(0, 8).map((f, i) => (
-                <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
-                  <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover" />
-                  {uploadProgress[f.name] === 'uploading' && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/60">
-                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                    </div>
+          {readyItems.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-foreground">
+                  {t('photoUpload.groupReady')} <span className="text-muted-foreground font-normal">({readyItems.length})</span>
+                </p>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                {readyItems.map(it => (
+                  <div key={it.id} className="flex flex-col items-center gap-1 shrink-0">
+                    {renderThumb(it)}
+                    <span className="text-[10px] text-muted-foreground leading-tight">
+                      {format(it.exifDate!, 'd MMM yyyy', { locale: dateFnsLocale })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {unknownItems.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-border">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs font-medium text-yellow-700 dark:text-yellow-400 flex items-center gap-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  {t('photoUpload.groupUnknown')} <span className="font-normal opacity-80">({unknownItems.length})</span>
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground">{t('photoUpload.groupUnknownHint')}</p>
+
+              {/* Bulk actions */}
+              <div className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/50 p-2">
+                <CalendarClock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <label className="text-xs text-muted-foreground shrink-0">
+                  {t('photoUpload.setSameDateForAll')}
+                </label>
+                <input
+                  type="date"
+                  value={bulkDateValue}
+                  max={toDateInputValue(new Date())}
+                  onChange={(e) => applyBulkDate(e.target.value)}
+                  className="h-8 flex-1 min-w-[140px] rounded-md border border-input bg-background px-2 text-xs"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-xs text-destructive hover:text-destructive"
+                  onClick={removeAllUnknown}
+                >
+                  {t('photoUpload.removeAllWithoutDate')}
+                </Button>
+              </div>
+
+              {/* Per-photo */}
+              <div className="space-y-2">
+                {unknownItems.map(it => (
+                  <div key={it.id} className="flex items-center gap-2">
+                    {renderThumb(it, { showWarning: true })}
+                    <input
+                      type="date"
+                      value={toDateInputValue(it.manualDate)}
+                      max={toDateInputValue(new Date())}
+                      onChange={(e) => setManualDateFor(it.id, fromDateInputValue(e.target.value))}
+                      className="h-9 flex-1 min-w-0 rounded-md border border-input bg-background px-2 text-sm"
+                      placeholder={t('photoUpload.selectDate')}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {items.length > 0 && (
+            <Input
+              placeholder={t('photoUpload.captionPlaceholder')}
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+            />
+          )}
+
+          {items.length > 0 && (
+            <div className="space-y-2 rounded-lg border border-border p-3">
+              <div className="flex items-center gap-2">
+                <Checkbox id="is-event" checked={isEvent} onCheckedChange={(v) => setIsEvent(!!v)} />
+                <Label htmlFor="is-event" className="text-sm cursor-pointer">
+                  {t('events.isPartOfEvent')}
+                </Label>
+              </div>
+              {isEvent && (
+                <div className="space-y-2 pt-1">
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={eventMode === 'new' ? 'default' : 'outline'}
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => setEventMode('new')}
+                    >
+                      {t('events.newEvent')}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={eventMode === 'existing' ? 'default' : 'outline'}
+                      size="sm"
+                      className="flex-1"
+                      disabled={(eventsData || []).length === 0}
+                      onClick={() => setEventMode('existing')}
+                    >
+                      {t('events.existingEvent')}
+                    </Button>
+                  </div>
+                  {eventMode === 'new' ? (
+                    <Input
+                      placeholder={t('events.eventNamePlaceholder')}
+                      value={newEventName}
+                      onChange={(e) => setNewEventName(e.target.value)}
+                    />
+                  ) : (
+                    <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('events.selectEvent')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[...(eventsData || [])]
+                          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                          .map((e) => (
+                            <SelectItem key={e.id} value={e.id}>
+                              {e.icon} {e.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                   )}
-                  {uploadProgress[f.name] === 'done' && (
-                    <div className="absolute bottom-1.5 right-1.5 rounded-full bg-success p-1 text-success-foreground shadow-sm">
-                      <Check className="h-3.5 w-3.5" />
-                    </div>
-                  )}
-                  {uploadProgress[f.name] === 'error' && (
-                    <div className="absolute bottom-1.5 right-1.5 rounded-full bg-destructive p-1 text-destructive-foreground shadow-sm">
-                      <X className="h-3.5 w-3.5" />
-                    </div>
-                  )}
-                </div>
-              ))}
-              {files.length > 8 && (
-                <div className="aspect-square rounded-lg bg-muted flex items-center justify-center text-sm text-muted-foreground">
-                  +{files.length - 8}
                 </div>
               )}
             </div>
           )}
 
-          {noExifFiles.length > 0 && (
-            <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3 space-y-2">
-              <p className="text-xs text-yellow-600 dark:text-yellow-400 flex items-center gap-1.5">
-                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                {noExifFiles.length === files.length
-                  ? t('photoUpload.noExifAll')
-                  : t('photoUpload.noExifSome', { count: noExifFiles.length })}
-              </p>
-              <p className="text-xs text-muted-foreground">{t('photoUpload.noExifHint')}</p>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "w-full justify-start text-left text-xs h-8 font-normal",
-                      !manualDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="h-3.5 w-3.5 mr-1.5" />
-                    {manualDate
-                      ? format(manualDate, "d MMM yyyy", { locale: dateFnsLocale })
-                      : t('photoUpload.selectDate')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={manualDate}
-                    onSelect={setManualDate}
-                    disabled={(date) => date > new Date()}
-                    initialFocus
-                    className="p-3"
-                  />
-                </PopoverContent>
-              </Popover>
+          {items.length > 0 && (
+            <TagSelector selectedTagIds={selectedTagIds} onToggle={handleToggleTag} />
+          )}
+
+          {items.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Switch id="is-shared" checked={isShared} onCheckedChange={setIsShared} />
+              <Label htmlFor="is-shared" className="text-sm">
+                {isShared ? t('photoUpload.visibleGuests') : t('photoUpload.parentsOnly')}
+              </Label>
             </div>
           )}
 
-          <Input
-            placeholder={t('photoUpload.captionPlaceholder')}
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-          />
-
-          <div className="space-y-2 rounded-lg border border-border p-3">
-            <div className="flex items-center gap-2">
-              <Checkbox id="is-event" checked={isEvent} onCheckedChange={(v) => setIsEvent(!!v)} />
-              <Label htmlFor="is-event" className="text-sm cursor-pointer">
-                {t('events.isPartOfEvent')}
-              </Label>
-            </div>
-            {isEvent && (
-              <div className="space-y-2 pt-1">
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant={eventMode === 'new' ? 'default' : 'outline'}
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => setEventMode('new')}
-                  >
-                    {t('events.newEvent')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={eventMode === 'existing' ? 'default' : 'outline'}
-                    size="sm"
-                    className="flex-1"
-                    disabled={(eventsData || []).length === 0}
-                    onClick={() => setEventMode('existing')}
-                  >
-                    {t('events.existingEvent')}
-                  </Button>
-                </div>
-                {eventMode === 'new' ? (
-                  <Input
-                    placeholder={t('events.eventNamePlaceholder')}
-                    value={newEventName}
-                    onChange={(e) => setNewEventName(e.target.value)}
-                  />
-                ) : (
-                  <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('events.selectEvent')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[...(eventsData || [])]
-                        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                        .map((e) => (
-                          <SelectItem key={e.id} value={e.id}>
-                            {e.icon} {e.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-            )}
-          </div>
-
-          <TagSelector selectedTagIds={selectedTagIds} onToggle={handleToggleTag} />
-
-          <div className="flex items-center gap-2">
-            <Switch id="is-shared" checked={isShared} onCheckedChange={setIsShared} />
-            <Label htmlFor="is-shared" className="text-sm">
-              {isShared ? t('photoUpload.visibleGuests') : t('photoUpload.parentsOnly')}
-            </Label>
-          </div>
+          {blockedCount > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {t('photoUpload.blockedNotice', { count: blockedCount })}
+            </p>
+          )}
 
           <Button
             onClick={handleUpload}
-            disabled={!selectedChild || files.length === 0 || uploading}
+            disabled={!selectedChild || uploadableItems.length === 0 || uploading}
             className="w-full"
           >
             {uploading
-              ? t('photoUpload.uploading', { done: completedCount, total: files.length })
-              : t('photoUpload.uploadButton', { count: files.length })}
+              ? t('photoUpload.uploading', { done: completedCount, total: uploadableItems.length })
+              : t('photoUpload.uploadButton', { count: uploadableItems.length })}
           </Button>
         </div>
       </DialogContent>
