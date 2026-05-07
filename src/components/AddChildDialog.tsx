@@ -15,7 +15,11 @@ const colors = [
   { value: 'sky', label: '🩵 Cielo' },
 ];
 
-export function AddChildDialog() {
+interface AddChildDialogProps {
+  trigger?: React.ReactNode;
+}
+
+export function AddChildDialog({ trigger }: AddChildDialogProps = {}) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
@@ -41,9 +45,11 @@ export function AddChildDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          {t('child.addChild')}
-        </Button>
+        {trigger ?? (
+          <Button variant="outline" className="gap-2">
+            {t('child.addChild')}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

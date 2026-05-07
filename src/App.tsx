@@ -9,6 +9,7 @@ import Index from "./pages/Index.tsx";
 import Landing from "./pages/Landing.tsx";
 import Auth from "./pages/Auth.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
+import Settings from "./pages/Settings.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import { pruneExpiredSignedUrls } from "@/lib/signed-url-cache";
 
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/app" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
