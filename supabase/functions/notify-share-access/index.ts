@@ -126,13 +126,16 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userErr } = await userClient.auth.getUser(token);
-    if (userErr || !userData?.user) {
+    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
+    if (claimsErr || !claimsData?.claims?.sub) {
+      console.error("getClaims failed:", claimsErr?.message);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const viewer = userData.user;
+    const viewerId = claimsData.claims.sub as string;
+    const viewerEmail = (claimsData.claims.email as string | undefined) ?? null;
+    const viewer = { id: viewerId, email: viewerEmail };
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
