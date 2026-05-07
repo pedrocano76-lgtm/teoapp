@@ -229,7 +229,7 @@ const Index = () => {
             onSelectChild={(id) => {
               setSelectedChildId(id);
               setSelectedEventId(null);
-              setSelectedTagId(null);
+              setSelectedTagIds([]);
               setSelectedLocation(null);
               setSelectedActivityId(null);
               exitSelectionMode();
@@ -251,8 +251,8 @@ const Index = () => {
                   sortOrder={sortOrder}
                   onSortChange={setSortOrder}
                   tags={tags}
-                  selectedTagId={selectedTagId}
-                  onTagSelect={setSelectedTagId}
+                  selectedTagIds={selectedTagIds}
+                  onTagToggle={toggleTag}
                   events={filteredEvents}
                   selectedEventId={selectedEventId}
                   onEventSelect={setSelectedEventId}
@@ -290,7 +290,7 @@ const Index = () => {
                   <ChildSelector
                     children={children}
                     selectedId={selectedChildId}
-                    onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagId(null); setSelectedLocation(null); setSelectedActivityId(null); }}
+                    onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagIds([]); setSelectedLocation(null); setSelectedActivityId(null); }}
                   />
                 </div>
               )}
