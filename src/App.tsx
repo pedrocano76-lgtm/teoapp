@@ -10,6 +10,7 @@ import Landing from "./pages/Landing.tsx";
 import Auth from "./pages/Auth.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import Settings from "./pages/Settings.tsx";
+import EventView from "./pages/EventView.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import { pruneExpiredSignedUrls } from "@/lib/signed-url-cache";
 
