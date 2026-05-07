@@ -84,17 +84,23 @@ export function Timeline({ photos, child, sortOrder = 'asc', selectionMode, sele
   return (
     <>
       <div className="space-y-10">
-        {Array.from(groups.entries()).map(([key, { label, photos: groupPhotos, date }]) => {
-          const dateLabel = date.toLocaleDateString(intlLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-          const ageLabel = getAge(child.birthDate, date);
-
+        {items.map((item) => {
+          if (item.type === 'event') {
+            return (
+              <section key={item.key} className="animate-fade-in">
+                <EventCard event={item.event} photos={item.photos} />
+              </section>
+            );
+          }
+          const dateLabel = item.date.toLocaleDateString(intlLocale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+          const ageLabel = getAge(child.birthDate, item.date);
           return (
-            <section key={key} className="animate-fade-in">
+            <section key={item.key} className="animate-fade-in">
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-px flex-1 bg-border" />
                 <div className="text-center">
                   <h3 className="text-lg font-heading font-semibold text-foreground whitespace-nowrap">
-                    {label}
+                    {item.label}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {dateLabel} · {ageLabel}
@@ -103,7 +109,7 @@ export function Timeline({ photos, child, sortOrder = 'asc', selectionMode, sele
                 <div className="h-px flex-1 bg-border" />
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {groupPhotos.map((photo) => (
+                {item.photos.map((photo) => (
                   <PhotoCard
                     key={photo.id}
                     photo={photo}
