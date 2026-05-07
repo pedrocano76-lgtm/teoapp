@@ -11,6 +11,23 @@ import {
 const SIGNED_URL_TTL_SECONDS = 3600; // 1 hour
 export const PHOTOS_PAGE_SIZE = 20;
 
+function removePhotoFromCache(old: any, photoId: string) {
+  if (!old) return old;
+  if (Array.isArray(old)) return old.filter((row: any) => row.id !== photoId);
+  if (Array.isArray(old.pages)) {
+    return {
+      ...old,
+      pages: old.pages.map((page: any) => ({
+        ...page,
+        rows: Array.isArray(page.rows)
+          ? page.rows.filter((row: any) => row.id !== photoId)
+          : page.rows,
+      })),
+    };
+  }
+  return old;
+}
+
 export function useChildren() {
   const { user } = useAuth();
   return useQuery({
@@ -349,7 +366,7 @@ export function useDeletePhoto() {
         console.error('[DELETE_DEBUG] Storage remove error:', storageRes.error);
         throw storageRes.error;
       }
-      const removedNames = (storageRes.data ?? []).map((o: any) => o.name);
+      const removedNames = (storageRes.data ?? []).map((o: any) => o.name ?? o.path ?? o.id);
       console.log('[DELETE_DEBUG] Storage remove data (per-file):', storageRes.data);
       if (!removedNames.includes(storagePath)) {
         console.warn('[DELETE_DEBUG] Storage: file not found at path', storagePath);
@@ -372,7 +389,8 @@ export function useDeletePhoto() {
         throw dbRes.error;
       }
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
+      queryClient.setQueriesData({ queryKey: ['photos'] }, (old) => removePhotoFromCache(old, variables.photoId));
       await queryClient.invalidateQueries({ queryKey: ['photos'] });
       await queryClient.refetchQueries({ queryKey: ['photos'], type: 'active' });
     },
