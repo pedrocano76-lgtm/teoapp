@@ -35,7 +35,7 @@ export function FilterDropdown({
   const uniqueEvents = Array.from(new Map(events.map(e => [e.name, e])).values());
   const { data: activitiesData = [] } = useActivities(selectedChildId ?? undefined);
   const activities = activitiesData as Array<{ id: string; name: string; type: string; icon: string | null }>;
-  const hasFilters = selectedTagId || selectedEventId || selectedLocation || selectedActivityId || sortOrder === 'asc';
+  const hasFilters = selectedTagIds.length > 0 || selectedEventId || selectedLocation || selectedActivityId || sortOrder === 'asc';
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
