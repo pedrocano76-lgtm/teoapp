@@ -17,6 +17,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { TagSelector } from './TagSelector';
 import { CalendarIcon, AlertTriangle, Loader2, Check, X, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+
+async function supabaseUpdateEventDate(eventId: string, dateIso: string) {
+  await supabase.from('events').update({ date: dateIso }).eq('id', eventId);
+}
 
 interface PhotoUploadProps {
   children: { id: string; name: string }[];
