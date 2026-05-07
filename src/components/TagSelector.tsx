@@ -1,6 +1,6 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTags, useAddTag } from '@/hooks/useData';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -11,6 +11,7 @@ interface TagSelectorProps {
 }
 
 export function TagSelector({ selectedTagIds, onToggle }: TagSelectorProps) {
+  const { t } = useTranslation();
   const { data: tags } = useTags();
   const addTag = useAddTag();
   const [newTag, setNewTag] = useState('');
@@ -21,14 +22,12 @@ export function TagSelector({ selectedTagIds, onToggle }: TagSelectorProps) {
       const created = await addTag.mutateAsync({ name: newTag.trim() });
       if (created) onToggle(created.id);
       setNewTag('');
-    } catch {
-      // Tag might already exist
-    }
+    } catch { /* tag exists */ }
   };
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-foreground">Etiquetas (opcional)</p>
+      <p className="text-sm font-medium text-foreground">{t('tags.optional')}</p>
       <div className="flex flex-wrap gap-1.5">
         {(tags || []).map((tag) => (
           <button
@@ -49,14 +48,14 @@ export function TagSelector({ selectedTagIds, onToggle }: TagSelectorProps) {
       </div>
       <div className="flex gap-2">
         <Input
-          placeholder="Añadir etiqueta..."
+          placeholder={t('tags.addPlaceholder')}
           value={newTag}
           onChange={(e) => setNewTag(e.target.value)}
           className="text-sm h-8"
           onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCustom())}
         />
         <Button type="button" size="sm" variant="outline" onClick={handleAddCustom} disabled={!newTag.trim()}>
-          Añadir
+          {t('tags.addButton')}
         </Button>
       </div>
     </div>

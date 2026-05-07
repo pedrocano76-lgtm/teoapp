@@ -6,6 +6,7 @@ import { SlidersHorizontal, ArrowUpDown, MapPin } from 'lucide-react';
 import { Tag, Event } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useActivities } from '@/hooks/useData';
+import { useTranslation } from 'react-i18next';
 
 interface FilterDropdownProps {
   sortOrder: 'asc' | 'desc';
@@ -31,6 +32,7 @@ export function FilterDropdown({
   locations, selectedLocation, onLocationSelect,
   selectedChildId, selectedActivityId, onActivitySelect,
 }: FilterDropdownProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const uniqueEvents = Array.from(new Map(events.map(e => [e.name, e])).values());
   const { data: activitiesData = [] } = useActivities(selectedChildId ?? undefined);
@@ -42,16 +44,15 @@ export function FilterDropdown({
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1.5 relative">
           <SlidersHorizontal className="h-4 w-4" />
-          Filtros
+          {t('filters.button')}
           {hasFilters && (
             <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-accent" />
           )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72 p-4 space-y-4" align="end">
-        {/* Sort order */}
         <div className="space-y-2">
-          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Orden</Label>
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('filters.sortLabel')}</Label>
           <div className="flex gap-2">
             <Button
               variant={sortOrder === 'asc' ? 'default' : 'outline'}
@@ -60,7 +61,7 @@ export function FilterDropdown({
               onClick={() => onSortChange('asc')}
             >
               <ArrowUpDown className="h-3 w-3" />
-              Más antiguas
+              {t('filters.oldestFirst')}
             </Button>
             <Button
               variant={sortOrder === 'desc' ? 'default' : 'outline'}
@@ -69,15 +70,14 @@ export function FilterDropdown({
               onClick={() => onSortChange('desc')}
             >
               <ArrowUpDown className="h-3 w-3 rotate-180" />
-              Más recientes
+              {t('filters.newestFirst')}
             </Button>
           </div>
         </div>
 
-        {/* Events */}
         {uniqueEvents.length > 0 && (
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Eventos</Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('filters.eventsLabel')}</Label>
             <div className="flex flex-wrap gap-1.5">
               <button
                 onClick={() => onEventSelect(null)}
@@ -86,7 +86,7 @@ export function FilterDropdown({
                   !selectedEventId ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 )}
               >
-                Todos
+                {t('common.all')}
               </button>
               {uniqueEvents.map(event => (
                 <button
@@ -107,10 +107,9 @@ export function FilterDropdown({
           </div>
         )}
 
-        {/* Activities */}
         {selectedChildId && activities.length > 0 && onActivitySelect && (
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actividades</Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('filters.activitiesLabel')}</Label>
             <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
               <button
                 onClick={() => onActivitySelect(null)}
@@ -119,7 +118,7 @@ export function FilterDropdown({
                   !selectedActivityId ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 )}
               >
-                Todas
+                {t('common.all')}
               </button>
               {activities.map(activity => (
                 <button
@@ -142,7 +141,7 @@ export function FilterDropdown({
 
         {tags.length > 0 && (
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Etiquetas</Label>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('filters.tagsLabel')}</Label>
             <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
               <button
                 onClick={() => onTagToggle(null)}
@@ -151,7 +150,7 @@ export function FilterDropdown({
                   selectedTagIds.length === 0 ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 )}
               >
-                Todos
+                {t('common.all')}
               </button>
               {tags.map(tag => (
                 <button
@@ -172,9 +171,8 @@ export function FilterDropdown({
           </div>
         )}
 
-        {/* Locations */}
         <div className="space-y-2">
-          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Lugar</Label>
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('filters.locationLabel')}</Label>
           {locations.length > 0 ? (
             <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
               <button
@@ -184,7 +182,7 @@ export function FilterDropdown({
                   !selectedLocation ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 )}
               >
-                Todos
+                {t('common.all')}
               </button>
               {locations.map(loc => (
                 <button
@@ -203,11 +201,10 @@ export function FilterDropdown({
               ))}
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground italic">No hay fotos con ubicación</p>
+            <p className="text-xs text-muted-foreground italic">{t('filters.noLocations')}</p>
           )}
         </div>
 
-        {/* Clear all */}
         {hasFilters && (
           <Button
             variant="ghost"
@@ -221,7 +218,7 @@ export function FilterDropdown({
               onActivitySelect?.(null);
             }}
           >
-            Limpiar filtros
+            {t('filters.clear')}
           </Button>
         )}
       </PopoverContent>

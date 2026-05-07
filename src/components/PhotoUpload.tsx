@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { useUploadPhoto, useEvents, useAddEvent } from '@/hooks/useData';
 import { useToast } from '@/hooks/use-toast';
+import { useLocale } from '@/hooks/useLocale';
 import { getExifDate } from '@/lib/exif-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +31,7 @@ interface PhotoUploadProps {
 
 export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProps) {
   const { t } = useTranslation();
+  const { dateFnsLocale } = useLocale();
   const [open, setOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState(defaultChildId || '');
   const [caption, setCaption] = useState('');
@@ -52,7 +53,6 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
   const { toast } = useToast();
   const { data: eventsData } = useEvents(selectedChild || undefined);
 
-  // Auto-select if only one child
   useEffect(() => {
     if (children.length === 1 && !selectedChild) {
       setSelectedChild(children[0].id);
@@ -69,15 +69,14 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
     const MAX_FILE_SIZE_MB = 50;
     const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'];
 
-    // Validate files
     const validFiles: File[] = [];
     const rejected: { name: string; reason: string }[] = [];
 
     for (const file of selectedFiles) {
       if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-        rejected.push({ name: file.name, reason: 'supera 50MB' });
+        rejected.push({ name: file.name, reason: t('photoUpload.reasonSize') });
       } else if (!ALLOWED_TYPES.includes(file.type)) {
-        rejected.push({ name: file.name, reason: 'tipo no permitido' });
+        rejected.push({ name: file.name, reason: t('photoUpload.reasonType') });
       } else {
         validFiles.push(file);
       }
@@ -86,9 +85,8 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
     if (rejected.length > 0) {
       const list = rejected.map(r => `'${r.name}' (${r.reason})`).join(', ');
       toast({
-        title: 'Archivos ignorados',
-        description: `${rejected.length} archivo${rejected.length > 1 ? 's' : ''} ignorado${rejected.length > 1 ? 's' : ''}: ${list}`,
-        variant: 'default',
+        title: t('photoUpload.ignoredTitle'),
+        description: t('photoUpload.ignoredDesc', { count: rejected.length, list }),
       });
     }
 
@@ -99,17 +97,12 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
     setManualDate(undefined);
     setUploadProgress(Object.fromEntries(validFiles.map(f => [f.name, 'pending'])));
 
-    // Check EXIF dates
     const missing: string[] = [];
     for (const file of validFiles) {
       const exifDate = await getExifDate(file);
-      if (!exifDate) {
-        missing.push(file.name);
-      }
+      if (!exifDate) missing.push(file.name);
     }
-    if (missing.length > 0) {
-      setNoExifFiles(missing);
-    }
+    if (missing.length > 0) setNoExifFiles(missing);
   };
 
   const handleUpload = async () => {
@@ -117,7 +110,6 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
     setUploading(true);
 
     try {
-      // Resolve event id (create if needed)
       let eventIdToUse: string | undefined = undefined;
       if (isEvent) {
         if (eventMode === 'new' && newEventName.trim()) {
@@ -132,7 +124,6 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
         }
       }
 
-      // Upload in parallel batches of 3 to balance speed and bandwidth
       const CONCURRENCY = 3;
       let completed = 0;
       let failed = 0;
@@ -153,7 +144,6 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                 isShared,
               });
               setUploadProgress(prev => ({ ...prev, [file.name]: 'done' }));
-              // Track earliest photo date for default event date
               const exif = await getExifDate(file);
               const d = exif || manualDate || null;
               if (d && (!earliestDate || d.getTime() < earliestDate.getTime())) {
@@ -169,18 +159,17 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
         failed += results.filter(r => r.status === 'rejected').length;
       }
 
-      // If new event was created without a date, default it to the earliest photo date
       if (isEvent && eventMode === 'new' && eventIdToUse && earliestDate) {
         const iso = (earliestDate as Date).toISOString().slice(0, 10);
         await supabaseUpdateEventDate(eventIdToUse, iso);
       }
 
       if (failed === 0) {
-        toast({ title: '¡Subidas!', description: `${completed} foto${completed > 1 ? 's' : ''} añadida${completed > 1 ? 's' : ''}.` });
+        toast({ title: t('photoUpload.uploadedTitle'), description: t('photoUpload.uploadedDesc', { count: completed }) });
       } else {
         toast({
-          title: 'Subida parcial',
-          description: `${completed} subidas, ${failed} fallidas.`,
+          title: t('photoUpload.partialTitle'),
+          description: t('photoUpload.partialDesc', { done: completed, failed }),
           variant: failed === files.length ? 'destructive' : 'default',
         });
       }
@@ -197,13 +186,12 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
       setManualDate(undefined);
       setUploadProgress({});
     } catch (error: any) {
-      toast({ title: 'Error al subir', description: error.message, variant: 'destructive' });
+      toast({ title: t('photoUpload.errorTitle'), description: error.message, variant: 'destructive' });
     } finally {
       setUploading(false);
     }
   };
 
-  const childEvents = eventsData || [];
   const completedCount = Object.values(uploadProgress).filter(status => status === 'done' || status === 'error').length;
 
   return (
@@ -213,26 +201,26 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
           <Button
             size="icon"
             className="h-14 w-14 rounded-full shadow-lg [&_svg]:size-6"
-            aria-label="Añadir fotos"
+            aria-label={t('photoUpload.ariaAdd')}
           >
             <Camera />
           </Button>
         ) : (
           <Button className="gap-2">
-            <Camera className="h-4 w-4" /> Añadir fotos
+            <Camera className="h-4 w-4" /> {t('photoUpload.trigger')}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-heading">Subir fotos</DialogTitle>
-          <DialogDescription>Sube fotos desde tu dispositivo. La fecha se extraerá automáticamente de la foto.</DialogDescription>
+          <DialogTitle className="font-heading">{t('photoUpload.title')}</DialogTitle>
+          <DialogDescription>{t('photoUpload.description')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           {children.length > 1 && (
             <Select value={selectedChild} onValueChange={setSelectedChild}>
               <SelectTrigger>
-                <SelectValue placeholder="Seleccionar hijo/a" />
+                <SelectValue placeholder={t('photoUpload.selectChild')} />
               </SelectTrigger>
               <SelectContent>
                 {children.map((c) => (
@@ -265,7 +253,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                 className="w-full"
                 onClick={() => fileInputRef.current?.click()}
               >
-                {files.length > 0 ? `${files.length} archivo${files.length > 1 ? 's' : ''} seleccionado${files.length > 1 ? 's' : ''}` : 'Elegir fotos'}
+                {files.length > 0 ? t('photoUpload.filesSelected', { count: files.length }) : t('photoUpload.chooseFiles')}
               </Button>
               {files.length === 0 && (
                 <Button
@@ -273,24 +261,18 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                   className="w-full sm:hidden gap-2"
                   onClick={() => cameraInputRef.current?.click()}
                 >
-                  <Camera className="h-4 w-4" /> Cámara
+                  <Camera className="h-4 w-4" /> {t('photoUpload.camera')}
                 </Button>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              JPG, PNG, HEIC o WEBP · Máx. 50MB por foto
-            </p>
+            <p className="text-xs text-muted-foreground">{t('photoUpload.fileTypes')}</p>
           </div>
 
           {files.length > 0 && (
             <div className="grid grid-cols-4 gap-2">
               {files.slice(0, 8).map((f, i) => (
                 <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
-                  <img
-                    src={URL.createObjectURL(f)}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover" />
                   {uploadProgress[f.name] === 'uploading' && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/60">
                       <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -316,16 +298,15 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             </div>
           )}
 
-          {/* Warning when EXIF date not found */}
           {noExifFiles.length > 0 && (
             <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3 space-y-2">
               <p className="text-xs text-yellow-600 dark:text-yellow-400 flex items-center gap-1.5">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                 {noExifFiles.length === files.length
-                  ? 'No se pudo extraer la fecha de ninguna foto.'
-                  : `${noExifFiles.length} foto${noExifFiles.length > 1 ? 's' : ''} sin fecha detectada.`}
+                  ? t('photoUpload.noExifAll')
+                  : t('photoUpload.noExifSome', { count: noExifFiles.length })}
               </p>
-              <p className="text-xs text-muted-foreground">Indica cuándo fueron tomadas:</p>
+              <p className="text-xs text-muted-foreground">{t('photoUpload.noExifHint')}</p>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -338,8 +319,8 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                   >
                     <CalendarIcon className="h-3.5 w-3.5 mr-1.5" />
                     {manualDate
-                      ? format(manualDate, "d MMM yyyy", { locale: es })
-                      : "Seleccionar fecha..."}
+                      ? format(manualDate, "d MMM yyyy", { locale: dateFnsLocale })
+                      : t('photoUpload.selectDate')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
@@ -357,12 +338,11 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
           )}
 
           <Input
-            placeholder="Comentario (opcional)"
+            placeholder={t('photoUpload.captionPlaceholder')}
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
           />
 
-          {/* Event toggle + selector */}
           <div className="space-y-2 rounded-lg border border-border p-3">
             <div className="flex items-center gap-2">
               <Checkbox id="is-event" checked={isEvent} onCheckedChange={(v) => setIsEvent(!!v)} />
@@ -419,13 +399,12 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             )}
           </div>
 
-          {/* Tag selector */}
           <TagSelector selectedTagIds={selectedTagIds} onToggle={handleToggleTag} />
 
           <div className="flex items-center gap-2">
             <Switch id="is-shared" checked={isShared} onCheckedChange={setIsShared} />
             <Label htmlFor="is-shared" className="text-sm">
-              {isShared ? 'Visible para invitados' : 'Solo padres'}
+              {isShared ? t('photoUpload.visibleGuests') : t('photoUpload.parentsOnly')}
             </Label>
           </div>
 
@@ -434,7 +413,9 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             disabled={!selectedChild || files.length === 0 || uploading}
             className="w-full"
           >
-            {uploading ? `Subiendo ${completedCount} de ${files.length}...` : `Subir ${files.length} foto${files.length !== 1 ? 's' : ''}`}
+            {uploading
+              ? t('photoUpload.uploading', { done: completedCount, total: files.length })
+              : t('photoUpload.uploadButton', { count: files.length })}
           </Button>
         </div>
       </DialogContent>
