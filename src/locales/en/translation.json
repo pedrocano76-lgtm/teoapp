@@ -13,7 +13,11 @@
     "error": "Error",
     "name": "Name",
     "loadMore": "Load more",
-    "loadingMore": "Loading..."
+    "loadingMore": "Loading...",
+    "confirm": "Confirm",
+    "apply": "Apply",
+    "back": "Back",
+    "all": "All"
   },
   "nav": {
     "home": "Home",
@@ -69,7 +73,14 @@
     "forgotPassword": "Forgot your password?",
     "enterEmailFirst": "Please enter your email first",
     "resetEmailSent": "Email sent",
-    "resetEmailSentDesc": "Check your inbox for the reset link."
+    "resetEmailSentDesc": "Check your inbox for the reset link.",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "passwordUpdated": "Password updated successfully",
+    "resetPasswordTitle": "Reset password",
+    "newPassword": "New password",
+    "confirmNewPassword": "Confirm new password",
+    "updatePassword": "Update password"
   },
   "family": {
     "parents": "Parents",
@@ -97,21 +108,30 @@
     "customRelationship": "Custom relationship",
     "createInvitation": "Create invitation",
     "emailNotSent": "Invitation created. Could not send the automatic email — share the link manually.",
-    "inviteEmailSubject": "You've been invited to a Memorydrawer family album!"
+    "inviteEmailSubject": "You've been invited to a Memorydrawer family album!",
+    "inviteEmailHeading": "You have an invitation! 📸",
+    "inviteEmailBody": "Someone in your family has invited you to view the family photo album on <strong>Memorydrawer</strong>.",
+    "inviteEmailCta": "View the family album",
+    "inviteEmailFooter": "If you weren't expecting this invitation, you can ignore this email."
   },
   "relationships": {
     "father": "Father",
     "mother": "Mother",
+    "grandfather": "Grandfather",
+    "grandmother": "Grandmother",
     "grandparent": "Grandparent",
-    "uncle": "Uncle/Aunt",
+    "uncle": "Uncle",
+    "aunt": "Aunt",
+    "uncleAunt": "Uncle/Aunt",
     "cousin": "Cousin",
     "greatGrandparent": "Great-grandparent",
     "godparent": "Godparent",
     "sibling": "Sibling",
+    "siblingShort": "Sibling",
     "other": "Other"
   },
   "child": {
-    "addChild": "👶 Add child",
+    "addChild": "Add child",
     "addChildTitle": "Add child",
     "addChildDesc": "Enter the name, birth date and album color.",
     "namePlaceholder": "Child's name",
@@ -132,7 +152,12 @@
     "chooseFromAlbumDesc": "Select an existing photo of {{name}} to use as profile picture.",
     "noPhotosYet": "No photos in the album yet.",
     "loadingPhotos": "Loading photos...",
-    "noChildren": "No children added."
+    "noChildren": "No children added.",
+    "colorPink": "🌸 Pink",
+    "colorSage": "🌿 Sage",
+    "colorLavender": "💜 Lavender",
+    "colorPeach": "🍑 Peach",
+    "colorSky": "🩵 Sky"
   },
   "activities": {
     "title": "Activities",
@@ -148,7 +173,9 @@
   "notifications": {
     "title": "Birthday notifications",
     "sameDay": "Same day",
-    "dayBefore": "Day before"
+    "dayBefore": "Day before",
+    "headerTitle": "Notifications",
+    "empty": "No notifications"
   },
   "settings": {
     "appearance": "Appearance",
@@ -173,6 +200,103 @@
     "findDuplicates": "Find duplicates",
     "findDuplicatesDesc": "Scan your library for visually identical photos and clean them up."
   },
+  "filters": {
+    "button": "Filters",
+    "sortLabel": "Sort",
+    "oldestFirst": "Oldest first",
+    "newestFirst": "Newest first",
+    "eventsLabel": "Events",
+    "activitiesLabel": "Activities",
+    "tagsLabel": "Tags",
+    "locationLabel": "Location",
+    "noLocations": "No photos with location",
+    "clear": "Clear filters"
+  },
+  "bulk": {
+    "selected": "selected",
+    "changeDate": "Change date",
+    "changeTags": "Change tags",
+    "applyTo": "Apply to {{count}} photos",
+    "delete": "Delete",
+    "deleteConfirm": "Delete {{count}} photos?",
+    "dateUpdated": "Date updated on {{count}} photos",
+    "dateError": "Could not update dates",
+    "tagsUpdated": "Tags updated on {{count}} photos",
+    "tagsError": "Could not update tags",
+    "photosDeleted": "{{count}} photos deleted",
+    "deleteError": "Could not delete photos"
+  },
+  "duplicates": {
+    "button": "Duplicates",
+    "title": "Find duplicates",
+    "description": "Photos are compared visually to find duplicate images, regardless of date or filename.",
+    "willScan": "Will analyze {{count}} photos using visual comparison.",
+    "startScan": "Start scan",
+    "scanning": "Analyzing photos… {{progress}}%",
+    "noneFound": "No duplicates found!",
+    "groupsFound_one": "{{count}} duplicate group found",
+    "groupsFound_other": "{{count}} duplicate groups found",
+    "autoSelect": "Auto-select",
+    "similarPhotos": "{{count}} similar photos",
+    "original": "Original",
+    "deleteN_one": "Delete {{count}} photo",
+    "deleteN_other": "Delete {{count}} photos",
+    "scanError": "Error scanning duplicates",
+    "deletedN": "{{count}} duplicates deleted",
+    "deleteError": "Error deleting duplicates"
+  },
+  "tags": {
+    "optional": "Tags (optional)",
+    "addPlaceholder": "Add tag...",
+    "addButton": "Add"
+  },
+  "photoUpload": {
+    "ariaAdd": "Add photos",
+    "trigger": "Add photos",
+    "title": "Upload photos",
+    "description": "Upload photos from your device. The date will be extracted automatically.",
+    "selectChild": "Select child",
+    "chooseFiles": "Choose photos",
+    "filesSelected_one": "{{count}} file selected",
+    "filesSelected_other": "{{count}} files selected",
+    "camera": "Camera",
+    "fileTypes": "JPG, PNG, HEIC or WEBP · Max 50MB per photo",
+    "ignoredTitle": "Files ignored",
+    "ignoredDesc_one": "{{count}} file ignored: {{list}}",
+    "ignoredDesc_other": "{{count}} files ignored: {{list}}",
+    "reasonSize": "exceeds 50MB",
+    "reasonType": "type not allowed",
+    "noExifAll": "Could not extract a date from any photo.",
+    "noExifSome_one": "{{count}} photo without detected date.",
+    "noExifSome_other": "{{count}} photos without detected date.",
+    "noExifHint": "Tell us when they were taken:",
+    "selectDate": "Select date...",
+    "captionPlaceholder": "Comment (optional)",
+    "visibleGuests": "Visible to guests",
+    "parentsOnly": "Parents only",
+    "uploading": "Uploading {{done}} of {{total}}...",
+    "uploadButton_one": "Upload {{count}} photo",
+    "uploadButton_other": "Upload {{count}} photos",
+    "uploadedTitle": "Uploaded!",
+    "uploadedDesc_one": "{{count}} photo added.",
+    "uploadedDesc_other": "{{count}} photos added.",
+    "partialTitle": "Partial upload",
+    "partialDesc": "{{done}} uploaded, {{failed}} failed.",
+    "errorTitle": "Upload error"
+  },
+  "photoEdit": {
+    "title": "Edit photo",
+    "description": "Modify photo details",
+    "captionLabel": "Comment",
+    "captionPlaceholder": "Add a comment...",
+    "dateLabel": "Date",
+    "selectDate": "Select date",
+    "updated": "Photo updated",
+    "updateError": "Error updating photo",
+    "deleted": "Photo deleted",
+    "deleteError": "Error deleting photo",
+    "confirmDelete": "Delete this photo?"
+  },
   "events": {
     "isPartOfEvent": "This is part of an event",
     "newEvent": "New event",
@@ -184,7 +308,11 @@
   },
   "lightbox": {
     "photo": "Photo",
-    "counter": "{{current}} / {{total}}"
+    "counter": "{{current}} / {{total}}",
+    "altOf": "Photo of {{name}}"
+  },
+  "page": {
+    "notFound": "Oops! Page not found"
   },
   "photos": {
     "count_one": "{{count}} photo",
@@ -207,5 +335,17 @@
     "groupMonths": "🌱 {{value}}",
     "groupYears": "🎂 {{value}}",
     "preBirthGroup": "⏳ Before birth"
+  },
+  "profile": {
+    "title": "Your account",
+    "description": "Edit your profile information.",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "relationship": "Relationship",
+    "selectPlaceholder": "Select…",
+    "changePhoto": "Change photo",
+    "imageTooLarge": "Image too large (max 5MB)",
+    "uploadFailed": "Upload failed",
+    "updated": "Profile updated"
   }
 }

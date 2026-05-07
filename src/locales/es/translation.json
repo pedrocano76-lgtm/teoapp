@@ -13,7 +13,11 @@
     "error": "Error",
     "name": "Nombre",
     "loadMore": "Cargar más",
-    "loadingMore": "Cargando..."
+    "loadingMore": "Cargando...",
+    "confirm": "Confirmar",
+    "apply": "Aplicar",
+    "back": "Atrás",
+    "all": "Todos"
   },
   "nav": {
     "home": "Inicio",
@@ -69,7 +73,14 @@
     "forgotPassword": "¿Olvidaste tu contraseña?",
     "enterEmailFirst": "Introduce tu email primero",
     "resetEmailSent": "Email enviado",
-    "resetEmailSentDesc": "Revisa tu bandeja de entrada para el enlace de restablecimiento."
+    "resetEmailSentDesc": "Revisa tu bandeja de entrada para el enlace de restablecimiento.",
+    "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+    "passwordsDoNotMatch": "Las contraseñas no coinciden",
+    "passwordUpdated": "Contraseña actualizada correctamente",
+    "resetPasswordTitle": "Restablecer contraseña",
+    "newPassword": "Nueva contraseña",
+    "confirmNewPassword": "Confirmar nueva contraseña",
+    "updatePassword": "Actualizar contraseña"
   },
   "family": {
     "parents": "Padres",
@@ -97,21 +108,30 @@
     "customRelationship": "Parentesco personalizado",
     "createInvitation": "Crear invitación",
     "emailNotSent": "Invitación creada. No se pudo enviar el email automático — comparte el enlace manualmente.",
-    "inviteEmailSubject": "¡Te han invitado al álbum familiar de Memorydrawer!"
+    "inviteEmailSubject": "¡Te han invitado al álbum familiar de Memorydrawer!",
+    "inviteEmailHeading": "¡Tienes una invitación! 📸",
+    "inviteEmailBody": "Alguien de tu familia te ha invitado a ver el álbum de fotos familiar en <strong>Memorydrawer</strong>.",
+    "inviteEmailCta": "Ver el álbum familiar",
+    "inviteEmailFooter": "Si no esperabas esta invitación, puedes ignorar este email."
   },
   "relationships": {
     "father": "Padre",
     "mother": "Madre",
+    "grandfather": "Abuelo",
+    "grandmother": "Abuela",
     "grandparent": "Abuelo/a",
-    "uncle": "Tío/a",
+    "uncle": "Tío",
+    "aunt": "Tía",
+    "uncleAunt": "Tío/a",
     "cousin": "Primo/a",
     "greatGrandparent": "Bisabuelo/a",
     "godparent": "Padrino/Madrina",
     "sibling": "Hermano/a",
+    "siblingShort": "Hermano/a",
     "other": "Otro"
   },
   "child": {
-    "addChild": "👶 Añadir hijo/a",
+    "addChild": "Añadir hijo/a",
     "addChildTitle": "Añadir hijo/a",
     "addChildDesc": "Introduce el nombre, fecha de nacimiento y color del álbum.",
     "namePlaceholder": "Nombre del niño/a",
@@ -132,7 +152,12 @@
     "chooseFromAlbumDesc": "Selecciona una foto existente de {{name}} para usarla como foto de perfil.",
     "noPhotosYet": "Aún no hay fotos en el álbum.",
     "loadingPhotos": "Cargando fotos...",
-    "noChildren": "No hay hijos añadidos."
+    "noChildren": "No hay hijos añadidos.",
+    "colorPink": "🌸 Rosa",
+    "colorSage": "🌿 Salvia",
+    "colorLavender": "💜 Lavanda",
+    "colorPeach": "🍑 Melocotón",
+    "colorSky": "🩵 Cielo"
   },
   "activities": {
     "title": "Actividades",
@@ -148,7 +173,9 @@
   "notifications": {
     "title": "Notificaciones de cumpleaños",
     "sameDay": "El mismo día",
-    "dayBefore": "El día anterior"
+    "dayBefore": "El día anterior",
+    "headerTitle": "Notificaciones",
+    "empty": "Sin notificaciones"
   },
   "settings": {
     "appearance": "Apariencia",
@@ -173,6 +200,103 @@
     "findDuplicates": "Buscar duplicados",
     "findDuplicatesDesc": "Analiza tu biblioteca para encontrar fotos visualmente idénticas."
   },
+  "filters": {
+    "button": "Filtros",
+    "sortLabel": "Orden",
+    "oldestFirst": "Más antiguas",
+    "newestFirst": "Más recientes",
+    "eventsLabel": "Eventos",
+    "activitiesLabel": "Actividades",
+    "tagsLabel": "Etiquetas",
+    "locationLabel": "Lugar",
+    "noLocations": "No hay fotos con ubicación",
+    "clear": "Limpiar filtros"
+  },
+  "bulk": {
+    "selected": "seleccionadas",
+    "changeDate": "Cambiar fecha",
+    "changeTags": "Cambiar etiquetas",
+    "applyTo": "Aplicar a {{count}} fotos",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Eliminar {{count}} fotos?",
+    "dateUpdated": "Fecha actualizada en {{count}} fotos",
+    "dateError": "Error al actualizar fechas",
+    "tagsUpdated": "Etiquetas actualizadas en {{count}} fotos",
+    "tagsError": "Error al actualizar etiquetas",
+    "photosDeleted": "{{count}} fotos eliminadas",
+    "deleteError": "Error al eliminar fotos"
+  },
+  "duplicates": {
+    "button": "Duplicados",
+    "title": "Buscar duplicados",
+    "description": "Se comparan las fotos visualmente para encontrar imágenes duplicadas, independientemente de la fecha o nombre de archivo.",
+    "willScan": "Se analizarán {{count}} fotos usando comparación visual.",
+    "startScan": "Iniciar escaneo",
+    "scanning": "Analizando fotos… {{progress}}%",
+    "noneFound": "¡No se encontraron duplicados!",
+    "groupsFound_one": "{{count}} grupo de duplicados encontrado",
+    "groupsFound_other": "{{count}} grupos de duplicados encontrados",
+    "autoSelect": "Seleccionar automáticamente",
+    "similarPhotos": "{{count}} fotos similares",
+    "original": "Original",
+    "deleteN_one": "Eliminar {{count}} foto",
+    "deleteN_other": "Eliminar {{count}} fotos",
+    "scanError": "Error al escanear duplicados",
+    "deletedN": "{{count}} duplicados eliminados",
+    "deleteError": "Error al eliminar duplicados"
+  },
+  "tags": {
+    "optional": "Etiquetas (opcional)",
+    "addPlaceholder": "Añadir etiqueta...",
+    "addButton": "Añadir"
+  },
+  "photoUpload": {
+    "ariaAdd": "Añadir fotos",
+    "trigger": "Añadir fotos",
+    "title": "Subir fotos",
+    "description": "Sube fotos desde tu dispositivo. La fecha se extraerá automáticamente de la foto.",
+    "selectChild": "Seleccionar hijo/a",
+    "chooseFiles": "Elegir fotos",
+    "filesSelected_one": "{{count}} archivo seleccionado",
+    "filesSelected_other": "{{count}} archivos seleccionados",
+    "camera": "Cámara",
+    "fileTypes": "JPG, PNG, HEIC o WEBP · Máx. 50MB por foto",
+    "ignoredTitle": "Archivos ignorados",
+    "ignoredDesc_one": "{{count}} archivo ignorado: {{list}}",
+    "ignoredDesc_other": "{{count}} archivos ignorados: {{list}}",
+    "reasonSize": "supera 50MB",
+    "reasonType": "tipo no permitido",
+    "noExifAll": "No se pudo extraer la fecha de ninguna foto.",
+    "noExifSome_one": "{{count}} foto sin fecha detectada.",
+    "noExifSome_other": "{{count}} fotos sin fecha detectada.",
+    "noExifHint": "Indica cuándo fueron tomadas:",
+    "selectDate": "Seleccionar fecha...",
+    "captionPlaceholder": "Comentario (opcional)",
+    "visibleGuests": "Visible para invitados",
+    "parentsOnly": "Solo padres",
+    "uploading": "Subiendo {{done}} de {{total}}...",
+    "uploadButton_one": "Subir {{count}} foto",
+    "uploadButton_other": "Subir {{count}} fotos",
+    "uploadedTitle": "¡Subidas!",
+    "uploadedDesc_one": "{{count}} foto añadida.",
+    "uploadedDesc_other": "{{count}} fotos añadidas.",
+    "partialTitle": "Subida parcial",
+    "partialDesc": "{{done}} subidas, {{failed}} fallidas.",
+    "errorTitle": "Error al subir"
+  },
+  "photoEdit": {
+    "title": "Editar foto",
+    "description": "Modifica los detalles de la foto",
+    "captionLabel": "Comentario",
+    "captionPlaceholder": "Añade un comentario...",
+    "dateLabel": "Fecha",
+    "selectDate": "Seleccionar fecha",
+    "updated": "Foto actualizada",
+    "updateError": "Error al actualizar la foto",
+    "deleted": "Foto eliminada",
+    "deleteError": "Error al eliminar la foto",
+    "confirmDelete": "¿Eliminar esta foto?"
+  },
   "events": {
     "isPartOfEvent": "Esto es parte de un evento",
     "newEvent": "Nuevo evento",
@@ -184,7 +308,11 @@
   },
   "lightbox": {
     "photo": "Foto",
-    "counter": "{{current}} / {{total}}"
+    "counter": "{{current}} / {{total}}",
+    "altOf": "Foto de {{name}}"
+  },
+  "page": {
+    "notFound": "¡Ups! Página no encontrada"
   },
   "photos": {
     "count_one": "{{count}} foto",
@@ -207,5 +335,17 @@
     "groupMonths": "🌱 {{value}}",
     "groupYears": "🎂 {{value}}",
     "preBirthGroup": "⏳ Antes de nacer"
+  },
+  "profile": {
+    "title": "Tu cuenta",
+    "description": "Edita la información de tu perfil.",
+    "name": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "relationship": "Parentesco",
+    "selectPlaceholder": "Selecciona…",
+    "changePhoto": "Cambiar foto",
+    "imageTooLarge": "Imagen demasiado grande (máx 5MB)",
+    "uploadFailed": "Error al subir",
+    "updated": "Perfil actualizado"
   }
 }
