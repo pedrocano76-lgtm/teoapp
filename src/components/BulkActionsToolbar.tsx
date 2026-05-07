@@ -59,19 +59,32 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
   };
 
   const handleBulkDelete = async () => {
-    try {
-      for (const photo of selectedPhotos) {
+    const ids = selectedPhotos.map(p => p.id);
+    console.log('[DELETE_DEBUG] Bulk delete - photo IDs:', ids);
+    console.log('[DELETE_DEBUG] Bulk delete - storage paths:', selectedPhotos.map(p => p.storagePath));
+    console.log('[DELETE_DEBUG] Bulk delete - thumbnail paths:', selectedPhotos.map(p => p.thumbnailPath ?? null));
+    const failures: { id: string; error: any }[] = [];
+    for (const photo of selectedPhotos) {
+      try {
         await deletePhoto.mutateAsync({
           photoId: photo.id,
           storagePath: photo.storagePath,
           thumbnailPath: photo.thumbnailPath,
         });
+      } catch (err: any) {
+        console.error('[DELETE_DEBUG] Bulk delete failure for photo', photo.id, err);
+        failures.push({ id: photo.id, error: err });
       }
+    }
+    if (failures.length === 0) {
       toast.success(t('bulk.photosDeleted', { count: selectedPhotos.length }));
       setConfirmDelete(false);
       onDone();
-    } catch {
-      toast.error(t('bulk.deleteError'));
+    } else {
+      const firstMsg = failures[0].error?.message || String(failures[0].error);
+      toast.error(`${t('bulk.deleteError')}: ${failures.length}/${selectedPhotos.length} — ${firstMsg}`);
+      setConfirmDelete(false);
+      if (failures.length < selectedPhotos.length) onDone();
     }
   };
 
