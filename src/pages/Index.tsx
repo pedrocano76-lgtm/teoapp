@@ -163,6 +163,11 @@ const Index = () => {
     if (selectedLocation) {
       result = result.filter(p => p.locationName === selectedLocation);
     }
+    if (selectedTagIds.length > 0) {
+      result = result.filter(p =>
+        (p.tags || []).some(t => selectedTagIds.includes(t.id))
+      );
+    }
     if (selectedActivity) {
       const activityName = selectedActivity.name.trim().toLowerCase();
       result = result.filter(p =>
@@ -172,7 +177,7 @@ const Index = () => {
     return result.sort((a, b) =>
       sortOrder === 'asc' ? a.date.getTime() - b.date.getTime() : b.date.getTime() - a.date.getTime()
     );
-  }, [selectedChildId, selectedEventId, selectedLocation, selectedActivity, sortOrder, photos, events]);
+  }, [selectedChildId, selectedEventId, selectedLocation, selectedActivity, selectedTagIds, sortOrder, photos, events]);
 
   const uniqueLocations = useMemo(() => {
     const locs = new Set<string>();
