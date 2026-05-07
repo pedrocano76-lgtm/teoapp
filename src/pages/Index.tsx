@@ -15,7 +15,7 @@ import { FilterDropdown } from '@/components/FilterDropdown';
 import { NotificationBell } from '@/components/NotificationBell';
 import { AppSidebar } from '@/components/AppSidebar';
 import { BulkActionsToolbar } from '@/components/BulkActionsToolbar';
-import { DuplicateFinder } from '@/components/DuplicateFinder';
+
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { supabase } from '@/integrations/supabase/client';
 import type { Child, Photo, Event, Tag } from '@/lib/types';
