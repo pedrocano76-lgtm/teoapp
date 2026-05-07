@@ -322,12 +322,36 @@ export function useDeletePhoto() {
       storagePath: string;
       thumbnailPath?: string | null;
     }) => {
-      await supabase.from('photo_tags').delete().eq('photo_id', photoId);
-      const { error } = await supabase.from('photos').delete().eq('id', photoId);
-      if (error) throw error;
+      console.log('[DELETE_DEBUG] Photo ID being deleted:', photoId);
+      console.log('[DELETE_DEBUG] Storage path:', storagePath);
+      console.log('[DELETE_DEBUG] Thumbnail path:', thumbnailPath ?? '(none)');
+
+      const tagsRes = await supabase.from('photo_tags').delete().eq('photo_id', photoId);
+      console.log('[DELETE_DEBUG] photo_tags delete result:', tagsRes);
+      if (tagsRes.error) {
+        console.error('[DELETE_DEBUG] photo_tags delete error:', tagsRes.error);
+        throw tagsRes.error;
+      }
+
+      const dbRes = await supabase.from('photos').delete().eq('id', photoId);
+      console.log('[DELETE_DEBUG] photos DB delete result:', dbRes);
+      if (dbRes.error) {
+        console.error('[DELETE_DEBUG] photos DB delete error:', dbRes.error);
+        throw dbRes.error;
+      }
+
       const toRemove = [storagePath];
+      const thumbAttempted = !!thumbnailPath;
       if (thumbnailPath) toRemove.push(thumbnailPath);
-      await supabase.storage.from('photos').remove(toRemove);
+      console.log('[DELETE_DEBUG] Storage paths to remove:', toRemove, '(thumbnail attempted:', thumbAttempted, ')');
+
+      const storageRes = await supabase.storage.from('photos').remove(toRemove);
+      console.log('[DELETE_DEBUG] Storage remove full response:', storageRes);
+      if (storageRes.error) {
+        console.error('[DELETE_DEBUG] Storage remove error:', storageRes.error);
+        throw storageRes.error;
+      }
+      console.log('[DELETE_DEBUG] Storage remove data (per-file):', storageRes.data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['photos'] });
