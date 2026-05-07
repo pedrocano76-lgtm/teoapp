@@ -163,24 +163,61 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
               </PopoverContent>
             </Popover>
           </div>
-          {eventsData && eventsData.length > 0 && (
-            <div className="space-y-2">
-              <Label>Evento</Label>
-              <Select value={eventId} onValueChange={setEventId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sin evento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sin evento</SelectItem>
-                  {eventsData.map((event: any) => (
-                    <SelectItem key={event.id} value={event.id}>
-                      {event.icon} {event.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="space-y-2 rounded-lg border border-border p-3">
+            <div className="flex items-center gap-2">
+              <Checkbox id="edit-is-event" checked={isEvent} onCheckedChange={(v) => setIsEvent(!!v)} />
+              <Label htmlFor="edit-is-event" className="text-sm cursor-pointer">
+                {t('events.isPartOfEvent')}
+              </Label>
             </div>
-          )}
+            {isEvent && (
+              <div className="space-y-2 pt-1">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={eventMode === 'existing' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    disabled={(eventsData || []).length === 0}
+                    onClick={() => setEventMode('existing')}
+                  >
+                    {t('events.existingEvent')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={eventMode === 'new' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setEventMode('new')}
+                  >
+                    {t('events.newEvent')}
+                  </Button>
+                </div>
+                {eventMode === 'new' ? (
+                  <Input
+                    placeholder={t('events.eventNamePlaceholder')}
+                    value={newEventName}
+                    onChange={(e) => setNewEventName(e.target.value)}
+                  />
+                ) : (
+                  <Select value={eventId} onValueChange={setEventId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('events.selectEvent')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[...(eventsData || [])]
+                        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                        .map((event: any) => (
+                          <SelectItem key={event.id} value={event.id}>
+                            {event.icon} {event.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
+          </div>
 
           <TagSelector selectedTagIds={selectedTagIds} onToggle={toggleTag} />
 
