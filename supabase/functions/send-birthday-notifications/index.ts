@@ -20,13 +20,18 @@ function calcAge(birth: Date, on: Date) {
   return age;
 }
 
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
+
 function buildHtml(childName: string, age: number, when: "today" | "tomorrow") {
+  const safeName = escapeHtml(childName);
   const title = when === "today"
-    ? `¡Hoy es el cumpleaños de ${childName}! 🎂`
-    : `¡Mañana es el cumpleaños de ${childName}! 🎂`;
+    ? `¡Hoy es el cumpleaños de ${safeName}! 🎂`
+    : `¡Mañana es el cumpleaños de ${safeName}! 🎂`;
   const intro = when === "today"
-    ? `${childName} cumple <strong>${age}</strong> ${age === 1 ? "año" : "años"} hoy.`
-    : `Mañana ${childName} cumplirá <strong>${age}</strong> ${age === 1 ? "año" : "años"}.`;
+    ? `${safeName} cumple <strong>${age}</strong> ${age === 1 ? "año" : "años"} hoy.`
+    : `Mañana ${safeName} cumplirá <strong>${age}</strong> ${age === 1 ? "año" : "años"}.`;
   return `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,Inter,Arial,sans-serif;background:#faf8f6;margin:0;padding:24px;color:#1c1c1e;">
     <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:16px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
       <h1 style="font-size:22px;margin:0 0 12px;color:#1c1c1e;">${title}</h1>
