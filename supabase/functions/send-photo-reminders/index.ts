@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
@@ -37,6 +37,21 @@ Deno.serve(async (req) => {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const CRON_SECRET = Deno.env.get("CRON_SECRET");
+
+    // Auth: require x-cron-secret header or service-role bearer token
+    const cronHeader = req.headers.get("x-cron-secret");
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    const isAuthorized =
+      (CRON_SECRET && cronHeader === CRON_SECRET) ||
+      (bearer && bearer === SERVICE_KEY);
+    if (!isAuthorized) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurado");
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY no configurado");

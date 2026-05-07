@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
 };
 
@@ -44,6 +44,23 @@ Deno.serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const CRON_SECRET = Deno.env.get("CRON_SECRET");
+
+    // Auth: require either x-cron-secret header or Bearer service-role token
+    const cronHeader = req.headers.get("x-cron-secret");
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    const isAuthorized =
+      (CRON_SECRET && cronHeader === CRON_SECRET) ||
+      (bearer && bearer === SERVICE_ROLE);
+
+    if (!isAuthorized) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
     // Detect test mode from query string or JSON body
@@ -130,7 +147,7 @@ Deno.serve(async (req) => {
         const html = buildHtml(child.name, age, when);
 
         const { error: invokeErr } = await admin.functions.invoke("send-email", {
-          body: { to: email, subject, html },
+          body: { to: email, subject, html, _internal: true },
         });
         if (invokeErr) {
           errors.push({ childId: child.id, reason: `send-email ${email}: ${invokeErr.message}` });
