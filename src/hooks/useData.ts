@@ -11,6 +11,23 @@ import {
 const SIGNED_URL_TTL_SECONDS = 3600; // 1 hour
 export const PHOTOS_PAGE_SIZE = 20;
 
+function removePhotoFromCache(old: any, photoId: string) {
+  if (!old) return old;
+  if (Array.isArray(old)) return old.filter((row: any) => row.id !== photoId);
+  if (Array.isArray(old.pages)) {
+    return {
+      ...old,
+      pages: old.pages.map((page: any) => ({
+        ...page,
+        rows: Array.isArray(page.rows)
+          ? page.rows.filter((row: any) => row.id !== photoId)
+          : page.rows,
+      })),
+    };
+  }
+  return old;
+}
+
 export function useChildren() {
   const { user } = useAuth();
   return useQuery({
