@@ -104,7 +104,11 @@ const Index = () => {
   const { isGuest, canEdit } = useUserRole();
 
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const toggleTag = useCallback((id: string | null) => {
+    if (id === null) { setSelectedTagIds([]); return; }
+    setSelectedTagIds(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
+  }, []);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
