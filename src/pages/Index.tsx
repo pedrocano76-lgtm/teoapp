@@ -384,6 +384,7 @@ const Index = () => {
                       selectionMode={selectionMode}
                       selectedIds={selectedPhotoIds}
                       onToggleSelect={toggleSelect}
+                      events={selectedEventId ? [] : filteredEvents}
                     />
                   </>
                 ) : children.length === 1 ? (
@@ -396,6 +397,7 @@ const Index = () => {
                       selectionMode={selectionMode}
                       selectedIds={selectedPhotoIds}
                       onToggleSelect={toggleSelect}
+                      events={selectedEventId ? [] : filteredEvents}
                     />
                   </>
                 ) : (
@@ -406,6 +408,7 @@ const Index = () => {
                     selectionMode={selectionMode}
                     selectedIds={selectedPhotoIds}
                     onToggleSelect={toggleSelect}
+                    events={selectedEventId ? [] : events}
                   />
                 )}
 
