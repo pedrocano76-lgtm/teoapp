@@ -131,7 +131,7 @@ export type Database = {
           child_id: string
           color: string
           created_at: string
-          date: string
+          date: string | null
           icon: string
           id: string
           name: string
@@ -140,7 +140,7 @@ export type Database = {
           child_id: string
           color?: string
           created_at?: string
-          date: string
+          date?: string | null
           icon?: string
           id?: string
           name: string
@@ -149,7 +149,7 @@ export type Database = {
           child_id?: string
           color?: string
           created_at?: string
-          date?: string
+          date?: string | null
           icon?: string
           id?: string
           name?: string
