@@ -9,6 +9,7 @@ import { useSignedProfilePhotoUrl } from '@/hooks/useData';
 interface ChildrenManagerProps {
   children: Child[];
   onSelectChild: (id: string | null) => void;
+  selectedChildId?: string | null;
 }
 
 const colorMap: Record<Child['color'], string> = {
@@ -19,7 +20,15 @@ const colorMap: Record<Child['color'], string> = {
   sky: 'bg-sky',
 };
 
-function ChildRow({ child, onSelectChild }: { child: Child; onSelectChild: (id: string | null) => void }) {
+function ChildRow({
+  child,
+  onSelectChild,
+  isActive,
+}: {
+  child: Child;
+  onSelectChild: (id: string | null) => void;
+  isActive: boolean;
+}) {
   const [profileOpen, setProfileOpen] = useState(false);
   const { data: photoUrl } = useSignedProfilePhotoUrl(child.profilePhotoPath);
 
@@ -28,12 +37,19 @@ function ChildRow({ child, onSelectChild }: { child: Child; onSelectChild: (id: 
       <button
         onClick={() => {
           onSelectChild(child.id);
-          setProfileOpen(true);
         }}
-        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition-colors text-left"
+        onDoubleClick={() => setProfileOpen(true)}
+        className={cn(
+          'w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-sidebar-accent transition-colors text-left',
+        )}
+        style={
+          isActive
+            ? { borderLeft: '3px solid #C8845A', paddingLeft: 9, background: 'hsl(var(--sidebar-accent) / 0.5)' }
+            : { borderLeft: '3px solid transparent', paddingLeft: 9 }
+        }
       >
         <span className={cn(
-          'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-primary-foreground overflow-hidden',
+          'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-primary-foreground overflow-hidden shrink-0',
           colorMap[child.color]
         )}>
           {photoUrl ? (
@@ -42,9 +58,9 @@ function ChildRow({ child, onSelectChild }: { child: Child; onSelectChild: (id: 
             child.name[0]
           )}
         </span>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-sidebar-foreground truncate">{child.name}</p>
-          <p className="text-xs text-muted-foreground">{getAge(child.birthDate)}</p>
+          <p className="text-xs text-muted-foreground truncate">{getAge(child.birthDate)}</p>
         </div>
       </button>
       <ChildProfile child={child} open={profileOpen} onOpenChange={setProfileOpen} />
@@ -52,14 +68,19 @@ function ChildRow({ child, onSelectChild }: { child: Child; onSelectChild: (id: 
   );
 }
 
-export function ChildrenManager({ children, onSelectChild }: ChildrenManagerProps) {
+export function ChildrenManager({ children, onSelectChild, selectedChildId }: ChildrenManagerProps) {
   const { t } = useTranslation();
   if (children.length === 0) return <p className="text-sm text-muted-foreground px-4">{t('child.noChildren', { defaultValue: 'No hay hijos añadidos.' })}</p>;
 
   return (
-    <div className="space-y-1 px-2">
+    <div className="space-y-0.5 px-2">
       {children.map(child => (
-        <ChildRow key={child.id} child={child} onSelectChild={onSelectChild} />
+        <ChildRow
+          key={child.id}
+          child={child}
+          onSelectChild={onSelectChild}
+          isActive={selectedChildId === child.id}
+        />
       ))}
     </div>
   );
