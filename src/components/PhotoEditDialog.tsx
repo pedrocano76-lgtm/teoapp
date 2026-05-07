@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +13,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TagSelector } from '@/components/TagSelector';
 import { useUpdatePhoto, useDeletePhoto, usePhotoTags, useEvents, useAddEvent } from '@/hooks/useData';
+import { useLocale } from '@/hooks/useLocale';
 import { MapPin, Trash2, CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -37,6 +37,7 @@ interface PhotoEditDialogProps {
 
 export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoEditDialogProps) {
   const { t } = useTranslation();
+  const { dateFnsLocale } = useLocale();
   const [caption, setCaption] = useState(photo.caption || '');
   const [isEvent, setIsEvent] = useState(!!photo.eventId);
   const [eventMode, setEventMode] = useState<'new' | 'existing'>('existing');
@@ -95,21 +96,21 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
         isShared,
         takenAt: takenAt ? takenAt.toISOString() : undefined,
       });
-      toast.success('Foto actualizada');
+      toast.success(t('photoEdit.updated'));
       onOpenChange(false);
     } catch {
-      toast.error('Error al actualizar la foto');
+      toast.error(t('photoEdit.updateError'));
     }
   };
 
   const handleDelete = async () => {
     try {
       await deletePhoto.mutateAsync({ photoId: photo.id, storagePath: photo.storagePath, thumbnailPath: photo.thumbnailPath });
-      toast.success('Foto eliminada');
+      toast.success(t('photoEdit.deleted'));
       onOpenChange(false);
       onDeleted?.();
     } catch {
-      toast.error('Error al eliminar la foto');
+      toast.error(t('photoEdit.deleteError'));
     }
   };
 
@@ -123,24 +124,24 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar foto</DialogTitle>
-          <DialogDescription>Modifica los detalles de la foto</DialogDescription>
+          <DialogTitle>{t('photoEdit.title')}</DialogTitle>
+          <DialogDescription>{t('photoEdit.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="caption">Comentario</Label>
+            <Label htmlFor="caption">{t('photoEdit.captionLabel')}</Label>
             <Textarea
               id="caption"
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
-              placeholder="Añade un comentario..."
+              placeholder={t('photoEdit.captionPlaceholder')}
               className="min-h-[60px]"
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Fecha</Label>
+            <Label>{t('photoEdit.dateLabel')}</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -148,7 +149,7 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
                   className={cn("w-full justify-start text-left font-normal", !takenAt && "text-muted-foreground")}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {takenAt ? format(takenAt, "PPP", { locale: es }) : 'Seleccionar fecha'}
+                  {takenAt ? format(takenAt, "PPP", { locale: dateFnsLocale }) : t('photoEdit.selectDate')}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -224,7 +225,7 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
           <div className="flex items-center gap-2">
             <Switch id="edit-shared" checked={isShared} onCheckedChange={setIsShared} />
             <Label htmlFor="edit-shared" className="text-sm">
-              {isShared ? 'Visible para invitados' : 'Solo padres'}
+              {isShared ? t('photoUpload.visibleGuests') : t('photoUpload.parentsOnly')}
             </Label>
           </div>
 
@@ -239,19 +240,19 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
         <DialogFooter className="flex justify-between sm:justify-between">
           {confirmDelete ? (
             <div className="flex items-center gap-2 w-full">
-              <p className="text-sm text-destructive flex-1">¿Eliminar esta foto?</p>
-              <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
+              <p className="text-sm text-destructive flex-1">{t('photoEdit.confirmDelete')}</p>
+              <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>{t('common.cancel')}</Button>
               <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deletePhoto.isPending}>
-                Confirmar
+                {t('common.confirm')}
               </Button>
             </div>
           ) : (
             <>
               <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setConfirmDelete(true)}>
-                <Trash2 className="h-4 w-4 mr-1" /> Eliminar
+                <Trash2 className="h-4 w-4 mr-1" /> {t('common.delete')}
               </Button>
               <Button onClick={handleSave} disabled={updatePhoto.isPending}>
-                Guardar
+                {t('common.save')}
               </Button>
             </>
           )}

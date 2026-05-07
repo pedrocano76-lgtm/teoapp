@@ -7,13 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const colors = [
-  { value: 'primary', label: '🌸 Rosa' },
-  { value: 'sage', label: '🌿 Salvia' },
-  { value: 'lavender', label: '💜 Lavanda' },
-  { value: 'peach', label: '🍑 Melocotón' },
-  { value: 'sky', label: '🩵 Cielo' },
-];
+const colorKeys = [
+  { value: 'primary', key: 'child.colorPink' },
+  { value: 'sage', key: 'child.colorSage' },
+  { value: 'lavender', key: 'child.colorLavender' },
+  { value: 'peach', key: 'child.colorPeach' },
+  { value: 'sky', key: 'child.colorSky' },
+] as const;
 
 interface AddChildDialogProps {
   trigger?: React.ReactNode;
@@ -74,8 +74,8 @@ export function AddChildDialog({ trigger }: AddChildDialogProps = {}) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {colors.map((c) => (
-                <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+              {colorKeys.map((c) => (
+                <SelectItem key={c.value} value={c.value}>{t(c.key)}</SelectItem>
               ))}
             </SelectContent>
           </Select>

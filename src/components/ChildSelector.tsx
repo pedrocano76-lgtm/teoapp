@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Child } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +25,7 @@ const colorRingMap: Record<Child['color'], string> = {
 };
 
 export function ChildSelector({ children, selectedId, onSelect }: ChildSelectorProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-3">
       <button
@@ -35,7 +37,7 @@ export function ChildSelector({ children, selectedId, onSelect }: ChildSelectorP
             : 'bg-muted text-muted-foreground hover:bg-muted/80'
         )}
       >
-        All
+        {t('common.all')}
       </button>
       {children.map((child) => (
         <button

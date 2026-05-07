@@ -1,14 +1,14 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TagSelector } from '@/components/TagSelector';
 import { useUpdatePhoto, useDeletePhoto } from '@/hooks/useData';
+import { useLocale } from '@/hooks/useLocale';
 import { CalendarIcon, Trash2, Tag, X, CheckSquare } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 import { Photo } from '@/lib/types';
 
 interface BulkActionsToolbarProps {
@@ -18,6 +18,8 @@ interface BulkActionsToolbarProps {
 }
 
 export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActionsToolbarProps) {
+  const { t } = useTranslation();
+  const { dateFnsLocale } = useLocale();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [bulkDate, setBulkDate] = useState<Date | undefined>();
@@ -31,34 +33,28 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
     if (!bulkDate) return;
     try {
       for (const photo of selectedPhotos) {
-        await updatePhoto.mutateAsync({
-          photoId: photo.id,
-          takenAt: bulkDate.toISOString(),
-        });
+        await updatePhoto.mutateAsync({ photoId: photo.id, takenAt: bulkDate.toISOString() });
       }
-      toast.success(`Fecha actualizada en ${selectedPhotos.length} fotos`);
+      toast.success(t('bulk.dateUpdated', { count: selectedPhotos.length }));
       setShowDatePicker(false);
       setBulkDate(undefined);
       onDone();
     } catch {
-      toast.error('Error al actualizar fechas');
+      toast.error(t('bulk.dateError'));
     }
   };
 
   const handleBulkTags = async () => {
     try {
       for (const photo of selectedPhotos) {
-        await updatePhoto.mutateAsync({
-          photoId: photo.id,
-          tagIds: bulkTagIds,
-        });
+        await updatePhoto.mutateAsync({ photoId: photo.id, tagIds: bulkTagIds });
       }
-      toast.success(`Etiquetas actualizadas en ${selectedPhotos.length} fotos`);
+      toast.success(t('bulk.tagsUpdated', { count: selectedPhotos.length }));
       setShowTagPicker(false);
       setBulkTagIds([]);
       onDone();
     } catch {
-      toast.error('Error al actualizar etiquetas');
+      toast.error(t('bulk.tagsError'));
     }
   };
 
@@ -71,11 +67,11 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
           thumbnailPath: photo.thumbnailPath,
         });
       }
-      toast.success(`${selectedPhotos.length} fotos eliminadas`);
+      toast.success(t('bulk.photosDeleted', { count: selectedPhotos.length }));
       setConfirmDelete(false);
       onDone();
     } catch {
-      toast.error('Error al eliminar fotos');
+      toast.error(t('bulk.deleteError'));
     }
   };
 
@@ -83,16 +79,15 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
     <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border py-3 px-4 flex items-center gap-3 flex-wrap animate-fade-in">
       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
         <CheckSquare className="h-4 w-4 text-primary" />
-        {selectedPhotos.length} seleccionadas
+        {selectedPhotos.length} {t('bulk.selected')}
       </div>
 
       <div className="flex items-center gap-2 flex-wrap flex-1">
-        {/* Date picker */}
         <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="gap-1.5">
               <CalendarIcon className="h-3.5 w-3.5" />
-              Cambiar fecha
+              {t('bulk.changeDate')}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -108,10 +103,10 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
               {bulkDate && (
                 <div className="flex items-center justify-between px-1">
                   <span className="text-sm text-muted-foreground">
-                    {format(bulkDate, "PPP", { locale: es })}
+                    {format(bulkDate, "PPP", { locale: dateFnsLocale })}
                   </span>
                   <Button size="sm" onClick={handleBulkDate} disabled={updatePhoto.isPending}>
-                    Aplicar
+                    {t('common.apply')}
                   </Button>
                 </div>
               )}
@@ -119,12 +114,11 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
           </PopoverContent>
         </Popover>
 
-        {/* Tag picker */}
         <Popover open={showTagPicker} onOpenChange={setShowTagPicker}>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="gap-1.5">
               <Tag className="h-3.5 w-3.5" />
-              Cambiar etiquetas
+              {t('bulk.changeTags')}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-72" align="start">
@@ -136,32 +130,31 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
                 )}
               />
               <Button size="sm" className="w-full" onClick={handleBulkTags} disabled={updatePhoto.isPending}>
-                Aplicar a {selectedPhotos.length} fotos
+                {t('bulk.applyTo', { count: selectedPhotos.length })}
               </Button>
             </div>
           </PopoverContent>
         </Popover>
 
-        {/* Delete */}
         {confirmDelete ? (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-destructive">¿Eliminar {selectedPhotos.length} fotos?</span>
-            <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
+            <span className="text-sm text-destructive">{t('bulk.deleteConfirm', { count: selectedPhotos.length })}</span>
+            <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>{t('common.cancel')}</Button>
             <Button variant="destructive" size="sm" onClick={handleBulkDelete} disabled={deletePhoto.isPending}>
-              Confirmar
+              {t('common.confirm')}
             </Button>
           </div>
         ) : (
           <Button variant="outline" size="sm" className="gap-1.5 text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="h-3.5 w-3.5" />
-            Eliminar
+            {t('bulk.delete')}
           </Button>
         )}
       </div>
 
       <Button variant="ghost" size="sm" onClick={onClear} className="gap-1">
         <X className="h-3.5 w-3.5" />
-        Cancelar
+        {t('common.cancel')}
       </Button>
     </div>
   );
