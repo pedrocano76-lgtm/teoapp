@@ -362,22 +362,62 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             onChange={(e) => setCaption(e.target.value)}
           />
 
-          {/* Event selector */}
-          {childEvents.length > 0 && (
-            <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Vincular a evento (opcional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sin evento</SelectItem>
-                {childEvents.map((e) => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {e.icon} {e.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          {/* Event toggle + selector */}
+          <div className="space-y-2 rounded-lg border border-border p-3">
+            <div className="flex items-center gap-2">
+              <Checkbox id="is-event" checked={isEvent} onCheckedChange={(v) => setIsEvent(!!v)} />
+              <Label htmlFor="is-event" className="text-sm cursor-pointer">
+                {t('events.isPartOfEvent')}
+              </Label>
+            </div>
+            {isEvent && (
+              <div className="space-y-2 pt-1">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={eventMode === 'new' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setEventMode('new')}
+                  >
+                    {t('events.newEvent')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={eventMode === 'existing' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    disabled={(eventsData || []).length === 0}
+                    onClick={() => setEventMode('existing')}
+                  >
+                    {t('events.existingEvent')}
+                  </Button>
+                </div>
+                {eventMode === 'new' ? (
+                  <Input
+                    placeholder={t('events.eventNamePlaceholder')}
+                    value={newEventName}
+                    onChange={(e) => setNewEventName(e.target.value)}
+                  />
+                ) : (
+                  <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('events.selectEvent')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[...(eventsData || [])]
+                        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                        .map((e) => (
+                          <SelectItem key={e.id} value={e.id}>
+                            {e.icon} {e.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Tag selector */}
           <TagSelector selectedTagIds={selectedTagIds} onToggle={handleToggleTag} />
