@@ -112,10 +112,26 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
     setUploading(true);
 
     try {
+      // Resolve event id (create if needed)
+      let eventIdToUse: string | undefined = undefined;
+      if (isEvent) {
+        if (eventMode === 'new' && newEventName.trim()) {
+          const created = await addEvent.mutateAsync({
+            childId: selectedChild,
+            name: newEventName.trim(),
+            date: null,
+          });
+          eventIdToUse = created.id;
+        } else if (eventMode === 'existing' && selectedEventId) {
+          eventIdToUse = selectedEventId;
+        }
+      }
+
       // Upload in parallel batches of 3 to balance speed and bandwidth
       const CONCURRENCY = 3;
       let completed = 0;
       let failed = 0;
+      let earliestDate: Date | null = null;
       for (let i = 0; i < files.length; i += CONCURRENCY) {
         const batch = files.slice(i, i + CONCURRENCY);
         const results = await Promise.allSettled(
@@ -127,11 +143,17 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                 childId: selectedChild,
                 caption: caption || undefined,
                 takenAt: noExifFiles.includes(file.name) && manualDate ? manualDate : undefined,
-                eventId: selectedEventId || undefined,
+                eventId: eventIdToUse,
                 tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
                 isShared,
               });
               setUploadProgress(prev => ({ ...prev, [file.name]: 'done' }));
+              // Track earliest photo date for default event date
+              const exif = await getExifDate(file);
+              const d = exif || manualDate || null;
+              if (d && (!earliestDate || d.getTime() < earliestDate.getTime())) {
+                earliestDate = d;
+              }
             } catch (error) {
               setUploadProgress(prev => ({ ...prev, [file.name]: 'error' }));
               throw error;
@@ -140,6 +162,12 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
         );
         completed += results.filter(r => r.status === 'fulfilled').length;
         failed += results.filter(r => r.status === 'rejected').length;
+      }
+
+      // If new event was created without a date, default it to the earliest photo date
+      if (isEvent && eventMode === 'new' && eventIdToUse && earliestDate) {
+        const iso = (earliestDate as Date).toISOString().slice(0, 10);
+        await supabaseUpdateEventDate(eventIdToUse, iso);
       }
 
       if (failed === 0) {
@@ -154,6 +182,9 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
       setOpen(false);
       setFiles([]);
       setCaption('');
+      setIsEvent(false);
+      setEventMode('new');
+      setNewEventName('');
       setSelectedEventId('');
       setSelectedTagIds([]);
       setIsShared(true);
