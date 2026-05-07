@@ -104,13 +104,16 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
   };
 
   const handleDelete = async () => {
+    console.log('[DELETE_DEBUG] Single delete invoked from edit dialog for photo:', photo.id);
     try {
       await deletePhoto.mutateAsync({ photoId: photo.id, storagePath: photo.storagePath, thumbnailPath: photo.thumbnailPath });
       toast.success(t('photoEdit.deleted'));
       onOpenChange(false);
       onDeleted?.();
-    } catch {
-      toast.error(t('photoEdit.deleteError'));
+    } catch (err: any) {
+      console.error('[DELETE_DEBUG] Single delete failed:', err);
+      const msg = err?.message || String(err);
+      toast.error(`${t('photoEdit.deleteError')}: ${msg}`);
     }
   };
 
