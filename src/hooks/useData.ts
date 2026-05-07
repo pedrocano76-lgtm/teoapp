@@ -366,7 +366,7 @@ export function useDeletePhoto() {
         console.error('[DELETE_DEBUG] Storage remove error:', storageRes.error);
         throw storageRes.error;
       }
-      const removedNames = (storageRes.data ?? []).map((o: any) => o.name);
+      const removedNames = (storageRes.data ?? []).map((o: any) => o.name ?? o.path ?? o.id);
       console.log('[DELETE_DEBUG] Storage remove data (per-file):', storageRes.data);
       if (!removedNames.includes(storagePath)) {
         console.warn('[DELETE_DEBUG] Storage: file not found at path', storagePath);
@@ -389,7 +389,8 @@ export function useDeletePhoto() {
         throw dbRes.error;
       }
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
+      queryClient.setQueriesData({ queryKey: ['photos'] }, (old) => removePhotoFromCache(old, variables.photoId));
       await queryClient.invalidateQueries({ queryKey: ['photos'] });
       await queryClient.refetchQueries({ queryKey: ['photos'], type: 'active' });
     },
