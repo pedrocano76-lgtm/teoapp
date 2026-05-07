@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TagSelector } from '@/components/TagSelector';
-import { useUpdatePhoto, useDeletePhoto, usePhotoTags, useEvents } from '@/hooks/useData';
+import { useUpdatePhoto, useDeletePhoto, usePhotoTags, useEvents, useAddEvent } from '@/hooks/useData';
 import { MapPin, Trash2, CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -33,8 +36,12 @@ interface PhotoEditDialogProps {
 }
 
 export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoEditDialogProps) {
+  const { t } = useTranslation();
   const [caption, setCaption] = useState(photo.caption || '');
+  const [isEvent, setIsEvent] = useState(!!photo.eventId);
+  const [eventMode, setEventMode] = useState<'new' | 'existing'>('existing');
   const [eventId, setEventId] = useState(photo.eventId || '');
+  const [newEventName, setNewEventName] = useState('');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [isShared, setIsShared] = useState(photo.isShared ?? true);
   const [takenAt, setTakenAt] = useState<Date | undefined>(photo.takenAt ? new Date(photo.takenAt) : undefined);
@@ -42,13 +49,17 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
 
   const updatePhoto = useUpdatePhoto();
   const deletePhoto = useDeletePhoto();
+  const addEvent = useAddEvent();
   const { data: photoTags } = usePhotoTags(photo.id);
   const { data: eventsData } = useEvents(photo.childId);
 
   useEffect(() => {
     if (open) {
       setCaption(photo.caption || '');
+      setIsEvent(!!photo.eventId);
+      setEventMode(photo.eventId ? 'existing' : 'new');
       setEventId(photo.eventId || '');
+      setNewEventName('');
       setIsShared(photo.isShared ?? true);
       setTakenAt(photo.takenAt ? new Date(photo.takenAt) : undefined);
       setConfirmDelete(false);
@@ -63,10 +74,23 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
 
   const handleSave = async () => {
     try {
+      let resolvedEventId: string | null = null;
+      if (isEvent) {
+        if (eventMode === 'new' && newEventName.trim()) {
+          const created = await addEvent.mutateAsync({
+            childId: photo.childId,
+            name: newEventName.trim(),
+            date: takenAt ?? null,
+          });
+          resolvedEventId = created.id;
+        } else if (eventMode === 'existing' && eventId) {
+          resolvedEventId = eventId;
+        }
+      }
       await updatePhoto.mutateAsync({
         photoId: photo.id,
         caption: caption || undefined,
-        eventId: eventId || null,
+        eventId: resolvedEventId,
         tagIds: selectedTagIds,
         isShared,
         takenAt: takenAt ? takenAt.toISOString() : undefined,
@@ -139,24 +163,61 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
               </PopoverContent>
             </Popover>
           </div>
-          {eventsData && eventsData.length > 0 && (
-            <div className="space-y-2">
-              <Label>Evento</Label>
-              <Select value={eventId} onValueChange={setEventId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sin evento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sin evento</SelectItem>
-                  {eventsData.map((event: any) => (
-                    <SelectItem key={event.id} value={event.id}>
-                      {event.icon} {event.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="space-y-2 rounded-lg border border-border p-3">
+            <div className="flex items-center gap-2">
+              <Checkbox id="edit-is-event" checked={isEvent} onCheckedChange={(v) => setIsEvent(!!v)} />
+              <Label htmlFor="edit-is-event" className="text-sm cursor-pointer">
+                {t('events.isPartOfEvent')}
+              </Label>
             </div>
-          )}
+            {isEvent && (
+              <div className="space-y-2 pt-1">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={eventMode === 'existing' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    disabled={(eventsData || []).length === 0}
+                    onClick={() => setEventMode('existing')}
+                  >
+                    {t('events.existingEvent')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={eventMode === 'new' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setEventMode('new')}
+                  >
+                    {t('events.newEvent')}
+                  </Button>
+                </div>
+                {eventMode === 'new' ? (
+                  <Input
+                    placeholder={t('events.eventNamePlaceholder')}
+                    value={newEventName}
+                    onChange={(e) => setNewEventName(e.target.value)}
+                  />
+                ) : (
+                  <Select value={eventId} onValueChange={setEventId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('events.selectEvent')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[...(eventsData || [])]
+                        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                        .map((event: any) => (
+                          <SelectItem key={event.id} value={event.id}>
+                            {event.icon} {event.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
+          </div>
 
           <TagSelector selectedTagIds={selectedTagIds} onToggle={toggleTag} />
 
