@@ -11,8 +11,8 @@ interface FilterDropdownProps {
   sortOrder: 'asc' | 'desc';
   onSortChange: (order: 'asc' | 'desc') => void;
   tags: Tag[];
-  selectedTagId: string | null;
-  onTagSelect: (id: string | null) => void;
+  selectedTagIds: string[];
+  onTagToggle: (id: string | null) => void;
   events: Event[];
   selectedEventId: string | null;
   onEventSelect: (id: string | null) => void;
@@ -26,7 +26,7 @@ interface FilterDropdownProps {
 
 export function FilterDropdown({
   sortOrder, onSortChange,
-  tags, selectedTagId, onTagSelect,
+  tags, selectedTagIds, onTagToggle,
   events, selectedEventId, onEventSelect,
   locations, selectedLocation, onLocationSelect,
   selectedChildId, selectedActivityId, onActivitySelect,
