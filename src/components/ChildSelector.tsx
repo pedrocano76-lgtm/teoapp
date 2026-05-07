@@ -35,7 +35,8 @@ export function ChildSelector({ children, selectedId, onSelect }: ChildSelectorP
             : 'bg-muted text-muted-foreground hover:bg-muted/80'
         )}
       >
-        All
+        {/* i18n via parent already; static "All"/"Todos" handled inline */}
+        <Trans />
       </button>
       {children.map((child) => (
         <button
