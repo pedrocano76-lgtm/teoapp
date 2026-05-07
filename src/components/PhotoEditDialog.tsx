@@ -36,8 +36,12 @@ interface PhotoEditDialogProps {
 }
 
 export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoEditDialogProps) {
+  const { t } = useTranslation();
   const [caption, setCaption] = useState(photo.caption || '');
+  const [isEvent, setIsEvent] = useState(!!photo.eventId);
+  const [eventMode, setEventMode] = useState<'new' | 'existing'>('existing');
   const [eventId, setEventId] = useState(photo.eventId || '');
+  const [newEventName, setNewEventName] = useState('');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [isShared, setIsShared] = useState(photo.isShared ?? true);
   const [takenAt, setTakenAt] = useState<Date | undefined>(photo.takenAt ? new Date(photo.takenAt) : undefined);
@@ -45,13 +49,17 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
 
   const updatePhoto = useUpdatePhoto();
   const deletePhoto = useDeletePhoto();
+  const addEvent = useAddEvent();
   const { data: photoTags } = usePhotoTags(photo.id);
   const { data: eventsData } = useEvents(photo.childId);
 
   useEffect(() => {
     if (open) {
       setCaption(photo.caption || '');
+      setIsEvent(!!photo.eventId);
+      setEventMode(photo.eventId ? 'existing' : 'new');
       setEventId(photo.eventId || '');
+      setNewEventName('');
       setIsShared(photo.isShared ?? true);
       setTakenAt(photo.takenAt ? new Date(photo.takenAt) : undefined);
       setConfirmDelete(false);
@@ -66,10 +74,24 @@ export function PhotoEditDialog({ open, onOpenChange, photo, onDeleted }: PhotoE
 
   const handleSave = async () => {
     try {
+      let resolvedEventId: string | null = null;
+      if (isEvent) {
+        if (eventMode === 'new' && newEventName.trim()) {
+          const created = await addEvent.mutateAsync({
+            childId: photo.childId,
+            name: newEventName.trim(),
+            icon: '⭐',
+            date: takenAt ? takenAt.toISOString().slice(0, 10) : null,
+          } as any);
+          resolvedEventId = created.id;
+        } else if (eventMode === 'existing' && eventId) {
+          resolvedEventId = eventId;
+        }
+      }
       await updatePhoto.mutateAsync({
         photoId: photo.id,
         caption: caption || undefined,
-        eventId: eventId || null,
+        eventId: resolvedEventId,
         tagIds: selectedTagIds,
         isShared,
         takenAt: takenAt ? takenAt.toISOString() : undefined,
