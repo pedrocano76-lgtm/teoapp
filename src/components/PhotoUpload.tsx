@@ -25,9 +25,13 @@ interface PhotoUploadProps {
 }
 
 export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState(defaultChildId || '');
   const [caption, setCaption] = useState('');
+  const [isEvent, setIsEvent] = useState(false);
+  const [eventMode, setEventMode] = useState<'new' | 'existing'>('new');
+  const [newEventName, setNewEventName] = useState('');
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
@@ -39,6 +43,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadPhoto = useUploadPhoto();
+  const addEvent = useAddEvent();
   const { toast } = useToast();
   const { data: eventsData } = useEvents(selectedChild || undefined);
 
