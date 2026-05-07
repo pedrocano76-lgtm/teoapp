@@ -173,6 +173,15 @@
     "findDuplicates": "Find duplicates",
     "findDuplicatesDesc": "Scan your library for visually identical photos and clean them up."
   },
+  "events": {
+    "isPartOfEvent": "This is part of an event",
+    "newEvent": "New event",
+    "existingEvent": "Existing event",
+    "eventNamePlaceholder": "Event name",
+    "selectEvent": "Select an event",
+    "filterTitle": "Events",
+    "noEvents": "No events for this child"
+  },
   "lightbox": {
     "photo": "Photo",
     "counter": "{{current}} / {{total}}"
