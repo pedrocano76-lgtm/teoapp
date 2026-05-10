@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 const COLORS = {
   bg: '#F5F0E8',
-  primary: '#C8845A',
+  primary: '#D4793A',
   text: '#4A3728',
   secondary: '#7A6A5A',
   green: '#8BAF8C',
@@ -19,26 +19,13 @@ const sans = {
 function Logo() {
   return (
     <div className="flex items-center gap-2">
-      <div
-        style={{
-          width: 26,
-          height: 26,
-          borderRadius: 6,
-          background: COLORS.primary,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-        aria-hidden
-      >
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <rect x="2" y="5" width="18" height="13" rx="2" stroke="white" strokeWidth="1.6" />
-          <line x1="2" y1="9" x2="20" y2="9" stroke="white" strokeWidth="1.6" />
-          <line x1="7" y1="5" x2="7" y2="9" stroke="white" strokeWidth="1.6" />
-          <circle cx="11" cy="14" r="2" fill="white" />
-        </svg>
-      </div>
+      <svg width="32" height="32" viewBox="0 0 160 160" fill="none" aria-hidden>
+        <rect x="36" y="36" width="96" height="118" rx="10" fill="#C8B4A2" />
+        <rect x="23" y="23" width="96" height="118" rx="10" fill="#E2CEBC" />
+        <rect x="10" y="10" width="96" height="118" rx="10" fill="#D4793A" />
+        <circle cx="58" cy="50" r="17" fill="#9E5520" opacity="0.2" />
+        <rect x="19" y="87" width="78" height="32" rx="7" fill="#9E5520" opacity="0.16" />
+      </svg>
       <span style={{ ...serif, fontSize: 20, fontWeight: 500, lineHeight: 1 }}>
         <span style={{ color: COLORS.text }}>memory</span>
         <span style={{ color: COLORS.primary }}>drawer</span>
