@@ -387,6 +387,7 @@ const Index = () => {
                       selectionMode={selectionMode}
                       selectedIds={selectedPhotoIds}
                       onToggleSelect={toggleSelect}
+                      onLongPress={canEdit ? startSelectionWith : undefined}
                       events={selectedEventId ? [] : filteredEvents}
                     />
                   </>
@@ -400,6 +401,7 @@ const Index = () => {
                       selectionMode={selectionMode}
                       selectedIds={selectedPhotoIds}
                       onToggleSelect={toggleSelect}
+                      onLongPress={canEdit ? startSelectionWith : undefined}
                       events={selectedEventId ? [] : filteredEvents}
                     />
                   </>
@@ -411,6 +413,7 @@ const Index = () => {
                     selectionMode={selectionMode}
                     selectedIds={selectedPhotoIds}
                     onToggleSelect={toggleSelect}
+                      onLongPress={canEdit ? startSelectionWith : undefined}
                     events={selectedEventId ? [] : events}
                   />
                 )}
