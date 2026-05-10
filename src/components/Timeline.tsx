@@ -119,6 +119,7 @@ export function Timeline({ photos, child, sortOrder = 'asc', selectionMode, sele
                     selectionMode={selectionMode}
                     isSelected={selectedIds?.has(photo.id)}
                     onToggleSelect={onToggleSelect}
+                    onLongPress={onLongPress}
                   />
                 ))}
               </div>
