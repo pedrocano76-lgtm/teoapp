@@ -247,7 +247,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
         failed += results.filter(r => r.status === 'rejected').length;
       }
 
-      if (isEvent && eventMode === 'new' && eventIdToUse && earliestDate) {
+      if (isEvent && eventMode === 'new' && eventIdToUse && !newEventDateObj && earliestDate) {
         const iso = (earliestDate as Date).toISOString().slice(0, 10);
         await supabaseUpdateEventDate(eventIdToUse, iso);
       }
