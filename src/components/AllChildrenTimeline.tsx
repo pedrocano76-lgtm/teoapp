@@ -14,9 +14,10 @@ interface AllChildrenTimelineProps {
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
   events?: Event[];
+  onLongPress?: (id: string) => void;
 }
 
-export function AllChildrenTimeline({ photos, children, sortOrder = 'asc', selectionMode, selectedIds, onToggleSelect, events = [] }: AllChildrenTimelineProps) {
+export function AllChildrenTimeline({ photos, children, sortOrder = 'asc', selectionMode, selectedIds, onToggleSelect, events = [], onLongPress }: AllChildrenTimelineProps) {
   const [lightboxIndex, setLightboxIndex] = useState(-1);
   const { intlLocale } = useLocale();
   const sortedPhotos = useMemo(() => [...photos].sort((a, b) =>
