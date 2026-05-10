@@ -145,7 +145,7 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
                   prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
                 )}
               />
-              <Button size="sm" className="w-full" onClick={handleBulkTags} disabled={updatePhoto.isPending}>
+              <Button size="sm" className="w-full" onClick={handleBulkTags} disabled={bulkAddTags.isPending || bulkTagIds.length === 0}>
                 {t('bulk.applyTo', { count: selectedPhotos.length })}
               </Button>
             </div>
