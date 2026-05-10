@@ -202,6 +202,15 @@ const Index = () => {
     setSelectedPhotoIds(new Set());
   }, []);
 
+  const startSelectionWith = useCallback((id: string) => {
+    setSelectionMode(true);
+    setSelectedPhotoIds(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
+
   const selectedPhotos = useMemo(() =>
     filteredPhotos.filter(p => selectedPhotoIds.has(p.id)),
     [filteredPhotos, selectedPhotoIds]
