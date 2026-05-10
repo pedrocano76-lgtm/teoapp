@@ -15,6 +15,7 @@ import { FilterDropdown } from '@/components/FilterDropdown';
 import { NotificationBell } from '@/components/NotificationBell';
 import { AppSidebar } from '@/components/AppSidebar';
 import { BulkActionsToolbar } from '@/components/BulkActionsToolbar';
+import { BrandLogo } from '@/components/Brand';
 
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { supabase } from '@/integrations/supabase/client';
