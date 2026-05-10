@@ -177,6 +177,21 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
   const uploadableItems = items.filter(it => it.exifDate || it.manualDate);
   const blockedCount = unknownItems.filter(it => !it.manualDate).length;
 
+  const oldestSelectedDate = useMemo(() => {
+    let earliest: Date | null = null;
+    for (const it of uploadableItems) {
+      const d = it.exifDate || it.manualDate;
+      if (d && (!earliest || d.getTime() < earliest.getTime())) earliest = d;
+    }
+    return earliest;
+  }, [uploadableItems]);
+
+  useEffect(() => {
+    if (isEvent && eventMode === 'new' && !newEventDateTouched && oldestSelectedDate) {
+      setNewEventDate(toDateInputValue(oldestSelectedDate));
+    }
+  }, [isEvent, eventMode, oldestSelectedDate, newEventDateTouched]);
+
   const handleUpload = async () => {
     if (!selectedChild || uploadableItems.length === 0) return;
     setUploading(true);
