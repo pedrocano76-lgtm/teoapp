@@ -3,7 +3,7 @@ import { Photo, Child } from '@/lib/types';
 import { getAgeLabel } from '@/lib/age-utils';
 import { useLocale } from '@/hooks/useLocale';
 import { cn } from '@/lib/utils';
-import { MapPin, Pencil, Check } from 'lucide-react';
+import { MapPin, Pencil, Check, Bookmark } from 'lucide-react';
 import { PhotoEditDialog } from '@/components/PhotoEditDialog';
 import { useUserRole } from '@/hooks/useUserRole';
 
