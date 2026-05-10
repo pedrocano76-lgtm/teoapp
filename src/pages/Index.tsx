@@ -352,7 +352,7 @@ const Index = () => {
                   </>
                 ) : (
                   <>
-                    <BrandLogo size={48} className="mx-auto mb-4" />
+                    <BrandLogo size={40} className="mx-auto mb-4" />
                     <p className="text-muted-foreground text-lg">{t('empty.noPhotos')}</p>
                     {canEdit && (
                       <>
