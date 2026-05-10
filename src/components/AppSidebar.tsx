@@ -37,7 +37,7 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
           onClick={() => onSelectChild(null)}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <BrandLogo size={26} />
+          <BrandLogo size={32} />
           <BrandWordmark
             className="text-lg group-data-[collapsible=icon]:hidden"
             style={{ fontSize: 18, lineHeight: 1 }}
