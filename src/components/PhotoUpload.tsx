@@ -268,6 +268,8 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
       setIsEvent(false);
       setEventMode('new');
       setNewEventName('');
+      setNewEventDate('');
+      setNewEventDateTouched(false);
       setSelectedEventId('');
       setSelectedTagIds([]);
       setIsShared(true);
