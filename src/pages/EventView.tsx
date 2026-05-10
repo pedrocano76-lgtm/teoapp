@@ -105,14 +105,39 @@ export default function EventView() {
           <h1 className="flex-1 text-center text-[15px] truncate" style={{ fontFamily: 'Georgia, serif', color: '#4A3728' }}>
             <span style={{ color: '#C8845A' }}>✦</span> {event?.name ?? ''}
           </h1>
-          <div className="w-8" />
+          {canEdit && event ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setEditOpen(true)}
+              aria-label={t('eventEdit.title', 'Editar evento')}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          ) : (
+            <div className="w-8" />
+          )}
         </div>
       </header>
       <main className="container mx-auto px-3 pt-4 pb-20">
         {dateLabel && (
-          <p className="text-center text-sm text-muted-foreground mb-4">
+          <p className="text-center text-sm text-muted-foreground mb-1">
             {dateLabel} · {t('photos.count', { count: photos.length })}
           </p>
+        )}
+        {event?.description && (
+          <p className="text-center text-sm text-foreground/80 mb-4 max-w-xl mx-auto">
+            {event.description}
+          </p>
+        )}
+        {canEdit && event && (
+          <div className="flex justify-center mb-4">
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setAddPhotosOpen(true)}>
+              <Plus className="h-4 w-4" />
+              {t('eventEdit.addPhotos', 'Añadir fotos al evento')}
+            </Button>
+          </div>
         )}
         {isLoading ? (
           <p className="text-center text-muted-foreground py-10">{t('common.loading')}</p>
