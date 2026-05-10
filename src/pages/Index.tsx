@@ -275,6 +275,17 @@ const Index = () => {
                   selectedActivityId={selectedActivityId}
                   onActivitySelect={setSelectedActivityId}
                 />
+                {canEdit && filteredPhotos.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-8 w-8 ${selectionMode ? 'text-primary' : 'text-muted-foreground'}`}
+                    onClick={() => selectionMode ? exitSelectionMode() : setSelectionMode(true)}
+                    aria-label={selectionMode ? t('selection.cancel') : t('selection.select')}
+                  >
+                    <CheckSquare className="h-4 w-4" />
+                  </Button>
+                )}
                 {!isGuest && <NotificationBell />}
                 {isGuest && (
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={signOut} aria-label={t('nav.exit')}>
