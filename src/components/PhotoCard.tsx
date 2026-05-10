@@ -105,11 +105,22 @@ export function PhotoCard({ photo, child, onClick, selectionMode, isSelected, on
           )}
         </button>
         {!selectionMode && photo.eventId && (
-          <div className="absolute top-2 right-2 pointer-events-none">
-            <span className={cn(
-              'inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-accent/90 text-accent-foreground backdrop-blur-sm'
-            )}>
-              ✨
+          <div
+            className="absolute pointer-events-none flex items-center gap-1 rounded-full"
+            style={{
+              left: 6,
+              bottom: 6,
+              backgroundColor: 'rgba(212, 121, 58, 0.85)',
+              padding: '2px 8px',
+              maxWidth: 'calc(100% - 12px)',
+            }}
+          >
+            <Bookmark size={10} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
+            <span
+              className="truncate"
+              style={{ color: '#FFFFFF', fontSize: 10, fontWeight: 500, lineHeight: 1.2, maxWidth: '11ch' }}
+            >
+              {(photo.eventName || '').slice(0, 14)}{(photo.eventName || '').length > 14 ? '…' : ''}
             </span>
           </div>
         )}
