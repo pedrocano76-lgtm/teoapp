@@ -167,6 +167,21 @@ export default function EventView() {
           onOpenChange={(open) => { if (!open) setLightboxIndex(-1); }}
         />
       </main>
+      {event && (
+        <>
+          <EventEditDialog
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            event={{ id: event.id, name: event.name, date: event.date, description: (event as any).description }}
+          />
+          <AddPhotosToEventDialog
+            open={addPhotosOpen}
+            onOpenChange={setAddPhotosOpen}
+            eventId={event.id}
+            childId={event.child_id}
+          />
+        </>
+      )}
     </div>
   );
 }
