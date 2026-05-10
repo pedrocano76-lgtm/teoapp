@@ -37,6 +37,9 @@ export default function EventView() {
   const { data: childrenData } = useChildren();
   const { data: eventsData } = useEvents();
   const [lightboxIndex, setLightboxIndex] = useState(-1);
+  const [editOpen, setEditOpen] = useState(false);
+  const [addPhotosOpen, setAddPhotosOpen] = useState(false);
+  const { canEdit } = useUserRole();
 
   const { data: photosData, isLoading } = useQuery({
     queryKey: ['event-photos', eventId, user?.id],
