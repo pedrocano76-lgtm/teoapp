@@ -1,14 +1,17 @@
 import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Pencil, Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useChildren, useEvents } from '@/hooks/useData';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { PhotoCard } from '@/components/PhotoCard';
 import { PhotoLightbox } from '@/components/PhotoLightbox';
+import { EventEditDialog } from '@/components/EventEditDialog';
+import { AddPhotosToEventDialog } from '@/components/AddPhotosToEventDialog';
 import { useLocale } from '@/hooks/useLocale';
 import type { Photo, Child } from '@/lib/types';
 
