@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TagSelector } from '@/components/TagSelector';
-import { useUpdatePhoto, useDeletePhoto } from '@/hooks/useData';
+import { useUpdatePhoto, useDeletePhoto, useBulkAddTagsToPhotos } from '@/hooks/useData';
 import { useLocale } from '@/hooks/useLocale';
 import { CalendarIcon, Trash2, Tag, X, CheckSquare } from 'lucide-react';
 import { toast } from 'sonner';
@@ -28,6 +28,7 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
 
   const updatePhoto = useUpdatePhoto();
   const deletePhoto = useDeletePhoto();
+  const bulkAddTags = useBulkAddTagsToPhotos();
 
   const handleBulkDate = async () => {
     if (!bulkDate) return;
@@ -45,16 +46,23 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
   };
 
   const handleBulkTags = async () => {
+    if (bulkTagIds.length === 0) {
+      toast.error(t('bulk.tagsEmpty', { defaultValue: 'Selecciona al menos un tag' }));
+      return;
+    }
     try {
-      for (const photo of selectedPhotos) {
-        await updatePhoto.mutateAsync({ photoId: photo.id, tagIds: bulkTagIds });
-      }
-      toast.success(t('bulk.tagsUpdated', { count: selectedPhotos.length }));
+      await bulkAddTags.mutateAsync({
+        photoIds: selectedPhotos.map(p => p.id),
+        tagIds: bulkTagIds,
+      });
+      toast.success(
+        t('bulk.tagAdded', { count: selectedPhotos.length, defaultValue: 'Tag añadido a {{count}} fotos' })
+      );
       setShowTagPicker(false);
       setBulkTagIds([]);
       onDone();
-    } catch {
-      toast.error(t('bulk.tagsError'));
+    } catch (err: any) {
+      toast.error(`${t('bulk.tagsError', { defaultValue: 'No se pudieron añadir los tags' })}: ${err?.message ?? ''}`);
     }
   };
 
@@ -137,7 +145,7 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
                   prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
                 )}
               />
-              <Button size="sm" className="w-full" onClick={handleBulkTags} disabled={updatePhoto.isPending}>
+              <Button size="sm" className="w-full" onClick={handleBulkTags} disabled={bulkAddTags.isPending || bulkTagIds.length === 0}>
                 {t('bulk.applyTo', { count: selectedPhotos.length })}
               </Button>
             </div>

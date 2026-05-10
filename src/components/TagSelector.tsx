@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTags, useAddTag } from '@/hooks/useData';
+import { useTags, useResolveOrCreateTag } from '@/hooks/useData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface TagSelectorProps {
   selectedTagIds: string[];
@@ -13,16 +14,19 @@ interface TagSelectorProps {
 export function TagSelector({ selectedTagIds, onToggle }: TagSelectorProps) {
   const { t } = useTranslation();
   const { data: tags } = useTags();
-  const addTag = useAddTag();
+  const resolveTag = useResolveOrCreateTag();
   const [newTag, setNewTag] = useState('');
 
   const handleAddCustom = async () => {
-    if (!newTag.trim()) return;
+    const name = newTag.trim();
+    if (!name) return;
     try {
-      const created = await addTag.mutateAsync({ name: newTag.trim() });
-      if (created) onToggle(created.id);
+      const tag = await resolveTag.mutateAsync(name);
+      if (tag && !selectedTagIds.includes(tag.id)) onToggle(tag.id);
       setNewTag('');
-    } catch { /* tag exists */ }
+    } catch (err: any) {
+      toast.error(err?.message ?? 'No se pudo crear el tag');
+    }
   };
 
   return (

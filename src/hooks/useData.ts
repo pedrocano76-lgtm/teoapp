@@ -337,20 +337,25 @@ export function useUpdatePhoto() {
       photoId, caption, eventId, tagIds, isShared, takenAt,
     }: {
       photoId: string;
-      caption?: string;
+      caption?: string | null;
       eventId?: string | null;
       tagIds?: string[];
       isShared?: boolean;
       takenAt?: string;
     }) => {
-      const updates: any = { caption: caption ?? null, event_id: eventId ?? null };
+      const updates: any = {};
+      if (caption !== undefined) updates.caption = caption ?? null;
+      if (eventId !== undefined) updates.event_id = eventId ?? null;
       if (isShared !== undefined) updates.is_shared = isShared;
       if (takenAt) updates.taken_at = takenAt;
-      const { error } = await supabase
-        .from('photos')
-        .update(updates)
-        .eq('id', photoId);
-      if (error) throw error;
+
+      if (Object.keys(updates).length > 0) {
+        const { error } = await supabase
+          .from('photos')
+          .update(updates)
+          .eq('id', photoId);
+        if (error) throw error;
+      }
 
       if (tagIds !== undefined) {
         await supabase.from('photo_tags').delete().eq('photo_id', photoId);
@@ -366,6 +371,62 @@ export function useUpdatePhoto() {
       queryClient.invalidateQueries({ queryKey: ['photos'] });
       queryClient.invalidateQueries({ queryKey: ['photo_tags'] });
     },
+  });
+}
+
+/**
+ * Bulk-add (additive) tag assignments to multiple photos.
+ * Uses upsert against the unique (photo_id, tag_id) constraint to ignore duplicates.
+ */
+export function useBulkAddTagsToPhotos() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ photoIds, tagIds }: { photoIds: string[]; tagIds: string[] }) => {
+      if (photoIds.length === 0 || tagIds.length === 0) return;
+      const rows: { photo_id: string; tag_id: string }[] = [];
+      for (const pid of photoIds) {
+        for (const tid of tagIds) rows.push({ photo_id: pid, tag_id: tid });
+      }
+      const { error } = await supabase
+        .from('photo_tags')
+        .upsert(rows, { onConflict: 'photo_id,tag_id', ignoreDuplicates: true });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: ['photo_tags'] });
+    },
+  });
+}
+
+/**
+ * Resolve a tag by name (case-insensitive), creating it if it doesn't exist.
+ * Tags in this project are global with a unique name constraint.
+ */
+export function useResolveOrCreateTag() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (name: string) => {
+      const trimmed = name.trim();
+      if (!trimmed) throw new Error('empty');
+      const { data: existing, error: findErr } = await supabase
+        .from('tags')
+        .select('*')
+        .ilike('name', trimmed)
+        .limit(1)
+        .maybeSingle();
+      if (findErr) throw findErr;
+      if (existing) return existing;
+      const { data: created, error: insErr } = await supabase
+        .from('tags')
+        .insert({ name: trimmed, created_by: user!.id })
+        .select()
+        .single();
+      if (insErr) throw insErr;
+      return created;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tags'] }),
   });
 }
 
