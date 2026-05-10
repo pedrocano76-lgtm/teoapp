@@ -37,6 +37,7 @@ export function PhotoCard({ photo, child, onClick, selectionMode, isSelected, on
   });
 
   const handleClick = () => {
+    if (consumeTriggered()) return; // long press already handled
     if (selectionMode && onToggleSelect) {
       onToggleSelect(photo.id);
     } else {
