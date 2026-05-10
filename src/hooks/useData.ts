@@ -220,7 +220,43 @@ export function useAddEvent() {
   });
 }
 
-export function useTags() {
+export function useUpdateEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      eventId, name, date, description,
+    }: { eventId: string; name?: string; date?: Date | null; description?: string | null }) => {
+      const updates: any = {};
+      if (name !== undefined) updates.name = name;
+      if (date !== undefined) updates.date = date ? date.toISOString().slice(0, 10) : null;
+      if (description !== undefined) updates.description = description;
+      const { error } = await supabase.from('events').update(updates).eq('id', eventId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      queryClient.invalidateQueries({ queryKey: ['event-photos'] });
+    },
+  });
+}
+
+export function useLinkPhotosToEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ eventId, photoIds }: { eventId: string; photoIds: string[] }) => {
+      if (photoIds.length === 0) return;
+      const { error } = await supabase
+        .from('photos')
+        .update({ event_id: eventId })
+        .in('id', photoIds);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: ['event-photos'] });
+    },
+  });
+}
   const { user } = useAuth();
   return useQuery({
     queryKey: ['tags'],
