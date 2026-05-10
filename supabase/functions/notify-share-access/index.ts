@@ -2,7 +2,7 @@
 // - Email de bienvenida al invitado
 // - Email a los owners/parents del/los hijo(s) compartido(s)
 // Idempotente: marca family_shares.first_access_notified_at para no repetir.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -126,16 +126,14 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims?.sub) {
-      console.error("getClaims failed:", claimsErr?.message);
+    const { data: userRes, error: userErr } = await userClient.auth.getUser(token);
+    if (userErr || !userRes?.user?.id) {
+      console.error("getUser failed:", userErr?.message);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const viewerId = claimsData.claims.sub as string;
-    const viewerEmail = (claimsData.claims.email as string | undefined) ?? null;
-    const viewer = { id: viewerId, email: viewerEmail };
+    const viewer = { id: userRes.user.id, email: userRes.user.email ?? null };
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
