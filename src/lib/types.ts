@@ -43,6 +43,8 @@ export interface Photo {
   storagePath: string;
   thumbnailPath?: string | null;
   isShared: boolean;
+  eventName?: string;
+  eventColor?: string;
 }
 
 export interface Event {
@@ -52,6 +54,7 @@ export interface Event {
   childId: string;
   date: Date;
   color: string;
+  description?: string;
 }
 
 export interface Tag {
