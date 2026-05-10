@@ -1,13 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
-  <!-- memorydrawer icon — stacked photos -->
-  <!-- back photo -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 0 168 160" width="168" height="160">
   <rect x="36" y="36" width="96" height="118" rx="10" fill="#C8B4A2"/>
-  <!-- mid photo -->
   <rect x="23" y="23" width="96" height="118" rx="10" fill="#E2CEBC"/>
-  <!-- front photo -->
   <rect x="10" y="10" width="96" height="118" rx="10" fill="#D4793A"/>
-  <!-- photo content hint: subject circle -->
   <circle cx="58" cy="50" r="17" fill="#9E5520" opacity="0.2"/>
-  <!-- photo content hint: landscape band -->
   <rect x="19" y="87" width="78" height="32" rx="7" fill="#9E5520" opacity="0.16"/>
 </svg>

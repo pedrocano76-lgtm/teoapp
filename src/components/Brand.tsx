@@ -5,12 +5,13 @@ interface Props {
   className?: string;
 }
 
-export function BrandLogo({ size = 32, className }: Props) {
+export function MemoryDrawerIcon({ size = 40, className }: { size?: number; className?: string }) {
   return (
     <svg
+      xmlns="http://www.w3.org/2000/svg"
       width={size}
       height={size}
-      viewBox="0 0 160 160"
+      viewBox="-8 0 168 160"
       fill="none"
       className={cn('shrink-0', className)}
       aria-hidden
@@ -22,6 +23,11 @@ export function BrandLogo({ size = 32, className }: Props) {
       <rect x="19" y="87" width="78" height="32" rx="7" fill="#9E5520" opacity="0.16" />
     </svg>
   );
+}
+
+// Backwards-compat alias
+export function BrandLogo({ size = 32, className }: Props) {
+  return <MemoryDrawerIcon size={size} className={className} />;
 }
 
 interface WordmarkProps {
