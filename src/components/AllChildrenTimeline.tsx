@@ -120,6 +120,7 @@ export function AllChildrenTimeline({ photos, children, sortOrder = 'asc', selec
                       selectionMode={selectionMode}
                       isSelected={selectedIds?.has(photo.id)}
                       onToggleSelect={onToggleSelect}
+                      onLongPress={onLongPress}
                     />
                   );
                 })}
