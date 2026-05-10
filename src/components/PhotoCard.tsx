@@ -75,7 +75,8 @@ export function PhotoCard({ photo, child, onClick, selectionMode, isSelected, on
 
         <button
           onClick={handleClick}
-          className="w-full border-0 p-0 text-left cursor-pointer bg-transparent"
+          {...longPressHandlers}
+          className="w-full border-0 p-0 text-left cursor-pointer bg-transparent select-none"
         >
           <div className="aspect-square overflow-hidden">
             <img
