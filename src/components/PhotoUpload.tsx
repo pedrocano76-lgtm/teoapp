@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { useUploadPhoto, useEvents, useAddEvent } from '@/hooks/useData';
@@ -56,6 +56,8 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
   const [isEvent, setIsEvent] = useState(false);
   const [eventMode, setEventMode] = useState<'new' | 'existing'>('new');
   const [newEventName, setNewEventName] = useState('');
+  const [newEventDate, setNewEventDate] = useState<string>('');
+  const [newEventDateTouched, setNewEventDateTouched] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [items, setItems] = useState<UploadItem[]>([]);
@@ -175,18 +177,35 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
   const uploadableItems = items.filter(it => it.exifDate || it.manualDate);
   const blockedCount = unknownItems.filter(it => !it.manualDate).length;
 
+  const oldestSelectedDate = useMemo(() => {
+    let earliest: Date | null = null;
+    for (const it of uploadableItems) {
+      const d = it.exifDate || it.manualDate;
+      if (d && (!earliest || d.getTime() < earliest.getTime())) earliest = d;
+    }
+    return earliest;
+  }, [uploadableItems]);
+
+  useEffect(() => {
+    if (isEvent && eventMode === 'new' && !newEventDateTouched && oldestSelectedDate) {
+      setNewEventDate(toDateInputValue(oldestSelectedDate));
+    }
+  }, [isEvent, eventMode, oldestSelectedDate, newEventDateTouched]);
+
   const handleUpload = async () => {
     if (!selectedChild || uploadableItems.length === 0) return;
     setUploading(true);
 
     try {
       let eventIdToUse: string | undefined = undefined;
+      const newEventDateObj = newEventDate ? fromDateInputValue(newEventDate) : null;
+      const fallbackEventDate = newEventDateObj || oldestSelectedDate;
       if (isEvent) {
         if (eventMode === 'new' && newEventName.trim()) {
           const created = await addEvent.mutateAsync({
             childId: selectedChild,
             name: newEventName.trim(),
-            date: null,
+            date: fallbackEventDate,
           });
           eventIdToUse = created.id;
         } else if (eventMode === 'existing' && selectedEventId) {
@@ -228,7 +247,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
         failed += results.filter(r => r.status === 'rejected').length;
       }
 
-      if (isEvent && eventMode === 'new' && eventIdToUse && earliestDate) {
+      if (isEvent && eventMode === 'new' && eventIdToUse && !newEventDateObj && earliestDate) {
         const iso = (earliestDate as Date).toISOString().slice(0, 10);
         await supabaseUpdateEventDate(eventIdToUse, iso);
       }
@@ -249,6 +268,8 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
       setIsEvent(false);
       setEventMode('new');
       setNewEventName('');
+      setNewEventDate('');
+      setNewEventDateTouched(false);
       setSelectedEventId('');
       setSelectedTagIds([]);
       setIsShared(true);
@@ -489,11 +510,26 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                     </Button>
                   </div>
                   {eventMode === 'new' ? (
-                    <Input
-                      placeholder={t('events.eventNamePlaceholder')}
-                      value={newEventName}
-                      onChange={(e) => setNewEventName(e.target.value)}
-                    />
+                    <div className="space-y-2">
+                      <Input
+                        placeholder={t('events.eventNamePlaceholder')}
+                        value={newEventName}
+                        onChange={(e) => setNewEventName(e.target.value)}
+                      />
+                      <div className="space-y-1">
+                        <Label htmlFor="new-event-date" className="text-xs text-muted-foreground">
+                          {t('events.eventDateLabel', 'Fecha del evento')}
+                        </Label>
+                        <input
+                          id="new-event-date"
+                          type="date"
+                          value={newEventDate}
+                          max={toDateInputValue(new Date())}
+                          onChange={(e) => { setNewEventDate(e.target.value); setNewEventDateTouched(true); }}
+                          className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                        />
+                      </div>
+                    </div>
                   ) : (
                     <Select value={selectedEventId} onValueChange={setSelectedEventId}>
                       <SelectTrigger>
