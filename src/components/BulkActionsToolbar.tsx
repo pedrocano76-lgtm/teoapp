@@ -59,10 +59,6 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
   };
 
   const handleBulkDelete = async () => {
-    const ids = selectedPhotos.map(p => p.id);
-    console.log('[DELETE_DEBUG] Bulk delete - photo IDs:', ids);
-    console.log('[DELETE_DEBUG] Bulk delete - storage paths:', selectedPhotos.map(p => p.storagePath));
-    console.log('[DELETE_DEBUG] Bulk delete - thumbnail paths:', selectedPhotos.map(p => p.thumbnailPath ?? null));
     const failures: { id: string; error: any }[] = [];
     for (const photo of selectedPhotos) {
       try {
@@ -72,7 +68,6 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
           thumbnailPath: photo.thumbnailPath,
         });
       } catch (err: any) {
-        console.error('[DELETE_DEBUG] Bulk delete failure for photo', photo.id, err);
         failures.push({ id: photo.id, error: err });
       }
     }
