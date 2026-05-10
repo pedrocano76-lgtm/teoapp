@@ -6,22 +6,30 @@ interface Props {
 }
 
 export function MemoryDrawerIcon({ size = 40, className }: { size?: number; className?: string }) {
+  // viewBox is 168 wide × 160 tall — render with matching aspect ratio so the
+  // stacked photos sit visually centered inside the wrapper.
+  const width = Math.round(size * (168 / 160));
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox="-8 0 168 160"
-      fill="none"
-      className={cn('shrink-0', className)}
-      aria-hidden
+    <span
+      className={cn('inline-flex items-center justify-center shrink-0', className)}
+      style={{ width: size, height: size }}
     >
-      <rect x="36" y="36" width="96" height="118" rx="10" fill="#C8B4A2" />
-      <rect x="23" y="23" width="96" height="118" rx="10" fill="#E2CEBC" />
-      <rect x="10" y="10" width="96" height="118" rx="10" fill="#D4793A" />
-      <circle cx="58" cy="50" r="17" fill="#9E5520" opacity="0.2" />
-      <rect x="19" y="87" width="78" height="32" rx="7" fill="#9E5520" opacity="0.16" />
-    </svg>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={width}
+        height={size}
+        viewBox="-8 0 168 160"
+        fill="none"
+        aria-hidden
+        style={{ display: 'block' }}
+      >
+        <rect x="36" y="36" width="96" height="118" rx="10" fill="#C8B4A2" />
+        <rect x="23" y="23" width="96" height="118" rx="10" fill="#E2CEBC" />
+        <rect x="10" y="10" width="96" height="118" rx="10" fill="#D4793A" />
+        <circle cx="58" cy="50" r="17" fill="#9E5520" opacity="0.2" />
+        <rect x="19" y="87" width="78" height="32" rx="7" fill="#9E5520" opacity="0.16" />
+      </svg>
+    </span>
   );
 }
 
