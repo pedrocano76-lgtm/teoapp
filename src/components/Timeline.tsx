@@ -14,9 +14,10 @@ interface TimelineProps {
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
   events?: Event[];
+  onLongPress?: (id: string) => void;
 }
 
-export function Timeline({ photos, child, sortOrder = 'asc', selectionMode, selectedIds, onToggleSelect, events = [] }: TimelineProps) {
+export function Timeline({ photos, child, sortOrder = 'asc', selectionMode, selectedIds, onToggleSelect, events = [], onLongPress }: TimelineProps) {
   const [lightboxIndex, setLightboxIndex] = useState(-1);
   const { intlLocale } = useLocale();
 
@@ -118,6 +119,7 @@ export function Timeline({ photos, child, sortOrder = 'asc', selectionMode, sele
                     selectionMode={selectionMode}
                     isSelected={selectedIds?.has(photo.id)}
                     onToggleSelect={onToggleSelect}
+                    onLongPress={onLongPress}
                   />
                 ))}
               </div>

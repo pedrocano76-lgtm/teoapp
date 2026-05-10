@@ -126,13 +126,6 @@ const Index = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
 
-  // Show "Seleccionar" icon only when user is near the top of the page
-  const [atTop, setAtTop] = useState(true);
-  useEffect(() => {
-    const onScroll = () => setAtTop(window.scrollY < 80);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   const children = useMemo(() => (childrenData || []).map(mapChild), [childrenData]);
   const photos = useMemo(() => {
@@ -202,6 +195,15 @@ const Index = () => {
     setSelectedPhotoIds(new Set());
   }, []);
 
+  const startSelectionWith = useCallback((id: string) => {
+    setSelectionMode(true);
+    setSelectedPhotoIds(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
+
   const selectedPhotos = useMemo(() =>
     filteredPhotos.filter(p => selectedPhotoIds.has(p.id)),
     [filteredPhotos, selectedPhotoIds]
@@ -266,6 +268,17 @@ const Index = () => {
                   selectedActivityId={selectedActivityId}
                   onActivitySelect={setSelectedActivityId}
                 />
+                {canEdit && filteredPhotos.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-8 w-8 ${selectionMode ? 'text-primary' : 'text-muted-foreground'}`}
+                    onClick={() => selectionMode ? exitSelectionMode() : setSelectionMode(true)}
+                    aria-label={selectionMode ? t('selection.cancel') : t('selection.select')}
+                  >
+                    <CheckSquare className="h-4 w-4" />
+                  </Button>
+                )}
                 {!isGuest && <NotificationBell />}
                 {isGuest && (
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={signOut} aria-label={t('nav.exit')}>
@@ -285,29 +298,16 @@ const Index = () => {
             />
           )}
 
-          {/* Compact child pill selector + select toggle */}
-          {(children.length > 1 || (canEdit && filteredPhotos.length > 0)) && (
-            <div className="container mx-auto px-3 pt-2 flex items-center gap-2">
-              {children.length > 1 && (
-                <div className="flex-1 min-w-0 overflow-x-auto">
-                  <ChildSelector
-                    children={children}
-                    selectedId={selectedChildId}
-                    onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagIds([]); setSelectedLocation(null); setSelectedActivityId(null); }}
-                  />
-                </div>
-              )}
-              {canEdit && filteredPhotos.length > 0 && (atTop || selectionMode) && (
-                <Button
-                  variant={selectionMode ? 'default' : 'ghost'}
-                  size="icon"
-                  className="h-8 w-8 shrink-0 ml-auto"
-                  onClick={() => selectionMode ? exitSelectionMode() : setSelectionMode(true)}
-                  aria-label={selectionMode ? t('selection.cancel') : t('selection.select')}
-                >
-                  <CheckSquare className="h-4 w-4" />
-                </Button>
-              )}
+          {/* Compact child pill selector */}
+          {children.length > 1 && (
+            <div className="container mx-auto px-3 pt-2">
+              <div className="min-w-0 overflow-x-auto">
+                <ChildSelector
+                  children={children}
+                  selectedId={selectedChildId}
+                  onSelect={(id) => { setSelectedChildId(id); setSelectedEventId(null); setSelectedTagIds([]); setSelectedLocation(null); setSelectedActivityId(null); }}
+                />
+              </div>
             </div>
           )}
 
@@ -380,6 +380,7 @@ const Index = () => {
                       selectionMode={selectionMode}
                       selectedIds={selectedPhotoIds}
                       onToggleSelect={toggleSelect}
+                      onLongPress={canEdit ? startSelectionWith : undefined}
                       events={selectedEventId ? [] : filteredEvents}
                     />
                   </>
@@ -393,6 +394,7 @@ const Index = () => {
                       selectionMode={selectionMode}
                       selectedIds={selectedPhotoIds}
                       onToggleSelect={toggleSelect}
+                      onLongPress={canEdit ? startSelectionWith : undefined}
                       events={selectedEventId ? [] : filteredEvents}
                     />
                   </>
@@ -404,6 +406,7 @@ const Index = () => {
                     selectionMode={selectionMode}
                     selectedIds={selectedPhotoIds}
                     onToggleSelect={toggleSelect}
+                      onLongPress={canEdit ? startSelectionWith : undefined}
                     events={selectedEventId ? [] : events}
                   />
                 )}
