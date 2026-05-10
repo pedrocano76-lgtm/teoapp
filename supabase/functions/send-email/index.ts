@@ -146,11 +146,11 @@ Deno.serve(async (req) => {
     const payload: Record<string, unknown> = {
       from: FROM_ADDRESS,
       to: recipients,
-      subject,
+      subject: finalSubject,
     };
-    if (typeof html === "string") payload.html = html;
-    if (typeof text === "string") payload.text = text;
-    if (typeof reply_to === "string") payload.reply_to = reply_to;
+    if (typeof finalHtml === "string") payload.html = finalHtml;
+    if (typeof finalText === "string") payload.text = finalText;
+    if (isServiceRole && typeof reply_to === "string") payload.reply_to = reply_to;
 
     const resp = await fetch(`${GATEWAY_URL}/emails`, {
       method: "POST",
