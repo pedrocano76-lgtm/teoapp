@@ -198,12 +198,14 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
 
     try {
       let eventIdToUse: string | undefined = undefined;
+      const newEventDateObj = newEventDate ? fromDateInputValue(newEventDate) : null;
+      const fallbackEventDate = newEventDateObj || oldestSelectedDate;
       if (isEvent) {
         if (eventMode === 'new' && newEventName.trim()) {
           const created = await addEvent.mutateAsync({
             childId: selectedChild,
             name: newEventName.trim(),
-            date: null,
+            date: fallbackEventDate,
           });
           eventIdToUse = created.id;
         } else if (eventMode === 'existing' && selectedEventId) {
