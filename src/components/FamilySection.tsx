@@ -185,22 +185,12 @@ function InviteDialog({ role, label }: { role: string; label: string }) {
       setRelationship('');
       setCustomRelationship('');
 
-      const inviteUrl = `${window.location.origin}/auth?invite=${data.invite_code}&email=${encodeURIComponent(normalizedEmail)}`;
       try {
         const { error: emailError } = await supabase.functions.invoke('send-email', {
           body: {
             to: normalizedEmail,
-            subject: t('family.inviteEmailSubject'),
-            html: `
-              <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-                <h2 style="color: #1a1a1a;">¡Tienes una invitación! 📸</h2>
-                <p style="color: #555;">Alguien de tu familia te ha invitado a ver el álbum de fotos familiar en <strong>Memorydrawer</strong>.</p>
-                <div style="text-align: center; margin: 32px 0;">
-                  <a href="${inviteUrl}" style="background: #e8756a; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Ver el álbum familiar</a>
-                </div>
-                <p style="color: #999; font-size: 12px;">Si no esperabas esta invitación, puedes ignorar este email.</p>
-              </div>
-            `,
+            template: 'invite',
+            inviteCode: data.invite_code,
           },
         });
         if (emailError) throw emailError;
