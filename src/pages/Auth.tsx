@@ -25,6 +25,7 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(!inviteCode);
   const [email, setEmail] = useState(inviteEmail);
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
   const [relationship, setRelationship] = useState('');
   const [loading, setLoading] = useState(false);
