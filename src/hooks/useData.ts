@@ -257,6 +257,8 @@ export function useLinkPhotosToEvent() {
     },
   });
 }
+
+export function useTags() {
   const { user } = useAuth();
   return useQuery({
     queryKey: ['tags'],
