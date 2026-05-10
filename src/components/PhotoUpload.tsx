@@ -56,6 +56,8 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
   const [isEvent, setIsEvent] = useState(false);
   const [eventMode, setEventMode] = useState<'new' | 'existing'>('new');
   const [newEventName, setNewEventName] = useState('');
+  const [newEventDate, setNewEventDate] = useState<string>('');
+  const [newEventDateTouched, setNewEventDateTouched] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [items, setItems] = useState<UploadItem[]>([]);
