@@ -510,11 +510,26 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                     </Button>
                   </div>
                   {eventMode === 'new' ? (
-                    <Input
-                      placeholder={t('events.eventNamePlaceholder')}
-                      value={newEventName}
-                      onChange={(e) => setNewEventName(e.target.value)}
-                    />
+                    <div className="space-y-2">
+                      <Input
+                        placeholder={t('events.eventNamePlaceholder')}
+                        value={newEventName}
+                        onChange={(e) => setNewEventName(e.target.value)}
+                      />
+                      <div className="space-y-1">
+                        <Label htmlFor="new-event-date" className="text-xs text-muted-foreground">
+                          {t('events.eventDateLabel', 'Fecha del evento')}
+                        </Label>
+                        <input
+                          id="new-event-date"
+                          type="date"
+                          value={newEventDate}
+                          max={toDateInputValue(new Date())}
+                          onChange={(e) => { setNewEventDate(e.target.value); setNewEventDateTouched(true); }}
+                          className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                        />
+                      </div>
+                    </div>
                   ) : (
                     <Select value={selectedEventId} onValueChange={setSelectedEventId}>
                       <SelectTrigger>
