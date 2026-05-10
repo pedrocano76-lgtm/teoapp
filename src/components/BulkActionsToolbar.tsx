@@ -28,6 +28,7 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
 
   const updatePhoto = useUpdatePhoto();
   const deletePhoto = useDeletePhoto();
+  const bulkAddTags = useBulkAddTagsToPhotos();
 
   const handleBulkDate = async () => {
     if (!bulkDate) return;
@@ -45,16 +46,23 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
   };
 
   const handleBulkTags = async () => {
+    if (bulkTagIds.length === 0) {
+      toast.error(t('bulk.tagsEmpty', { defaultValue: 'Selecciona al menos un tag' }));
+      return;
+    }
     try {
-      for (const photo of selectedPhotos) {
-        await updatePhoto.mutateAsync({ photoId: photo.id, tagIds: bulkTagIds });
-      }
-      toast.success(t('bulk.tagsUpdated', { count: selectedPhotos.length }));
+      await bulkAddTags.mutateAsync({
+        photoIds: selectedPhotos.map(p => p.id),
+        tagIds: bulkTagIds,
+      });
+      toast.success(
+        t('bulk.tagAdded', { count: selectedPhotos.length, defaultValue: 'Tag añadido a {{count}} fotos' })
+      );
       setShowTagPicker(false);
       setBulkTagIds([]);
       onDone();
-    } catch {
-      toast.error(t('bulk.tagsError'));
+    } catch (err: any) {
+      toast.error(`${t('bulk.tagsError', { defaultValue: 'No se pudieron añadir los tags' })}: ${err?.message ?? ''}`);
     }
   };
 
