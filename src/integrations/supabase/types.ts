@@ -132,6 +132,7 @@ export type Database = {
           color: string
           created_at: string
           date: string | null
+          description: string | null
           icon: string
           id: string
           name: string
@@ -141,6 +142,7 @@ export type Database = {
           color?: string
           created_at?: string
           date?: string | null
+          description?: string | null
           icon?: string
           id?: string
           name: string
@@ -150,6 +152,7 @@ export type Database = {
           color?: string
           created_at?: string
           date?: string | null
+          description?: string | null
           icon?: string
           id?: string
           name?: string
