@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { to, subject, html, text, reply_to } = body as Record<string, unknown>;
+    const { to, subject, html, text, reply_to, template, inviteCode } = body as Record<string, unknown>;
 
     const recipients = (Array.isArray(to) ? to : typeof to === "string" ? [to] : [])
       .filter((r): r is string => typeof r === "string" && r.includes("@"))
@@ -75,38 +75,67 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (typeof subject !== "string" || subject.trim().length === 0) {
-      return new Response(JSON.stringify({ error: "Invalid 'subject'" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if ((typeof html !== "string" || html.trim().length === 0) && (typeof text !== "string" || text.trim().length === 0)) {
-      return new Response(JSON.stringify({ error: "Provide 'html' or 'text'" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
-    // Restrict recipients for end-user calls
-    if (!isServiceRole && callerUserId) {
-      const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-      const { data: shares } = await admin
-        .from("family_shares")
-        .select("shared_with_email")
-        .eq("family_owner_id", callerUserId);
-      const allowed = new Set<string>();
-      if (callerEmail) allowed.add(callerEmail);
-      for (const s of shares ?? []) {
-        if (s.shared_with_email) allowed.add(String(s.shared_with_email).toLowerCase());
-      }
-      const blocked = recipients.filter((r) => !allowed.has(r));
-      if (blocked.length > 0) {
-        return new Response(JSON.stringify({ error: "Recipient not allowed", blocked }), {
+    let finalSubject: string;
+    let finalHtml: string | undefined;
+    let finalText: string | undefined;
+
+    if (!isServiceRole) {
+      // End-user callers MAY NOT supply arbitrary HTML/subject. Only server-built
+      // templates are allowed to prevent the function from being abused as a
+      // phishing relay using the app's verified sender identity.
+      if (template !== "invite") {
+        return new Response(JSON.stringify({ error: "Only 'invite' template is allowed" }), {
           status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      if (typeof inviteCode !== "string" || !/^[A-Z0-9]{4,16}$/.test(inviteCode)) {
+        return new Response(JSON.stringify({ error: "Invalid 'inviteCode'" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Verify the invite code belongs to a share owned by the caller for this recipient
+      const adminCheck = createClient(SUPABASE_URL, SERVICE_ROLE);
+      const { data: share } = await adminCheck
+        .from("family_shares")
+        .select("id, shared_with_email, family_owner_id, invite_code")
+        .eq("invite_code", inviteCode)
+        .eq("family_owner_id", callerUserId!)
+        .maybeSingle();
+      if (!share || String(share.shared_with_email).toLowerCase() !== recipients[0]) {
+        return new Response(JSON.stringify({ error: "Invite not found for recipient" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const inviteUrl = `https://memorydrawer.app/auth?invite=${encodeURIComponent(inviteCode)}&email=${encodeURIComponent(recipients[0])}`;
+      finalSubject = "¡Tienes una invitación! 📸 Memorydrawer";
+      finalHtml = `<div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+        <h2 style="color: #1a1a1a;">¡Tienes una invitación! 📸</h2>
+        <p style="color: #555;">Alguien de tu familia te ha invitado a ver el álbum de fotos familiar en <strong>Memorydrawer</strong>.</p>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${inviteUrl}" style="background: #e8756a; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Ver el álbum familiar</a>
+        </div>
+        <p style="color: #999; font-size: 12px;">Si no esperabas esta invitación, puedes ignorar este email.</p>
+      </div>`;
+    } else {
+      if (typeof subject !== "string" || subject.trim().length === 0) {
+        return new Response(JSON.stringify({ error: "Invalid 'subject'" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if ((typeof html !== "string" || html.trim().length === 0) && (typeof text !== "string" || text.trim().length === 0)) {
+        return new Response(JSON.stringify({ error: "Provide 'html' or 'text'" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      finalSubject = subject;
+      if (typeof html === "string") finalHtml = html;
+      if (typeof text === "string") finalText = text;
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
