@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { MapPin, Pencil, Check, Bookmark } from 'lucide-react';
 import { PhotoEditDialog } from '@/components/PhotoEditDialog';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useLongPress } from '@/hooks/useLongPress';
 
 interface PhotoCardProps {
   photo: Photo;
@@ -14,9 +15,16 @@ interface PhotoCardProps {
   selectionMode?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (id: string) => void;
+  onLongPress?: (id: string) => void;
 }
 
-export function PhotoCard({ photo, child, onClick, selectionMode, isSelected, onToggleSelect }: PhotoCardProps) {
+export function PhotoCard({ photo, child, onClick, selectionMode, isSelected, onToggleSelect, onLongPress }: PhotoCardProps) {
+  const { handlers: longPressHandlers, consumeTriggered } = useLongPress({
+    delay: 500,
+    onLongPress: () => {
+      if (onLongPress && !selectionMode) onLongPress(photo.id);
+    },
+  });
   const [editOpen, setEditOpen] = useState(false);
   const { canEdit } = useUserRole();
   const { intlLocale } = useLocale();
