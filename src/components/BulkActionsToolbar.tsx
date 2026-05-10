@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TagSelector } from '@/components/TagSelector';
-import { useUpdatePhoto, useDeletePhoto } from '@/hooks/useData';
+import { useUpdatePhoto, useDeletePhoto, useBulkAddTagsToPhotos } from '@/hooks/useData';
 import { useLocale } from '@/hooks/useLocale';
 import { CalendarIcon, Trash2, Tag, X, CheckSquare } from 'lucide-react';
 import { toast } from 'sonner';
