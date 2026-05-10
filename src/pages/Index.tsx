@@ -61,6 +61,8 @@ function mapPhoto(row: any): Photo {
     storagePath: row.storage_path,
     thumbnailPath: row.thumbnail_path ?? null,
     isShared: row.is_shared ?? true,
+    eventName: row.events?.name ?? undefined,
+    eventColor: row.events?.color ?? undefined,
     tags,
   };
 }
