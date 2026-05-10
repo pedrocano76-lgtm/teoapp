@@ -245,11 +245,15 @@ export function useLinkPhotosToEvent() {
   return useMutation({
     mutationFn: async ({ eventId, photoIds }: { eventId: string; photoIds: string[] }) => {
       if (photoIds.length === 0) return;
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('photos')
         .update({ event_id: eventId })
-        .in('id', photoIds);
+        .in('id', photoIds)
+        .select('id');
       if (error) throw error;
+      if (!data || data.length !== photoIds.length) {
+        throw new Error(`Solo se vincularon ${data?.length ?? 0} de ${photoIds.length} fotos. Revisa permisos.`);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['photos'] });
