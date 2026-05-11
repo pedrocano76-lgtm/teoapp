@@ -583,11 +583,6 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             </div>
           )}
 
-          {blockedCount > 0 && (
-            <p className="text-xs text-muted-foreground">
-              {t('photoUpload.blockedNotice', { count: blockedCount })}
-            </p>
-          )}
 
           <Button
             onClick={handleUpload}
