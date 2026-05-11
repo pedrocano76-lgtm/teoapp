@@ -31,6 +31,8 @@ interface UploadItem {
   file: File;
   previewUrl: string;
   exifDate: Date | null;
+  inferredDate: Date | null;
+  dateSource: PhotoDateSource;
   manualDate: Date | null;
 }
 
