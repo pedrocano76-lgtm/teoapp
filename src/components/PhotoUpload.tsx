@@ -177,15 +177,17 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
     setItems(prev => prev.map(it => (it.exifDate ? it : { ...it, manualDate: d })));
   };
 
+  const effectiveDate = (it: UploadItem): Date | null =>
+    it.exifDate || it.manualDate || it.inferredDate;
+
   const readyItems = items.filter(it => it.exifDate);
-  const unknownItems = items.filter(it => !it.exifDate);
-  const uploadableItems = items.filter(it => it.exifDate || it.manualDate);
-  const blockedCount = unknownItems.filter(it => !it.manualDate).length;
+  const uncertainItems = items.filter(it => !it.exifDate);
+  const uploadableItems = items.filter(it => effectiveDate(it) !== null);
 
   const oldestSelectedDate = useMemo(() => {
     let earliest: Date | null = null;
     for (const it of uploadableItems) {
-      const d = it.exifDate || it.manualDate;
+      const d = effectiveDate(it);
       if (d && (!earliest || d.getTime() < earliest.getTime())) earliest = d;
     }
     return earliest;
