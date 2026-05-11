@@ -424,15 +424,17 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             </div>
           )}
 
-          {unknownItems.length > 0 && (
+          {uncertainItems.length > 0 && (
             <div className="space-y-2 pt-2 border-t border-border">
               <div className="flex items-start justify-between gap-2">
                 <p className="text-xs font-medium text-yellow-700 dark:text-yellow-400 flex items-center gap-1.5">
                   <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                  {t('photoUpload.groupUnknown')} <span className="font-normal opacity-80">({unknownItems.length})</span>
+                  Fechas a confirmar <span className="font-normal opacity-80">({uncertainItems.length})</span>
                 </p>
               </div>
-              <p className="text-xs text-muted-foreground">{t('photoUpload.groupUnknownHint')}</p>
+              <p className="text-xs text-muted-foreground">
+                No encontramos la fecha original de estas fotos. ¿Es correcta?
+              </p>
 
               {/* Bulk actions */}
               <div className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/50 p-2">
@@ -460,19 +462,29 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
 
               {/* Per-photo */}
               <div className="space-y-2">
-                {unknownItems.map(it => (
-                  <div key={it.id} className="flex items-center gap-2">
-                    {renderThumb(it, { showWarning: true })}
-                    <input
-                      type="date"
-                      value={toDateInputValue(it.manualDate)}
-                      max={toDateInputValue(new Date())}
-                      onChange={(e) => setManualDateFor(it.id, fromDateInputValue(e.target.value))}
-                      className="h-9 flex-1 min-w-0 rounded-md border border-input bg-background px-2 text-sm"
-                      placeholder={t('photoUpload.selectDate')}
-                    />
-                  </div>
-                ))}
+                {uncertainItems.map(it => {
+                  const shown = it.manualDate || it.inferredDate;
+                  const sourceLabel =
+                    it.dateSource === 'filename'
+                      ? 'Fecha del nombre del archivo (WhatsApp)'
+                      : 'Fecha de modificación del archivo';
+                  return (
+                    <div key={it.id} className="flex items-start gap-2">
+                      {renderThumb(it, { showWarning: true })}
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <input
+                          type="date"
+                          value={toDateInputValue(shown)}
+                          max={toDateInputValue(new Date())}
+                          onChange={(e) => setManualDateFor(it.id, fromDateInputValue(e.target.value))}
+                          className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                          placeholder={t('photoUpload.selectDate')}
+                        />
+                        <p className="text-[10px] text-muted-foreground">{sourceLabel}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
