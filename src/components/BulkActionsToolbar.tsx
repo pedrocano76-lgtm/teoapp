@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TagSelector } from '@/components/TagSelector';
+import { BulkAddToEventDialog } from '@/components/BulkAddToEventDialog';
 import { useUpdatePhoto, useDeletePhoto, useBulkAddTagsToPhotos } from '@/hooks/useData';
 import { useLocale } from '@/hooks/useLocale';
-import { CalendarIcon, Trash2, Tag, X, CheckSquare } from 'lucide-react';
+import { CalendarIcon, Trash2, Tag, X, CheckSquare, FolderPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Photo } from '@/lib/types';
 
@@ -22,6 +23,7 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
   const { dateFnsLocale } = useLocale();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTagPicker, setShowTagPicker] = useState(false);
+  const [showEventDialog, setShowEventDialog] = useState(false);
   const [bulkDate, setBulkDate] = useState<Date | undefined>();
   const [bulkTagIds, setBulkTagIds] = useState<string[]>([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -92,86 +94,130 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
   };
 
   return (
-    <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border py-3 px-4 flex items-center gap-3 flex-wrap animate-fade-in">
-      <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-        <CheckSquare className="h-4 w-4 text-primary" />
-        {selectedPhotos.length} {t('bulk.selected')}
-      </div>
+    <>
+      <div
+        className="fixed left-1/2 -translate-x-1/2 bottom-4 z-[60] animate-fade-in pointer-events-auto max-w-[calc(100vw-1rem)]"
+        role="toolbar"
+        aria-label={t('bulk.selected')}
+      >
+        <div className="flex items-center gap-2 rounded-full border border-border/60 bg-background/95 backdrop-blur-md shadow-lg shadow-black/10 px-2 py-1.5 pl-4 overflow-x-auto">
+          <div className="flex items-center gap-1.5 text-sm font-medium text-foreground shrink-0">
+            <CheckSquare className="h-4 w-4 text-primary" />
+            <span>{selectedPhotos.length}</span>
+            <span className="hidden sm:inline text-muted-foreground">{t('bulk.selected')}</span>
+          </div>
 
-      <div className="flex items-center gap-2 flex-wrap flex-1">
-        <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <CalendarIcon className="h-3.5 w-3.5" />
-              {t('bulk.changeDate')}
+          <div className="h-5 w-px bg-border/60 shrink-0" />
+
+          <div className="flex items-center gap-1 shrink-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 rounded-full h-8"
+              onClick={() => setShowEventDialog(true)}
+            >
+              <FolderPlus className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{t('bulk.addToEvent', { defaultValue: 'Añadir a evento' })}</span>
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <div className="p-3 space-y-3">
-              <Calendar
-                mode="single"
-                selected={bulkDate}
-                onSelect={setBulkDate}
-                disabled={(date) => date > new Date()}
-                initialFocus
-                className="pointer-events-auto"
-              />
-              {bulkDate && (
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-sm text-muted-foreground">
-                    {format(bulkDate, "PPP", { locale: dateFnsLocale })}
-                  </span>
-                  <Button size="sm" onClick={handleBulkDate} disabled={updatePhoto.isPending}>
-                    {t('common.apply')}
+
+            <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-1.5 rounded-full h-8">
+                  <CalendarIcon className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{t('bulk.changeDate')}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="center" side="top">
+                <div className="p-3 space-y-3">
+                  <Calendar
+                    mode="single"
+                    selected={bulkDate}
+                    onSelect={setBulkDate}
+                    disabled={(date) => date > new Date()}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                  {bulkDate && (
+                    <div className="flex items-center justify-between px-1">
+                      <span className="text-sm text-muted-foreground">
+                        {format(bulkDate, "PPP", { locale: dateFnsLocale })}
+                      </span>
+                      <Button size="sm" onClick={handleBulkDate} disabled={updatePhoto.isPending}>
+                        {t('common.apply')}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Popover open={showTagPicker} onOpenChange={setShowTagPicker}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-1.5 rounded-full h-8">
+                  <Tag className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{t('bulk.changeTags')}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72" align="center" side="top">
+                <div className="space-y-3">
+                  <TagSelector
+                    selectedTagIds={bulkTagIds}
+                    onToggle={(id) => setBulkTagIds(prev =>
+                      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
+                    )}
+                  />
+                  <Button size="sm" className="w-full" onClick={handleBulkTags} disabled={bulkAddTags.isPending || bulkTagIds.length === 0}>
+                    {t('bulk.applyTo', { count: selectedPhotos.length })}
                   </Button>
                 </div>
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
+              </PopoverContent>
+            </Popover>
 
-        <Popover open={showTagPicker} onOpenChange={setShowTagPicker}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <Tag className="h-3.5 w-3.5" />
-              {t('bulk.changeTags')}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-72" align="start">
-            <div className="space-y-3">
-              <TagSelector
-                selectedTagIds={bulkTagIds}
-                onToggle={(id) => setBulkTagIds(prev =>
-                  prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
-                )}
-              />
-              <Button size="sm" className="w-full" onClick={handleBulkTags} disabled={bulkAddTags.isPending || bulkTagIds.length === 0}>
-                {t('bulk.applyTo', { count: selectedPhotos.length })}
+            {confirmDelete ? (
+              <div className="flex items-center gap-1 pl-1">
+                <span className="text-xs text-destructive hidden md:inline">
+                  {t('bulk.deleteConfirm', { count: selectedPhotos.length })}
+                </span>
+                <Button variant="ghost" size="sm" className="rounded-full h-8" onClick={() => setConfirmDelete(false)}>
+                  {t('common.cancel')}
+                </Button>
+                <Button variant="destructive" size="sm" className="rounded-full h-8" onClick={handleBulkDelete} disabled={deletePhoto.isPending}>
+                  {t('common.confirm')}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 rounded-full h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{t('bulk.delete')}</span>
               </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        {confirmDelete ? (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-destructive">{t('bulk.deleteConfirm', { count: selectedPhotos.length })}</span>
-            <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>{t('common.cancel')}</Button>
-            <Button variant="destructive" size="sm" onClick={handleBulkDelete} disabled={deletePhoto.isPending}>
-              {t('common.confirm')}
-            </Button>
+            )}
           </div>
-        ) : (
-          <Button variant="outline" size="sm" className="gap-1.5 text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}>
-            <Trash2 className="h-3.5 w-3.5" />
-            {t('bulk.delete')}
+
+          <div className="h-5 w-px bg-border/60 shrink-0" />
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClear}
+            className="rounded-full h-8 w-8 shrink-0"
+            aria-label={t('common.cancel')}
+          >
+            <X className="h-4 w-4" />
           </Button>
-        )}
+        </div>
       </div>
 
-      <Button variant="ghost" size="sm" onClick={onClear} className="gap-1">
-        <X className="h-3.5 w-3.5" />
-        {t('common.cancel')}
-      </Button>
-    </div>
+      <BulkAddToEventDialog
+        open={showEventDialog}
+        onOpenChange={setShowEventDialog}
+        selectedPhotos={selectedPhotos}
+        onDone={onDone}
+      />
+    </>
   );
 }

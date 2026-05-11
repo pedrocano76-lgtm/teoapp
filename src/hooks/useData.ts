@@ -207,10 +207,12 @@ export function useEvents(childId?: string) {
 export function useAddEvent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ childId, name, date }: { childId: string; name: string; date?: Date | null }) => {
+    mutationFn: async ({ childId, name, date, description }: { childId: string; name: string; date?: Date | null; description?: string | null }) => {
+      const insert: any = { child_id: childId, name, date: date ? date.toISOString().slice(0, 10) : null };
+      if (description !== undefined && description !== null && description !== '') insert.description = description;
       const { data, error } = await supabase
         .from('events')
-        .insert({ child_id: childId, name, date: date ? date.toISOString().slice(0, 10) : null })
+        .insert(insert)
         .select()
         .single();
       if (error) throw error;
