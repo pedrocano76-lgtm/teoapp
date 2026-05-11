@@ -230,7 +230,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
           batch.map(async (it) => {
             setUploadProgress(prev => ({ ...prev, [it.id]: 'uploading' }));
             try {
-              const dateToUse = it.exifDate || it.manualDate!;
+              const dateToUse = effectiveDate(it)!;
               await uploadPhoto.mutateAsync({
                 file: it.file,
                 childId: selectedChild,
