@@ -126,12 +126,15 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
 
     const newItems: UploadItem[] = await Promise.all(
       validFiles.map(async (file) => {
-        const exifDate = await getExifDate(file);
+        const resolved = await resolvePhotoDate(file);
+        const isExif = resolved.source === 'exif';
         return {
           id: `${file.name}_${file.size}_${Math.random().toString(36).slice(2, 8)}`,
           file,
           previewUrl: URL.createObjectURL(file),
-          exifDate,
+          exifDate: isExif ? resolved.date : null,
+          inferredDate: isExif ? null : resolved.date,
+          dateSource: resolved.source,
           manualDate: null,
         };
       })
