@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { useUploadPhoto, useEvents, useAddEvent } from '@/hooks/useData';
 import { useToast } from '@/hooks/use-toast';
 import { useLocale } from '@/hooks/useLocale';
-import { getExifDate } from '@/lib/exif-utils';
+import { resolvePhotoDate, type PhotoDateSource } from '@/lib/exif-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
