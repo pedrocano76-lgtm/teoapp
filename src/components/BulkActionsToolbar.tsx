@@ -23,6 +23,7 @@ export function BulkActionsToolbar({ selectedPhotos, onClear, onDone }: BulkActi
   const { dateFnsLocale } = useLocale();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTagPicker, setShowTagPicker] = useState(false);
+  const [showEventDialog, setShowEventDialog] = useState(false);
   const [bulkDate, setBulkDate] = useState<Date | undefined>();
   const [bulkTagIds, setBulkTagIds] = useState<string[]>([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
