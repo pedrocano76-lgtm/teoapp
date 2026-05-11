@@ -1,5 +1,37 @@
 import ExifReader from 'exifreader';
 
+export type PhotoDateSource = 'exif' | 'filename' | 'lastModified';
+
+export interface PhotoDateResult {
+  date: Date;
+  source: PhotoDateSource;
+}
+
+/**
+ * Parses a WhatsApp-style filename: IMG-YYYYMMDD-WAxxxx.jpg / VID-YYYYMMDD-WAxxxx.mp4
+ */
+export function getWhatsAppFilenameDate(filename: string): Date | null {
+  const m = filename.match(/(?:IMG|VID)-(\d{4})(\d{2})(\d{2})-WA/i);
+  if (!m) return null;
+  const [, y, mo, d] = m;
+  const date = new Date(Number(y), Number(mo) - 1, Number(d), 12, 0, 0);
+  return isNaN(date.getTime()) ? null : date;
+}
+
+/**
+ * Resolves a photo date using fallback chain: EXIF → WhatsApp filename → file.lastModified.
+ * The `source` indicates reliability — only `exif` is considered reliable.
+ */
+export async function resolvePhotoDate(file: File): Promise<PhotoDateResult> {
+  const exif = await getExifDate(file);
+  if (exif) return { date: exif, source: 'exif' };
+
+  const fromName = getWhatsAppFilenameDate(file.name);
+  if (fromName) return { date: fromName, source: 'filename' };
+
+  return { date: new Date(file.lastModified || Date.now()), source: 'lastModified' };
+}
+
 export async function getExifDate(file: File): Promise<Date | null> {
   try {
     const arrayBuffer = await file.arrayBuffer();

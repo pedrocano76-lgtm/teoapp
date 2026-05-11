@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { useUploadPhoto, useEvents, useAddEvent } from '@/hooks/useData';
 import { useToast } from '@/hooks/use-toast';
 import { useLocale } from '@/hooks/useLocale';
-import { getExifDate } from '@/lib/exif-utils';
+import { resolvePhotoDate, type PhotoDateSource } from '@/lib/exif-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -31,6 +31,8 @@ interface UploadItem {
   file: File;
   previewUrl: string;
   exifDate: Date | null;
+  inferredDate: Date | null;
+  dateSource: PhotoDateSource;
   manualDate: Date | null;
 }
 
@@ -124,12 +126,15 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
 
     const newItems: UploadItem[] = await Promise.all(
       validFiles.map(async (file) => {
-        const exifDate = await getExifDate(file);
+        const resolved = await resolvePhotoDate(file);
+        const isExif = resolved.source === 'exif';
         return {
           id: `${file.name}_${file.size}_${Math.random().toString(36).slice(2, 8)}`,
           file,
           previewUrl: URL.createObjectURL(file),
-          exifDate,
+          exifDate: isExif ? resolved.date : null,
+          inferredDate: isExif ? null : resolved.date,
+          dateSource: resolved.source,
           manualDate: null,
         };
       })
@@ -172,15 +177,17 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
     setItems(prev => prev.map(it => (it.exifDate ? it : { ...it, manualDate: d })));
   };
 
+  const effectiveDate = (it: UploadItem): Date | null =>
+    it.exifDate || it.manualDate || it.inferredDate;
+
   const readyItems = items.filter(it => it.exifDate);
-  const unknownItems = items.filter(it => !it.exifDate);
-  const uploadableItems = items.filter(it => it.exifDate || it.manualDate);
-  const blockedCount = unknownItems.filter(it => !it.manualDate).length;
+  const uncertainItems = items.filter(it => !it.exifDate);
+  const uploadableItems = items.filter(it => effectiveDate(it) !== null);
 
   const oldestSelectedDate = useMemo(() => {
     let earliest: Date | null = null;
     for (const it of uploadableItems) {
-      const d = it.exifDate || it.manualDate;
+      const d = effectiveDate(it);
       if (d && (!earliest || d.getTime() < earliest.getTime())) earliest = d;
     }
     return earliest;
@@ -223,7 +230,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
           batch.map(async (it) => {
             setUploadProgress(prev => ({ ...prev, [it.id]: 'uploading' }));
             try {
-              const dateToUse = it.exifDate || it.manualDate!;
+              const dateToUse = effectiveDate(it)!;
               await uploadPhoto.mutateAsync({
                 file: it.file,
                 childId: selectedChild,
@@ -417,15 +424,17 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             </div>
           )}
 
-          {unknownItems.length > 0 && (
+          {uncertainItems.length > 0 && (
             <div className="space-y-2 pt-2 border-t border-border">
               <div className="flex items-start justify-between gap-2">
                 <p className="text-xs font-medium text-yellow-700 dark:text-yellow-400 flex items-center gap-1.5">
                   <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                  {t('photoUpload.groupUnknown')} <span className="font-normal opacity-80">({unknownItems.length})</span>
+                  Fechas a confirmar <span className="font-normal opacity-80">({uncertainItems.length})</span>
                 </p>
               </div>
-              <p className="text-xs text-muted-foreground">{t('photoUpload.groupUnknownHint')}</p>
+              <p className="text-xs text-muted-foreground">
+                No encontramos la fecha original de estas fotos. ¿Es correcta?
+              </p>
 
               {/* Bulk actions */}
               <div className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/50 p-2">
@@ -453,19 +462,29 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
 
               {/* Per-photo */}
               <div className="space-y-2">
-                {unknownItems.map(it => (
-                  <div key={it.id} className="flex items-center gap-2">
-                    {renderThumb(it, { showWarning: true })}
-                    <input
-                      type="date"
-                      value={toDateInputValue(it.manualDate)}
-                      max={toDateInputValue(new Date())}
-                      onChange={(e) => setManualDateFor(it.id, fromDateInputValue(e.target.value))}
-                      className="h-9 flex-1 min-w-0 rounded-md border border-input bg-background px-2 text-sm"
-                      placeholder={t('photoUpload.selectDate')}
-                    />
-                  </div>
-                ))}
+                {uncertainItems.map(it => {
+                  const shown = it.manualDate || it.inferredDate;
+                  const sourceLabel =
+                    it.dateSource === 'filename'
+                      ? 'Fecha del nombre del archivo (WhatsApp)'
+                      : 'Fecha de modificación del archivo';
+                  return (
+                    <div key={it.id} className="flex items-start gap-2">
+                      {renderThumb(it, { showWarning: true })}
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <input
+                          type="date"
+                          value={toDateInputValue(shown)}
+                          max={toDateInputValue(new Date())}
+                          onChange={(e) => setManualDateFor(it.id, fromDateInputValue(e.target.value))}
+                          className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                          placeholder={t('photoUpload.selectDate')}
+                        />
+                        <p className="text-[10px] text-muted-foreground">{sourceLabel}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -564,11 +583,6 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             </div>
           )}
 
-          {blockedCount > 0 && (
-            <p className="text-xs text-muted-foreground">
-              {t('photoUpload.blockedNotice', { count: blockedCount })}
-            </p>
-          )}
 
           <Button
             onClick={handleUpload}
