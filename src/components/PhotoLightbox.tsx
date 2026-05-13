@@ -8,6 +8,7 @@ import { getAgeLabel } from '@/lib/age-utils';
 import { useLocale } from '@/hooks/useLocale';
 import { PhotoEditDialog } from '@/components/PhotoEditDialog';
 import { useUserRole } from '@/hooks/useUserRole';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PhotoLightboxProps {
   photos: Photo[];
@@ -20,6 +21,7 @@ interface PhotoLightboxProps {
 export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChange }: PhotoLightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [editOpen, setEditOpen] = useState(false);
+  const [uploaderName, setUploaderName] = useState<string | null>(null);
   const { t } = useTranslation();
   const { intlLocale } = useLocale();
   const { canEdit } = useUserRole();
@@ -62,9 +64,20 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
     }
   }, [goNext, goPrev]);
 
-  if (!photos.length) return null;
   const photo = photos[currentIndex];
-  if (!photo) return null;
+  const uploadedBy = photo?.uploadedBy;
+
+  useEffect(() => {
+    setUploaderName(null);
+    if (!uploadedBy) return;
+    let cancelled = false;
+    supabase
+      .rpc('get_display_name', { _user_id: uploadedBy })
+      .then(({ data }) => { if (!cancelled) setUploaderName((data as string) || null); });
+    return () => { cancelled = true; };
+  }, [uploadedBy]);
+
+  if (!photos.length || !photo) return null;
   const child = children.find(c => c.id === photo.childId);
 
   const fullDate = photo.date.toLocaleDateString(intlLocale, {
@@ -73,6 +86,9 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
     month: 'long',
     year: 'numeric',
   });
+  const uploadedAtStr = photo.uploadedAt
+    ? photo.uploadedAt.toLocaleDateString(intlLocale, { day: 'numeric', month: 'short', year: 'numeric' })
+    : null;
 
   return (
     <>
@@ -145,6 +161,11 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
                   {photo.locationName && (
                     <p className="text-xs opacity-60 mt-0.5 flex items-center gap-1">
                       <MapPin className="h-3 w-3" /> {photo.locationName}
+                    </p>
+                  )}
+                  {(uploaderName || uploadedAtStr) && (
+                    <p className="text-[11px] opacity-50 mt-1">
+                      Subida por {uploaderName || '—'}{uploadedAtStr ? ` · ${uploadedAtStr}` : ''}
                     </p>
                   )}
                 </div>

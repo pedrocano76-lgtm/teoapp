@@ -41,6 +41,7 @@ export default function Settings() {
 
   const [enabled, setEnabled] = useState(true);
   const [birthdaysEnabled, setBirthdaysEnabled] = useState(true);
+  const [uploadsEmailEnabled, setUploadsEmailEnabled] = useState(true);
   const [frequency, setFrequency] = useState<Frequency>(5);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -77,13 +78,14 @@ export default function Settings() {
     (async () => {
       const { data } = await supabase
         .from('reminder_settings')
-        .select('enabled, inactivity_days, birthdays_enabled')
+        .select('enabled, inactivity_days, birthdays_enabled, notify_uploads_email')
         .eq('user_id', user.id)
         .maybeSingle();
       if (data) {
         setEnabled(data.enabled);
         setFrequency(data.inactivity_days as Frequency);
         setBirthdaysEnabled((data as any).birthdays_enabled ?? true);
+        setUploadsEmailEnabled((data as any).notify_uploads_email ?? true);
       } else {
         await supabase.from('reminder_settings').insert({
           user_id: user.id,
@@ -95,13 +97,14 @@ export default function Settings() {
     })();
   }, [user]);
 
-  const persist = async (next: { enabled?: boolean; frequency?: Frequency; birthdays?: boolean }) => {
+  const persist = async (next: { enabled?: boolean; frequency?: Frequency; birthdays?: boolean; uploadsEmail?: boolean }) => {
     if (!user) return;
     const payload: any = {
       user_id: user.id,
       enabled: next.enabled ?? enabled,
       inactivity_days: next.frequency ?? frequency,
       birthdays_enabled: next.birthdays ?? birthdaysEnabled,
+      notify_uploads_email: next.uploadsEmail ?? uploadsEmailEnabled,
     };
     const { error } = await supabase
       .from('reminder_settings')
@@ -169,6 +172,18 @@ export default function Settings() {
             <Switch
               checked={birthdaysEnabled}
               onCheckedChange={(v) => { setBirthdaysEnabled(v); persist({ birthdays: v }); }}
+              disabled={loading}
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <Label className="text-sm">Emails de fotos nuevas</Label>
+              <p className="text-xs text-muted-foreground">Recibe un email cuando otro familiar suba fotos. Las notificaciones en la app no se ven afectadas.</p>
+            </div>
+            <Switch
+              checked={uploadsEmailEnabled}
+              onCheckedChange={(v) => { setUploadsEmailEnabled(v); persist({ uploadsEmail: v }); }}
               disabled={loading}
             />
           </div>

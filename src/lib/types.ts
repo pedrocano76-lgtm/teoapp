@@ -45,6 +45,8 @@ export interface Photo {
   isShared: boolean;
   eventName?: string;
   eventColor?: string;
+  uploadedBy?: string;
+  uploadedAt?: Date;
 }
 
 export interface Event {
