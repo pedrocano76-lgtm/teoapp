@@ -21,6 +21,7 @@ interface PhotoLightboxProps {
 export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChange }: PhotoLightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [editOpen, setEditOpen] = useState(false);
+  const [uploaderName, setUploaderName] = useState<string | null>(null);
   const { t } = useTranslation();
   const { intlLocale } = useLocale();
   const { canEdit } = useUserRole();
