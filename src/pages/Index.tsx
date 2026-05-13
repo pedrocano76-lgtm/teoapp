@@ -63,6 +63,8 @@ function mapPhoto(row: any): Photo {
     isShared: row.is_shared ?? true,
     eventName: row.events?.name ?? undefined,
     eventColor: row.events?.color ?? undefined,
+    uploadedBy: row.uploaded_by ?? undefined,
+    uploadedAt: row.created_at ? new Date(row.created_at) : undefined,
     tags,
   };
 }
