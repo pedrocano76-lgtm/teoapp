@@ -41,6 +41,7 @@ export default function Settings() {
 
   const [enabled, setEnabled] = useState(true);
   const [birthdaysEnabled, setBirthdaysEnabled] = useState(true);
+  const [uploadsEmailEnabled, setUploadsEmailEnabled] = useState(true);
   const [frequency, setFrequency] = useState<Frequency>(5);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
