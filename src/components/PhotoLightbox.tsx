@@ -66,6 +66,17 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
 
   if (!photos.length) return null;
   const photo = photos[currentIndex];
+
+  useEffect(() => {
+    setUploaderName(null);
+    if (!photo?.uploadedBy) return;
+    let cancelled = false;
+    supabase
+      .rpc('get_display_name', { _user_id: photo.uploadedBy })
+      .then(({ data }) => { if (!cancelled) setUploaderName((data as string) || null); });
+    return () => { cancelled = true; };
+  }, [photo?.uploadedBy]);
+
   if (!photo) return null;
   const child = children.find(c => c.id === photo.childId);
 
@@ -75,6 +86,9 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
     month: 'long',
     year: 'numeric',
   });
+  const uploadedAtStr = photo.uploadedAt
+    ? photo.uploadedAt.toLocaleDateString(intlLocale, { day: 'numeric', month: 'short', year: 'numeric' })
+    : null;
 
   return (
     <>
