@@ -163,6 +163,11 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
                       <MapPin className="h-3 w-3" /> {photo.locationName}
                     </p>
                   )}
+                  {(uploaderName || uploadedAtStr) && (
+                    <p className="text-[11px] opacity-50 mt-1">
+                      Subida por {uploaderName || '—'}{uploadedAtStr ? ` · ${uploadedAtStr}` : ''}
+                    </p>
+                  )}
                 </div>
                 <p className="text-xs opacity-60">{currentIndex + 1} / {photos.length}</p>
               </div>
