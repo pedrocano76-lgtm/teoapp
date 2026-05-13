@@ -379,6 +379,7 @@ export type Database = {
           id: string
           inactivity_days: number
           last_reminder_sent_at: string | null
+          notify_uploads_email: boolean
           updated_at: string
           user_id: string
         }
@@ -389,6 +390,7 @@ export type Database = {
           id?: string
           inactivity_days?: number
           last_reminder_sent_at?: string | null
+          notify_uploads_email?: boolean
           updated_at?: string
           user_id: string
         }
@@ -399,6 +401,7 @@ export type Database = {
           id?: string
           inactivity_days?: number
           last_reminder_sent_at?: string | null
+          notify_uploads_email?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -476,6 +479,7 @@ export type Database = {
     Functions: {
       can_access_child: { Args: { child_uuid: string }; Returns: boolean }
       can_edit_child: { Args: { child_uuid: string }; Returns: boolean }
+      get_display_name: { Args: { _user_id: string }; Returns: string }
       is_guest_of_child: { Args: { child_uuid: string }; Returns: boolean }
       is_parent_of_child: { Args: { child_uuid: string }; Returns: boolean }
     }
