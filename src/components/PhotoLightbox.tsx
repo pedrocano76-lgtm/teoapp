@@ -8,6 +8,7 @@ import { getAgeLabel } from '@/lib/age-utils';
 import { useLocale } from '@/hooks/useLocale';
 import { PhotoEditDialog } from '@/components/PhotoEditDialog';
 import { useUserRole } from '@/hooks/useUserRole';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PhotoLightboxProps {
   photos: Photo[];
