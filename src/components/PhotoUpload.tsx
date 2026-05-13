@@ -224,6 +224,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
       let completed = 0;
       let failed = 0;
       let earliestDate: Date | null = null;
+      const uploadedPhotoIds: string[] = [];
       for (let i = 0; i < uploadableItems.length; i += CONCURRENCY) {
         const batch = uploadableItems.slice(i, i + CONCURRENCY);
         const results = await Promise.allSettled(
@@ -231,7 +232,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             setUploadProgress(prev => ({ ...prev, [it.id]: 'uploading' }));
             try {
               const dateToUse = effectiveDate(it)!;
-              await uploadPhoto.mutateAsync({
+              const created = await uploadPhoto.mutateAsync({
                 file: it.file,
                 childId: selectedChild,
                 caption: caption || undefined,
@@ -240,6 +241,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                 tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
                 isShared,
               });
+              if (created?.id) uploadedPhotoIds.push(created.id);
               setUploadProgress(prev => ({ ...prev, [it.id]: 'done' }));
               if (!earliestDate || dateToUse.getTime() < earliestDate.getTime()) {
                 earliestDate = dateToUse;
@@ -257,6 +259,15 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
       if (isEvent && eventMode === 'new' && eventIdToUse && !newEventDateObj && earliestDate) {
         const iso = (earliestDate as Date).toISOString().slice(0, 10);
         await supabaseUpdateEventDate(eventIdToUse, iso);
+      }
+
+      // Fire-and-forget: notify other family members
+      if (uploadedPhotoIds.length > 0) {
+        supabase.functions
+          .invoke('notify-photo-upload', {
+            body: { childId: selectedChild, photoIds: uploadedPhotoIds },
+          })
+          .catch((e) => console.warn('notify-photo-upload failed', e));
       }
 
       if (failed === 0) {
