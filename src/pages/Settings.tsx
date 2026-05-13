@@ -78,13 +78,14 @@ export default function Settings() {
     (async () => {
       const { data } = await supabase
         .from('reminder_settings')
-        .select('enabled, inactivity_days, birthdays_enabled')
+        .select('enabled, inactivity_days, birthdays_enabled, notify_uploads_email')
         .eq('user_id', user.id)
         .maybeSingle();
       if (data) {
         setEnabled(data.enabled);
         setFrequency(data.inactivity_days as Frequency);
         setBirthdaysEnabled((data as any).birthdays_enabled ?? true);
+        setUploadsEmailEnabled((data as any).notify_uploads_email ?? true);
       } else {
         await supabase.from('reminder_settings').insert({
           user_id: user.id,
@@ -96,13 +97,14 @@ export default function Settings() {
     })();
   }, [user]);
 
-  const persist = async (next: { enabled?: boolean; frequency?: Frequency; birthdays?: boolean }) => {
+  const persist = async (next: { enabled?: boolean; frequency?: Frequency; birthdays?: boolean; uploadsEmail?: boolean }) => {
     if (!user) return;
     const payload: any = {
       user_id: user.id,
       enabled: next.enabled ?? enabled,
       inactivity_days: next.frequency ?? frequency,
       birthdays_enabled: next.birthdays ?? birthdaysEnabled,
+      notify_uploads_email: next.uploadsEmail ?? uploadsEmailEnabled,
     };
     const { error } = await supabase
       .from('reminder_settings')
