@@ -64,20 +64,20 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
     }
   }, [goNext, goPrev]);
 
-  if (!photos.length) return null;
   const photo = photos[currentIndex];
+  const uploadedBy = photo?.uploadedBy;
 
   useEffect(() => {
     setUploaderName(null);
-    if (!photo?.uploadedBy) return;
+    if (!uploadedBy) return;
     let cancelled = false;
     supabase
-      .rpc('get_display_name', { _user_id: photo.uploadedBy })
+      .rpc('get_display_name', { _user_id: uploadedBy })
       .then(({ data }) => { if (!cancelled) setUploaderName((data as string) || null); });
     return () => { cancelled = true; };
-  }, [photo?.uploadedBy]);
+  }, [uploadedBy]);
 
-  if (!photo) return null;
+  if (!photos.length || !photo) return null;
   const child = children.find(c => c.id === photo.childId);
 
   const fullDate = photo.date.toLocaleDateString(intlLocale, {
