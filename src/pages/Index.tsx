@@ -96,14 +96,6 @@ const Index = () => {
   const { data: childrenData, isLoading: childrenLoading } = useChildren();
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
 
-  // Paginated photo fetch — first page (50 newest) lands fast, more load on scroll.
-  const {
-    data: photosPages,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading: photosLoading,
-  } = usePhotosInfinite(selectedChildId ?? undefined);
   const { data: eventsData } = useEvents();
   const { data: tagsData } = useTags();
   const { isGuest, canEdit } = useUserRole();
@@ -124,18 +116,62 @@ const Index = () => {
     ? activities.find(a => a.id === selectedActivityId) ?? null
     : null;
 
+  const events = useMemo(() => (eventsData || []).map(mapEvent), [eventsData]);
+  const tags = useMemo(() => (tagsData || []).map(mapTag), [tagsData]);
+
+  // Resolve UI filters → server-side query params.
+  // Event filter: match all events sharing the selected event's name
+  // (existing UX behavior of recurring events like "Birthday").
+  const filterEventIds = useMemo(() => {
+    if (!selectedEventId) return undefined;
+    const selected = events.find(e => e.id === selectedEventId);
+    if (!selected) return [selectedEventId];
+    return events
+      .filter(e => e.name === selected.name && (!selectedChildId || e.childId === selectedChildId))
+      .map(e => e.id);
+  }, [selectedEventId, events, selectedChildId]);
+
+  // Activity filter: an activity is matched by tag-name; resolve to tag IDs.
+  const activityTagIds = useMemo(() => {
+    if (!selectedActivity) return [];
+    const name = selectedActivity.name.trim().toLowerCase();
+    return tags.filter(t => t.name.trim().toLowerCase() === name).map(t => t.id);
+  }, [selectedActivity, tags]);
+
+  const filterTagIds = useMemo(() => {
+    const ids = new Set<string>(selectedTagIds);
+    activityTagIds.forEach(id => ids.add(id));
+    return ids.size > 0 ? Array.from(ids) : undefined;
+  }, [selectedTagIds, activityTagIds]);
+
+  const photoFilters = useMemo(() => ({
+    eventIds: filterEventIds,
+    locationName: selectedLocation,
+    tagIds: filterTagIds,
+    sortOrder,
+  }), [filterEventIds, selectedLocation, filterTagIds, sortOrder]);
+
+  // Paginated photo fetch — first page (20 newest) lands fast, more load on scroll.
+  // Filters are applied server-side; changing filters resets pagination via queryKey.
+  const {
+    data: photosPages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: photosLoading,
+    isFetching: photosFetching,
+  } = usePhotosInfinite(selectedChildId ?? undefined, photoFilters);
+
   // Selection mode
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
 
 
   const children = useMemo(() => (childrenData || []).map(mapChild), [childrenData]);
-  const photos = useMemo(() => {
+  const filteredPhotos = useMemo(() => {
     const allRows = (photosPages?.pages || []).flatMap(p => p.rows);
     return allRows.map(mapPhoto);
   }, [photosPages]);
-  const events = useMemo(() => (eventsData || []).map(mapEvent), [eventsData]);
-  const tags = useMemo(() => (tagsData || []).map(mapTag), [tagsData]);
 
   const selectedChild = selectedChildId
     ? children.find(c => c.id === selectedChildId) ?? null
@@ -146,42 +182,10 @@ const Index = () => {
     return events.filter(e => e.childId === selectedChildId);
   }, [selectedChildId, events]);
 
-  const filteredPhotos = useMemo(() => {
-    let result = photos;
-    if (selectedChildId) result = result.filter(p => p.childId === selectedChildId);
-    if (selectedEventId) {
-      const eventName = events.find(e => e.id === selectedEventId)?.name;
-      if (eventName) {
-        const matchingIds = events
-          .filter(e => e.name === eventName && (!selectedChildId || e.childId === selectedChildId))
-          .map(e => e.id);
-        result = result.filter(p => p.eventId && matchingIds.includes(p.eventId));
-      }
-    }
-    if (selectedLocation) {
-      result = result.filter(p => p.locationName === selectedLocation);
-    }
-    if (selectedTagIds.length > 0) {
-      result = result.filter(p =>
-        (p.tags || []).some(t => selectedTagIds.includes(t.id))
-      );
-    }
-    if (selectedActivity) {
-      const activityName = selectedActivity.name.trim().toLowerCase();
-      result = result.filter(p =>
-        (p.tags || []).some(t => t.name.trim().toLowerCase() === activityName)
-      );
-    }
-    return result.sort((a, b) =>
-      sortOrder === 'asc' ? a.date.getTime() - b.date.getTime() : b.date.getTime() - a.date.getTime()
-    );
-  }, [selectedChildId, selectedEventId, selectedLocation, selectedActivity, selectedTagIds, sortOrder, photos, events]);
+  const { data: locationsData } = useDistinctLocations(selectedChildId ?? undefined);
+  const uniqueLocations = locationsData ?? [];
 
-  const uniqueLocations = useMemo(() => {
-    const locs = new Set<string>();
-    photos.forEach(p => { if (p.locationName) locs.add(p.locationName); });
-    return Array.from(locs).sort();
-  }, [photos]);
+  const hasActiveFilters = !!(selectedEventId || selectedLocation || selectedActivityId || selectedTagIds.length > 0);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedPhotoIds(prev => {
