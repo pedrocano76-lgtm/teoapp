@@ -228,10 +228,10 @@ export default function Settings() {
         )}
 
         {/* Tools */}
-        {canEdit && photos.length > 0 && (
+        {canEdit && (
           <Section title={t('settings.tools')}>
             <div className="space-y-1.5">
-              <DuplicateFinder photos={photos} children={children} />
+              <DuplicateFinder children={children} />
               <p className="text-xs text-muted-foreground">{t('settings.findDuplicatesDesc')}</p>
             </div>
           </Section>
