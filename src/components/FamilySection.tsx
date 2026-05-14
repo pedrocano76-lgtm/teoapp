@@ -40,8 +40,33 @@ export function FamilySection() {
     enabled: !!user,
   });
 
-  const parents = shares?.filter(s => s.role === 'parent') || [];
-  const guests = shares?.filter(s => s.role === 'guest') || [];
+  const userIds = (shares || []).map(s => s.shared_with_user_id).filter(Boolean) as string[];
+
+  const { data: profiles } = useQuery({
+    queryKey: ['family_share_profiles', userIds.sort().join(',')],
+    queryFn: async () => {
+      if (userIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, display_name')
+        .in('user_id', userIds);
+      if (error) throw error;
+      return data;
+    },
+    enabled: userIds.length > 0,
+  });
+
+  const nameByUserId = new Map((profiles || []).map((p: any) => [p.user_id, p.display_name]));
+
+  const enrich = (s: any) => ({
+    ...s,
+    _displayName:
+      (s.shared_with_user_id && nameByUserId.get(s.shared_with_user_id)) ||
+      (s.shared_with_email ? String(s.shared_with_email).split('@')[0] : ''),
+  });
+
+  const parents = (shares?.filter(s => s.role === 'parent') || []).map(enrich);
+  const guests = (shares?.filter(s => s.role === 'guest') || []).map(enrich);
 
   return (
     <div className="space-y-4 px-2">
@@ -116,7 +141,7 @@ function ShareRow({ share }: { share: any }) {
   return (
     <div className="flex items-center justify-between text-xs group gap-1">
       <div className="truncate flex-1">
-        <span className="text-foreground">{share.shared_with_email}</span>
+        <span className="text-foreground">{share._displayName || share.shared_with_email}</span>
         {share.relationship && (
           <span className="text-muted-foreground ml-1">({share.relationship})</span>
         )}
