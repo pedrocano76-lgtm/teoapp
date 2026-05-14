@@ -337,7 +337,7 @@ const Index = () => {
                   </>
                 )}
               </div>
-            ) : photosLoading ? (
+            ) : photosLoading || (photosFetching && filteredPhotos.length === 0) ? (
               <div className="text-center py-20 flex flex-col items-center gap-3">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 <p className="text-muted-foreground">{t('empty.loadingPhotos')}</p>
