@@ -42,14 +42,17 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const CRON_SECRET = Deno.env.get("CRON_SECRET");
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
-    // Auth: require x-cron-secret header or service-role bearer token
+    // Auth: x-cron-secret header, service-role bearer, or anon apikey (pg_cron pattern)
     const cronHeader = req.headers.get("x-cron-secret");
+    const apikeyHeader = req.headers.get("apikey") ?? "";
     const authHeader = req.headers.get("Authorization") ?? "";
     const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
     const isAuthorized =
       (CRON_SECRET && cronHeader === CRON_SECRET) ||
-      (bearer && bearer === SERVICE_KEY);
+      (bearer && bearer === SERVICE_KEY) ||
+      (ANON_KEY && (apikeyHeader === ANON_KEY || bearer === ANON_KEY));
     if (!isAuthorized) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
