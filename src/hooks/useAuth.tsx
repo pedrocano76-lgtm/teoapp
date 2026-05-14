@@ -23,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -39,14 +40,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTimeout(async () => {
             const { data } = await supabase
               .from('profiles')
-              .select('locale')
+              .select('locale, display_name')
               .eq('user_id', session.user.id)
               .maybeSingle();
             const loc = (data as any)?.locale;
             if (loc === 'es' || loc === 'en') {
               if (!i18n.language?.startsWith(loc)) await i18n.changeLanguage(loc);
             }
+            setDisplayName((data as any)?.display_name || null);
           }, 0);
+        }
+        if (event === 'SIGNED_OUT') {
+          setDisplayName(null);
         }
       }
     );
@@ -58,13 +63,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         const { data } = await supabase
           .from('profiles')
-          .select('locale')
+          .select('locale, display_name')
           .eq('user_id', session.user.id)
           .maybeSingle();
         const loc = (data as any)?.locale;
         if ((loc === 'es' || loc === 'en') && !i18n.language?.startsWith(loc)) {
           await i18n.changeLanguage(loc);
         }
+        setDisplayName((data as any)?.display_name || null);
       }
     });
 
@@ -76,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signOut, displayName }}>
       {children}
     </AuthContext.Provider>
   );
