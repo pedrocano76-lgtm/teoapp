@@ -198,23 +198,25 @@ Deno.serve(async (req) => {
       const recipientEmail = userInfo?.user?.email;
       if (!recipientEmail) continue;
 
-      const subject = `📸 ${uploaderName} ha añadido fotos nuevas de ${child.name}`;
+      const safeUploader = escapeHtml(uploaderName);
+      const safeChild = escapeHtml(child.name);
+      const subject = `📸 ${safeUploader} ha añadido fotos nuevas de ${safeChild}`.replace(/[\r\n]/g, " ");
       const dateStr = new Date(uploadedAt).toLocaleDateString("es-ES", {
         day: "numeric", month: "long", year: "numeric",
       });
       const thumbsHtml = signedThumbs.length
         ? `<div style="display:flex;gap:8px;margin:20px 0;flex-wrap:wrap;">${
             signedThumbs.map(u =>
-              `<img src="${u}" alt="" style="width:120px;height:120px;object-fit:cover;border-radius:8px;" />`
+              `<img src="${escapeHtml(u)}" alt="" style="width:120px;height:120px;object-fit:cover;border-radius:8px;" />`
             ).join("")
           }</div>`
         : "";
       const html = `
         <div style="font-family: -apple-system, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color:#1a1a1a;">
-          <h2 style="margin:0 0 12px;">📸 ${uploaderName} ha añadido recuerdos nuevos</h2>
+          <h2 style="margin:0 0 12px;">📸 ${safeUploader} ha añadido recuerdos nuevos</h2>
           <p style="color:#555; line-height:1.5;">
             Hay <strong>${totalCount}</strong> foto${totalCount === 1 ? "" : "s"}
-            nueva${totalCount === 1 ? "" : "s"} de <strong>${child.name}</strong>
+            nueva${totalCount === 1 ? "" : "s"} de <strong>${safeChild}</strong>
             (${dateStr}).
           </p>
           ${thumbsHtml}
