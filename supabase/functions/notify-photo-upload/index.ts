@@ -17,6 +17,10 @@ const corsHeaders = {
 const APP_URL = "https://memorydrawer.app";
 const BATCH_WINDOW_MS = 5 * 60 * 1000;
 
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
