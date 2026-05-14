@@ -154,16 +154,23 @@ export function DuplicateFinder({ children }: DuplicateFinderProps) {
           </DialogHeader>
 
           {!isScanning && duplicates.length === 0 && scanProgress === 0 && (
-            <div className="text-center py-8">
-              <Search className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-              <p className="text-muted-foreground mb-4">
-                {t('duplicates.willScan', { count: photos.length })}
-              </p>
-              <Button onClick={scanForDuplicates} className="gap-1.5">
-                <Search className="h-4 w-4" />
-                {t('duplicates.startScan')}
-              </Button>
-            </div>
+            isLoadingPhotos ? (
+              <div className="text-center py-8 space-y-3">
+                <Loader2 className="h-10 w-10 mx-auto text-primary animate-spin" />
+                <p className="text-muted-foreground">{t('common.loading')}</p>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Search className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-muted-foreground mb-4">
+                  {t('duplicates.willScan', { count: photos.length })}
+                </p>
+                <Button onClick={scanForDuplicates} className="gap-1.5" disabled={photos.length === 0}>
+                  <Search className="h-4 w-4" />
+                  {t('duplicates.startScan')}
+                </Button>
+              </div>
+            )
           )}
 
           {isScanning && (
