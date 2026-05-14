@@ -359,6 +359,24 @@ const Index = () => {
                       {t('empty.removeFilter')}
                     </Button>
                   </>
+                ) : hasActiveFilters ? (
+                  <>
+                    <BrandLogo size={40} className="mx-auto mb-4" />
+                    <p className="text-muted-foreground text-lg">{t('empty.noPhotosWithFilters')}</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4"
+                      onClick={() => {
+                        setSelectedEventId(null);
+                        setSelectedTagIds([]);
+                        setSelectedLocation(null);
+                        setSelectedActivityId(null);
+                      }}
+                    >
+                      {t('empty.removeFilter')}
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <BrandLogo size={40} className="mx-auto mb-4" />
