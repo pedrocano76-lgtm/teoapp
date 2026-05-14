@@ -37,6 +37,7 @@
     "loadingPhotos": "Loading photos...",
     "loadingMorePhotos": "Loading more photos...",
     "noPhotos": "No photos yet",
+    "noPhotosWithFilters": "No photos match these filters.",
     "noPhotosHint": "Upload your first photos to start the timeline",
     "noPhotosForActivity": "No photos tagged with '{{activity}}' yet",
     "removeFilter": "Remove filter"
