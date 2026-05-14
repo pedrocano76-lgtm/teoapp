@@ -67,6 +67,15 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Authorization: caller must have edit access to this child.
+    const { data: canEdit, error: canEditErr } = await userClient
+      .rpc("can_edit_child", { child_uuid: childId });
+    if (canEditErr || !canEdit) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Uploader display name
     const { data: uploaderProfile } = await admin
       .from("profiles")

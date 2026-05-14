@@ -26,23 +26,35 @@ interface PhotoRow {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  let force = false;
-  let onlyUserId: string | null = null;
-  if (req.method === "POST") {
-    try {
-      const body = await req.json();
-      force = body?.force === true;
-      onlyUserId = typeof body?.user_id === "string" ? body.user_id : null;
-    } catch (_) { /* sin body */ }
-  }
-
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    // No strict auth gate: this function is invoked by pg_cron with the anon key.
-    // It performs no destructive action and only sends reminders to opted-in users.
+    const CRON_SECRET = Deno.env.get("CRON_SECRET");
+
+    // Auth gate: accept either a CRON_SECRET header (pg_cron) or a service-role bearer token.
+    const cronHeader = req.headers.get("x-cron-secret");
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    const isCron = !!CRON_SECRET && cronHeader === CRON_SECRET;
+    const isServiceRole = !!SERVICE_KEY && bearer === SERVICE_KEY;
+    if (!isCron && !isServiceRole) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let force = false;
+    let onlyUserId: string | null = null;
+    if (req.method === "POST") {
+      try {
+        const body = await req.json();
+        force = body?.force === true;
+        onlyUserId = typeof body?.user_id === "string" ? body.user_id : null;
+      } catch (_) { /* sin body */ }
+    }
 
 
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurado");
