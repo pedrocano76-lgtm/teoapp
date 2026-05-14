@@ -24,7 +24,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ children: childrenList, onSelectChild, selectedChildId }: AppSidebarProps) {
-  const { user, signOut } = useAuth();
+  const { user, signOut, displayName } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
@@ -37,7 +37,7 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
           onClick={() => onSelectChild(null)}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <BrandLogo size={32} />
+          <BrandLogo size={36} />
           <BrandWordmark
             className="text-lg group-data-[collapsible=icon]:hidden"
             style={{ fontSize: 18, lineHeight: 1 }}
@@ -79,9 +79,9 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
         <p
           className="text-[11px] truncate group-data-[collapsible=icon]:hidden"
           style={{ color: '#9A8A7A' }}
-          title={user?.email ?? undefined}
+          title={displayName ?? user?.email ?? undefined}
         >
-          {user?.email}
+          {displayName || user?.email?.split('@')[0]}
         </p>
         <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col">
           <button
