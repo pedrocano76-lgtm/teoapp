@@ -184,17 +184,26 @@ Deno.serve(async (req) => {
         });
 
         const respBody = await resp.json();
-        if (!resp.ok) {
-          results.push({ user_id: s.user_id, status: "send_error", detail: JSON.stringify(respBody) });
-          continue;
+        const emailOk = resp.ok;
+
+        // Always create in-app notification (independent of email outcome)
+        await supabase.from("notifications").insert({
+          user_id: s.user_id,
+          type: "photo_reminder",
+          message: `Llevas ${daysText} sin añadir fotos a ${childrenNames.length === 1 ? `el álbum de ${childrenNames[0]}` : "tus álbumes"}.`,
+          data: { days_since: daysSince === Infinity ? null : daysSince, children: childrenNames },
+        });
+
+        if (!emailOk) {
+          results.push({ user_id: s.user_id, status: "in_app_only", detail: JSON.stringify(respBody) });
+        } else {
+          results.push({ user_id: s.user_id, status: "sent" });
         }
 
         await supabase
           .from("reminder_settings")
           .update({ last_reminder_sent_at: now.toISOString() })
           .eq("user_id", s.user_id);
-
-        results.push({ user_id: s.user_id, status: "sent" });
       } catch (innerErr) {
         const msg = innerErr instanceof Error ? innerErr.message : String(innerErr);
         results.push({ user_id: s.user_id, status: "error", detail: msg });
