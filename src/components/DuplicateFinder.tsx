@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Photo, Child } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { useDeletePhoto } from '@/hooks/useData';
+import { useDeletePhoto, useAllPhotos } from '@/hooks/useData';
 import { toast } from 'sonner';
 import { Trash2, Search, CheckCircle2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -11,7 +11,6 @@ import { computeDHash, hammingDistance } from '@/lib/image-hash';
 import { Progress } from '@/components/ui/progress';
 
 interface DuplicateFinderProps {
-  photos: Photo[];
   children: Child[];
 }
 
