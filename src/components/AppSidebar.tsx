@@ -24,7 +24,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ children: childrenList, onSelectChild, selectedChildId }: AppSidebarProps) {
-  const { user, signOut } = useAuth();
+  const { user, signOut, displayName } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
