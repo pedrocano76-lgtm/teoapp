@@ -79,9 +79,9 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
         <p
           className="text-[11px] truncate group-data-[collapsible=icon]:hidden"
           style={{ color: '#9A8A7A' }}
-          title={user?.email ?? undefined}
+          title={displayName ?? user?.email ?? undefined}
         >
-          {user?.email}
+          {displayName || user?.email?.split('@')[0]}
         </p>
         <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col">
           <button
