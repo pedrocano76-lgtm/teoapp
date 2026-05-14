@@ -111,7 +111,8 @@ Deno.serve(async (req) => {
     const { data: photoRows } = await admin
       .from("photos")
       .select("id, thumbnail_path, storage_path")
-      .in("id", photoIds);
+      .in("id", photoIds)
+      .eq("child_id", childId);
 
     const previewPaths: string[] = (photoRows || [])
       .slice(0, 4)
