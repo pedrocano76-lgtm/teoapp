@@ -37,6 +37,7 @@
     "loadingPhotos": "Cargando fotos...",
     "loadingMorePhotos": "Cargando más fotos...",
     "noPhotos": "Aún no hay fotos",
+    "noPhotosWithFilters": "No hay fotos con estos filtros.",
     "noPhotosHint": "Sube tus primeras fotos para iniciar la línea de tiempo",
     "noPhotosForActivity": "No hay fotos etiquetadas con '{{activity}}' aún",
     "removeFilter": "Quitar filtro"
