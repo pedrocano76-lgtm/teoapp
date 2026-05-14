@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
-import { useChildren, usePhotosInfinite, useEvents, useTags, useActivities } from '@/hooks/useData';
+import { useChildren, usePhotosInfinite, useEvents, useTags, useActivities, useDistinctLocations } from '@/hooks/useData';
 import { useUserRole } from '@/hooks/useUserRole';
 import { ChildSelector } from '@/components/ChildSelector';
 import { Timeline } from '@/components/Timeline';
