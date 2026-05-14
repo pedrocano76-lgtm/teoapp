@@ -8,6 +8,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  displayName: string | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
