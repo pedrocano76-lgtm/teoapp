@@ -15,7 +15,7 @@ import { FilterDropdown } from '@/components/FilterDropdown';
 import { NotificationBell } from '@/components/NotificationBell';
 import { AppSidebar } from '@/components/AppSidebar';
 import { BulkActionsToolbar } from '@/components/BulkActionsToolbar';
-import { BrandLogo } from '@/components/Brand';
+import { BrandLogo, MemoryDrawerIcon } from '@/components/Brand';
 
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { supabase } from '@/integrations/supabase/client';
@@ -250,8 +250,9 @@ const Index = () => {
           <header className="sticky top-0 z-40 h-12 border-b border-border/60 glass">
             <div className="h-full container mx-auto px-3 flex items-center gap-2">
               <SidebarTrigger className="shrink-0 h-8 w-8" />
-              <h1 className="flex-1 text-center text-[15px] tracking-tight truncate" style={{ fontFamily: 'Georgia, serif', fontWeight: 500 }}>
-                <span style={{ color: '#4A3728' }}>memory</span><span style={{ color: '#C8845A' }}>drawer</span>
+              <h1 className="flex-1 text-center text-[15px] tracking-tight truncate inline-flex items-center justify-center gap-2" style={{ fontFamily: 'Georgia, serif', fontWeight: 500 }}>
+                <MemoryDrawerIcon size={28} />
+                <span><span style={{ color: '#4A3728' }}>memory</span><span style={{ color: '#C8845A' }}>drawer</span></span>
               </h1>
               <div className="flex items-center gap-1 shrink-0">
                 <FilterDropdown

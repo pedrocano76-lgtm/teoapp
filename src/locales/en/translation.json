@@ -339,7 +339,7 @@
     "yearsAndMonths": "{{years}} and {{months}}",
     "firstWeek": "🍼 First week",
     "weekN": "🍼 Week {{n}}",
-    "groupMonths": "🌱 {{value}}",
+    "groupMonths": "{{value}}",
     "groupYears": "🎂 {{value}}",
     "preBirthGroup": "⏳ Before birth"
   },
