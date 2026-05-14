@@ -178,8 +178,8 @@ export default function Settings() {
 
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <Label className="text-sm">Emails de fotos nuevas</Label>
-              <p className="text-xs text-muted-foreground">Recibe un email cuando otro familiar suba fotos. Las notificaciones en la app no se ven afectadas.</p>
+              <Label className="text-sm">{t('settings.uploadEmails')}</Label>
+              <p className="text-xs text-muted-foreground">{t('settings.uploadEmailsDesc')}</p>
             </div>
             <Switch
               checked={uploadsEmailEnabled}

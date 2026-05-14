@@ -101,6 +101,9 @@ export function Timeline({ photos, child, sortOrder = 'asc', selectionMode, sele
                 <div className="h-px flex-1 bg-border" />
                 <div className="text-center">
                   <h3 className="text-lg font-heading font-semibold text-foreground whitespace-nowrap">
+                    {item.key.startsWith('m') && (
+                      <span style={{ color: '#D4793A' }} className="mr-1.5">◆</span>
+                    )}
                     {item.label}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
