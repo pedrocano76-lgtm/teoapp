@@ -47,7 +47,6 @@ export default function Settings() {
   const [sending, setSending] = useState(false);
 
   const { data: childrenData } = useChildren();
-  const { data: photosPages } = usePhotosInfinite(undefined);
   const children = (childrenData || []).map((row: any) => ({
     id: row.id,
     name: row.name,
@@ -55,16 +54,6 @@ export default function Settings() {
     color: row.color,
     ownerId: row.owner_id,
   })) as any[];
-  const photos = (photosPages?.pages || []).flatMap((p: any) =>
-    p.rows.map((row: any) => ({
-      id: row.id,
-      url: row.signed_url || '',
-      thumbnailUrl: row.thumbnail_signed_url || row.signed_url || '',
-      childId: row.child_id,
-      storagePath: row.storage_path,
-      thumbnailPath: row.thumbnail_path ?? null,
-    })),
-  ) as any[];
 
   const themeOptions = [
     { value: 'light' as const, label: t('settings.themeLight'), icon: Sun },
