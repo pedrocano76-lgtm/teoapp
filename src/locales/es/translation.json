@@ -188,6 +188,8 @@
     "themeSystem": "Sistema",
     "birthdayReminders": "Recordatorios de cumpleaños",
     "birthdayRemindersDesc": "Recibe un email antes del cumpleaños de cada hijo/a.",
+    "uploadEmails": "Emails de fotos nuevas",
+    "uploadEmailsDesc": "Recibe un email cuando otro familiar suba fotos. Las notificaciones en la app no se ven afectadas.",
     "emailReminders": "Recordatorios de inactividad",
     "emailRemindersDesc": "Te avisamos cuando lleves varios días sin añadir fotos.",
     "frequency": "Frecuencia (días sin actividad)",

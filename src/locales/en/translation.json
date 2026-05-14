@@ -188,6 +188,8 @@
     "themeSystem": "System",
     "birthdayReminders": "Birthday reminders",
     "birthdayRemindersDesc": "Email me before each child's birthday.",
+    "uploadEmails": "New photo emails",
+    "uploadEmailsDesc": "Get an email when another family member uploads photos. In-app notifications are not affected.",
     "emailReminders": "Inactivity reminders",
     "emailRemindersDesc": "We'll remind you when you go several days without adding photos.",
     "frequency": "Frequency (days of inactivity)",
