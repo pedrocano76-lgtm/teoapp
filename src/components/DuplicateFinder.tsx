@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Photo, Child } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { useDeletePhoto } from '@/hooks/useData';
+import { useDeletePhoto, useAllPhotos } from '@/hooks/useData';
 import { toast } from 'sonner';
 import { Trash2, Search, CheckCircle2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -11,7 +11,6 @@ import { computeDHash, hammingDistance } from '@/lib/image-hash';
 import { Progress } from '@/components/ui/progress';
 
 interface DuplicateFinderProps {
-  photos: Photo[];
   children: Child[];
 }
 
@@ -22,7 +21,7 @@ interface DuplicateGroup {
 
 const DUPLICATE_THRESHOLD = 10;
 
-export function DuplicateFinder({ photos, children }: DuplicateFinderProps) {
+export function DuplicateFinder({ children }: DuplicateFinderProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [markedForDeletion, setMarkedForDeletion] = useState<Set<string>>(new Set());
@@ -30,6 +29,20 @@ export function DuplicateFinder({ photos, children }: DuplicateFinderProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [duplicates, setDuplicates] = useState<DuplicateGroup[]>([]);
+
+  // Fetch the entire library on demand — duplicate detection must scan all
+  // photos, not just whichever pages the timeline has loaded so far.
+  const { data: allPhotosRows, isLoading: isLoadingPhotos } = useAllPhotos(open);
+  const photos: Photo[] = (allPhotosRows ?? []).map((row: any) => ({
+    id: row.id,
+    url: row.signed_url || '',
+    thumbnailUrl: row.thumbnail_signed_url || row.signed_url || '',
+    childId: row.child_id,
+    date: new Date(row.taken_at),
+    storagePath: row.storage_path,
+    thumbnailPath: row.thumbnail_path ?? null,
+    isShared: row.is_shared ?? true,
+  }));
 
   const deletePhoto = useDeletePhoto();
   const childMap = new Map(children.map(c => [c.id, c]));
@@ -141,16 +154,23 @@ export function DuplicateFinder({ photos, children }: DuplicateFinderProps) {
           </DialogHeader>
 
           {!isScanning && duplicates.length === 0 && scanProgress === 0 && (
-            <div className="text-center py-8">
-              <Search className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-              <p className="text-muted-foreground mb-4">
-                {t('duplicates.willScan', { count: photos.length })}
-              </p>
-              <Button onClick={scanForDuplicates} className="gap-1.5">
-                <Search className="h-4 w-4" />
-                {t('duplicates.startScan')}
-              </Button>
-            </div>
+            isLoadingPhotos ? (
+              <div className="text-center py-8 space-y-3">
+                <Loader2 className="h-10 w-10 mx-auto text-primary animate-spin" />
+                <p className="text-muted-foreground">{t('common.loading')}</p>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Search className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-muted-foreground mb-4">
+                  {t('duplicates.willScan', { count: photos.length })}
+                </p>
+                <Button onClick={scanForDuplicates} className="gap-1.5" disabled={photos.length === 0}>
+                  <Search className="h-4 w-4" />
+                  {t('duplicates.startScan')}
+                </Button>
+              </div>
+            )
           )}
 
           {isScanning && (

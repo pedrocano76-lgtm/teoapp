@@ -133,33 +133,46 @@ async function prefetchNextPageUrls(childId: string | undefined, nextPageIndex: 
   }
 }
 
+export interface PhotoFilters {
+  eventIds?: string[];
+  locationName?: string | null;
+  tagIds?: string[];
+  sortOrder?: 'asc' | 'desc';
+}
+
 /**
- * Paginated photos with infinite scroll. Each page is sorted by taken_at DESC
- * (newest first) so we can stream the most recent photos in first.
+ * Paginated photos with infinite scroll. Filters are applied server-side as
+ * WHERE clauses, so the result reflects the entire library — not just what's
+ * already loaded. Changing filters changes the queryKey, which resets pagination.
  */
-export function usePhotosInfinite(childId?: string) {
+export function usePhotosInfinite(childId?: string, filters?: PhotoFilters) {
   const { user } = useAuth();
+  const eventIds = filters?.eventIds && filters.eventIds.length > 0 ? [...filters.eventIds].sort() : undefined;
+  const tagIds = filters?.tagIds && filters.tagIds.length > 0 ? [...filters.tagIds].sort() : undefined;
+  const locationName = filters?.locationName ?? undefined;
+  const sortOrder: 'asc' | 'desc' = filters?.sortOrder ?? 'desc';
   return useInfiniteQuery({
-    queryKey: ['photos', 'infinite', childId ?? 'all', user?.id],
+    queryKey: ['photos', 'infinite', childId ?? 'all', user?.id, { eventIds, tagIds, locationName, sortOrder }],
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
       const from = (pageParam as number) * PHOTOS_PAGE_SIZE;
       const to = from + PHOTOS_PAGE_SIZE - 1;
+      const tagJoin = tagIds ? 'photo_tags!inner(tag_id, tags(id, name, icon, color, is_predefined))' : 'photo_tags(tag_id, tags(id, name, icon, color, is_predefined))';
       let query = supabase
         .from('photos')
-        .select('*, events(name, icon, color), photo_tags(tag_id, tags(id, name, icon, color, is_predefined))')
-        .order('taken_at', { ascending: false })
+        .select(`*, events(name, icon, color), ${tagJoin}`)
+        .order('taken_at', { ascending: sortOrder === 'asc' })
         .range(from, to);
       if (childId) query = query.eq('child_id', childId);
+      if (eventIds) query = query.in('event_id', eventIds);
+      if (locationName) query = query.eq('location_name', locationName);
+      if (tagIds) query = query.in('photo_tags.tag_id', tagIds);
       const { data, error } = await query;
       if (error) throw error;
       const withUrls = await attachSignedUrls(data ?? []);
-      // Fire and forget — pre-warm cache for next page
-      prefetchNextPageUrls(childId, (pageParam as number) + 1).catch(() => {});
       return { rows: withUrls, page: pageParam as number };
     },
     getNextPageParam: (lastPage) => {
-      // If we got a full page, there might be more.
       if (lastPage.rows.length < PHOTOS_PAGE_SIZE) return undefined;
       return (lastPage.page as number) + 1;
     },
@@ -168,24 +181,67 @@ export function usePhotosInfinite(childId?: string) {
 }
 
 /**
- * Legacy non-paginated fetch. Kept for callers that still need the full list
- * (e.g. duplicate finder). Prefer usePhotosInfinite for the timeline.
+ * Non-paginated fetch of all photos (no LIMIT). Used by the duplicate finder
+ * which needs the entire library to compute perceptual hashes. Heavy — only
+ * call on demand.
  */
-export function usePhotos(childId?: string) {
+export function useAllPhotos(enabled: boolean, childId?: string) {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ['photos', childId],
+    queryKey: ['photos', 'all', childId ?? 'all', user?.id],
+    queryFn: async () => {
+      const PAGE = 1000;
+      let offset = 0;
+      const all: any[] = [];
+      // Loop past the 1000-row Supabase default to get the full library
+      for (;;) {
+        let query = supabase
+          .from('photos')
+          .select('*, events(name, icon, color), photo_tags(tag_id, tags(id, name, icon, color, is_predefined))')
+          .order('taken_at', { ascending: false })
+          .range(offset, offset + PAGE - 1);
+        if (childId) query = query.eq('child_id', childId);
+        const { data, error } = await query;
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        all.push(...data);
+        if (data.length < PAGE) break;
+        offset += PAGE;
+      }
+      return await attachSignedUrls(all);
+    },
+    enabled: !!user && enabled,
+    staleTime: 60_000,
+  });
+}
+
+export function usePhotos(childId?: string) {
+  return useAllPhotos(true, childId);
+}
+
+/**
+ * Distinct location names visible to the current user. Used to populate the
+ * location filter dropdown independently of which photos are currently loaded.
+ */
+export function useDistinctLocations(childId?: string) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['photos', 'locations', childId ?? 'all', user?.id],
     queryFn: async () => {
       let query = supabase
         .from('photos')
-        .select('*, events(name, icon, color), photo_tags(tag_id, tags(id, name, icon, color, is_predefined))')
-        .order('taken_at', { ascending: true });
+        .select('location_name')
+        .not('location_name', 'is', null)
+        .limit(1000);
       if (childId) query = query.eq('child_id', childId);
       const { data, error } = await query;
       if (error) throw error;
-      return await attachSignedUrls(data ?? []);
+      const set = new Set<string>();
+      (data ?? []).forEach((r: any) => { if (r.location_name) set.add(r.location_name); });
+      return Array.from(set).sort();
     },
     enabled: !!user,
+    staleTime: 30_000,
   });
 }
 
