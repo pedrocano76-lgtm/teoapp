@@ -115,9 +115,9 @@ Deno.serve(async (req) => {
       .eq("child_id", childId);
 
     const previewPaths: string[] = (photoRows || [])
-      .slice(0, 4)
-      .map((p: any) => p.thumbnail_path || p.storage_path)
-      .filter(Boolean);
+      .map((p: any) => p.thumbnail_path)
+      .filter((p): p is string => Boolean(p))
+      .slice(0, 4);
 
     let signedThumbs: string[] = [];
     if (previewPaths.length > 0) {
