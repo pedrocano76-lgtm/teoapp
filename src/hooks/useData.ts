@@ -3,12 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { getExifDate, getExifLocation, reverseGeocode } from '@/lib/exif-utils';
 import { processImageForUpload } from '@/lib/image-processing';
-import {
-  getCachedSignedUrls,
-  setCachedSignedUrls,
-} from '@/lib/signed-url-cache';
+import { signPhotoPaths, signPhotoPath } from '@/lib/sign-photos';
 
-const SIGNED_URL_TTL_SECONDS = 3600; // 1 hour
 export const PHOTOS_PAGE_SIZE = 20;
 
 function removePhotoFromCache(old: any, photoId: string) {
