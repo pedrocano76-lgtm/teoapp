@@ -56,13 +56,8 @@ export default function EventView() {
         if (p.storage_path) paths.push(p.storage_path);
         if (p.thumbnail_path) paths.push(p.thumbnail_path);
       }
-      const urlMap: Record<string, string> = {};
-      if (paths.length > 0) {
-        const { data: signed } = await supabase.storage.from('photos').createSignedUrls(paths, 3600);
-        for (const s of signed ?? []) {
-          if (s.signedUrl && s.path) urlMap[s.path] = s.signedUrl;
-        }
-      }
+      const { signPhotoPaths } = await import('@/lib/sign-photos');
+      const urlMap = await signPhotoPaths(paths);
       return (data ?? []).map((row: any): Photo => ({
         id: row.id,
         url: urlMap[row.storage_path] || '',
