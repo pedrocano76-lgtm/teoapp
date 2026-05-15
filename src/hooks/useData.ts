@@ -669,9 +669,7 @@ export function useSignedProfilePhotoUrl(path?: string | null) {
     queryKey: ['profile-photo-url', path],
     queryFn: async () => {
       if (!path) return null;
-      const { data, error } = await supabase.storage.from('photos').createSignedUrl(path, 3600);
-      if (error) return null;
-      return data.signedUrl;
+      return await signPhotoPath(path);
     },
     enabled: !!path,
   });
