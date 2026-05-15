@@ -80,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    clearAllSignedUrls();
     await supabase.auth.signOut();
   };
 
