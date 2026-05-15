@@ -200,7 +200,7 @@ Deno.serve(async (req) => {
 
       const safeUploader = escapeHtml(uploaderName);
       const safeChild = escapeHtml(child.name);
-      const subject = `📸 ${safeUploader} ha añadido fotos nuevas de ${safeChild}`.replace(/[\r\n]/g, " ");
+      const subject = `${safeUploader} ha añadido recuerdos nuevos de ${safeChild}`.replace(/[\r\n]/g, " ");
       const dateStr = new Date(uploadedAt).toLocaleDateString("es-ES", {
         day: "numeric", month: "long", year: "numeric",
       });
@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
           ${thumbsHtml}
           <div style="text-align:center; margin: 28px 0;">
             <a href="${APP_URL}/app" style="background:#e8756a; color:white; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:600;">
-              Ver en Memory Drawer
+              Ver en Memorydrawer
             </a>
           </div>
           <p style="color:#999; font-size:12px;">
