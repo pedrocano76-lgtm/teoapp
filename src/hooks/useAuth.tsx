@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         if (event === 'SIGNED_OUT') {
           setDisplayName(null);
+          clearAllSignedUrls();
         }
       }
     );
