@@ -60,29 +60,7 @@ export function useAddChild() {
  * Returns a map path -> signed URL.
  */
 async function signPathsWithCache(paths: string[]): Promise<Record<string, string>> {
-  if (paths.length === 0) return {};
-  const unique = Array.from(new Set(paths));
-  const { cached, missing } = getCachedSignedUrls(unique);
-
-  if (missing.length === 0) return cached;
-
-  const { data: signedData, error: signError } = await supabase.storage
-    .from('photos')
-    .createSignedUrls(missing, SIGNED_URL_TTL_SECONDS);
-
-  if (signError || !signedData) return cached;
-
-  const newEntries: { path: string; url: string }[] = [];
-  for (const s of signedData) {
-    if (s.signedUrl && s.path) {
-      cached[s.path] = s.signedUrl;
-      newEntries.push({ path: s.path, url: s.signedUrl });
-    }
-  }
-  if (newEntries.length > 0) {
-    setCachedSignedUrls(newEntries, SIGNED_URL_TTL_SECONDS);
-  }
-  return cached;
+  return signPhotoPaths(paths);
 }
 
 async function attachSignedUrls(rows: any[]): Promise<any[]> {
