@@ -1,64 +1,55 @@
+# Landing page refresh
 
+All changes live in `src/pages/Landing.tsx`. No new files, no business logic touched.
 
-## Mejoras en la sincronización con OneDrive
+## 1. Replace the preview "app mock"
 
-### Problema principal: conexión por usuario
+Remove the current 3×2 grid of generic SVG tiles and the `sage` green color. Replace with a small **timeline mockup**:
 
-El conector de OneDrive de Lovable autentica **tu cuenta** (Pedro), no la de cada usuario. Esto significa que todos los usuarios de la app accederían a **tu** OneDrive, no al suyo. **No es posible hacer OAuth per-user con el conector estándar.**
+- Keep the existing white rounded card and the header row ("Tu hijo · línea de tiempo…").
+- Inside, render two age-group blocks stacked vertically:
+  - Group header line: `◆ 6 meses` in `#D4793A`, small caps-style label in `#7A6A5A` next to it (e.g. "marzo · 12 fotos").
+  - Below: 2-column grid of 4 photo placeholder rectangles (`aspect-[4/5]`, `borderRadius: 8`) using only brand tones: `#D4793A`, `#E2CEBC`, `#C8B4A2`, `#EDE8DF`. Solid fills, no icons inside.
+  - Second group `◆ 7 meses` with another 2 placeholders.
+- Keep the tag chips row below, but recolor the green "parque" chip to a warm tone (`#EDE8DF` bg, `#7A6A5A` text) so no green remains.
+- Remove the `sage` constant usage on the landing.
 
-Para que cada usuario conecte su propio OneDrive, necesitaríamos implementar un flujo OAuth completo propio (registrar app en Azure, gestionar tokens por usuario, refresh tokens, etc.). Esto es significativamente más complejo y requiere que tú crees una app en el portal de Azure.
+## 2. Complete features list
 
-**Propuesta pragmática**: Dado que esta app es para tu familia, usar tu conexión OneDrive es válido como punto de partida. Los padres con rol `parent` podrían usar esta funcionalidad para importar desde tus carpetas compartidas.
+Replace the current 3-item inline array with **7 items**, each using a `lucide-react` icon colored `#D4793A`:
 
-### Problemas técnicos actuales
+| # | Icon | Title | Description |
+|---|---|---|---|
+| 1 | `CalendarClock` | Línea de tiempo automática | Agrupa por meses y semanas desde el nacimiento, sin que hagas nada. |
+| 2 | `Star` | Eventos y primeras veces | Marca momentos únicos: primer baño, primera palabra, primer cumpleaños. |
+| 3 | `Users` | Comparte con tu familia | Invita por enlace. Abuelos, tíos, primos — cada uno con su rol. |
+| 4 | `MessageCircle` | Fotos desde WhatsApp | Sube fotos recibidas por WhatsApp sin perder la fecha original. |
+| 5 | `Copy` | Detección de duplicados | Encuentra y elimina fotos repetidas automáticamente. |
+| 6 | `MoonStar` | Modo oscuro y claro | Se adapta al sistema de tu móvil. |
+| 7 | `Smartphone` | Funciona como app | Instálala en tu móvil como una app nativa, sin pasar por ninguna tienda. |
 
-1. **Error 404 al escanear**: La URL de la API de OneDrive está mal construida (`/me/drive/items/{id}:/children` no es válida). Hay que usar `/me/drive/items/{id}/children`.
+Keep the existing row layout (icon tile + title + description). Add `import` from `lucide-react` at the top.
 
-2. **Sin feedback visual**: No hay indicador de progreso durante el escaneo ni el análisis facial. El usuario no sabe qué está pasando.
+## 3. New privacy section
 
-3. **Sin acción clara post-vinculación**: Vincular una carpeta no desencadena nada visible.
+Insert between features and the (now removed) testimonial slot:
 
-### Plan de mejoras
+- Full-width band with background `#E8E0D5`, rounded `16`, padding `28px 24px`, centered text.
+- `Shield` icon from `lucide-react`, 32px, `#D4793A`, centered above the title.
+- Title (serif, 22px, `#4A3728`): **Tus fotos, solo tuyas**
+- Body (15px, `#7A6A5A`, max-width ~420px, centered): *"Las fotos de tus hijos son tuyas y solo tuyas. Memorydrawer no vende tus datos, no usa tus imágenes para publicidad ni para entrenar inteligencia artificial. Tu álbum familiar no es un producto."*
 
-**1. Corregir el escaneo (edge function `sync-onedrive`)**
-- Arreglar la URL de la API: usar `/me/drive/items/{id}/children` en lugar del formato actual con `:/children`.
-- Mejorar el manejo de errores con mensajes claros en español.
+## 4. Remove testimonial
 
-**2. Flujo guiado con feedback visual (CloudSyncSettings)**
-- Al vincular carpeta: automáticamente iniciar el primer escaneo.
-- Barra de progreso durante el escaneo: "Buscando fotos...", "Analizando 15 fotos...", "3 coincidencias encontradas".
-- Usar polling o un estado intermedio para mostrar que algo está procesándose.
+Delete the entire "Ana, mamá de Pablo" white card (quote mark, italic paragraph, attribution, dot pagination). Replace with a single centered line above the final CTA:
 
-**3. Pantalla de revisión mejorada (PendingImportsReview)**
-- Mover la revisión a una vista dedicada (diálogo/modal) que se abre al terminar el escaneo o al tocar una notificación.
-- Mostrar las fotos en grid grande con botones claros de aceptar/rechazar.
-- Badge de confianza más intuitivo (verde = alta, amarillo = media).
+> *Sé de los primeros en probarlo.*
 
-**4. Sincronización automática diaria**
-- Crear un cron job con `pg_cron` que llame a `sync-onedrive` una vez al día.
-- Cuando encuentre fotos nuevas, crear un registro de notificación en una tabla `notifications`.
-- Mostrar un badge/indicador en el sidebar cuando haya fotos pendientes de revisar.
+Style: serif italic, 15px, `#7A6A5A`, centered, `margin: 24px 0`.
 
-**5. Notificaciones de fotos nuevas**
-- Nueva tabla `notifications` (user_id, type, message, read, created_at).
-- Icono de campana en el header con contador de no leídas.
-- Al tocar la notificación, abre directamente la revisión de fotos.
+## Technical notes
 
-### Archivos a modificar/crear
-
-- `supabase/functions/sync-onedrive/index.ts` — corregir URLs y mejorar respuestas
-- `src/components/CloudSyncSettings.tsx` — feedback visual, auto-scan
-- `src/components/PendingImportsReview.tsx` — mejorar UI de revisión
-- `src/pages/Index.tsx` — integrar notificaciones
-- Nueva migración: tabla `notifications` + cron job para sync diario
-
-### Sobre OAuth per-user (futuro)
-
-Si en el futuro quieres que cada usuario conecte su propio OneDrive, sería necesario:
-1. Registrar una app en Azure Portal (gratuito)
-2. Implementar flujo OAuth con redirect en una edge function
-3. Almacenar tokens por usuario en la DB
-4. Gestionar refresh de tokens automáticamente
-
-Esto es viable pero requiere configuración manual en Azure. Lo podemos abordar como fase 2 si lo necesitas.
-
+- File: `src/pages/Landing.tsx` only.
+- Add `lucide-react` imports (already in deps).
+- Keep the existing inline-style approach used throughout the file (no Tailwind refactor) so the diff stays scoped.
+- Remove unused `sage` / `peach` references where they no longer apply; keep `peach` if still used by the timeline mock placeholders, otherwise drop it.
