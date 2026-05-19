@@ -1,14 +1,27 @@
 import { Link } from 'react-router-dom';
+import {
+  CalendarClock,
+  Star,
+  Users,
+  MessageCircle,
+  Copy,
+  MoonStar,
+  Smartphone,
+  Shield,
+} from 'lucide-react';
 
 const COLORS = {
   bg: '#F5F0E8',
   primary: '#D4793A',
   text: '#4A3728',
   secondary: '#7A6A5A',
-  green: '#8BAF8C',
   card: '#EDE0D4',
   muted: '#9A8A7A',
+  privacy: '#E8E0D5',
 };
+
+// Brand-only photo placeholder tones
+const TONES = ['#D4793A', '#E2CEBC', '#C8B4A2', '#EDE8DF'];
 
 const serif = { fontFamily: 'Georgia, "Times New Roman", serif' };
 const sans = {
@@ -34,28 +47,60 @@ function Logo() {
   );
 }
 
-function Tile({ children, bg }: { children: React.ReactNode; bg: string }) {
+function GroupHeader({ label, meta }: { label: string; meta: string }) {
   return (
-    <div
-      style={{
-        background: bg,
-        aspectRatio: '1 / 1',
-        borderRadius: 10,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-      }}
-    >
-      {children}
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, margin: '0 0 8px' }}>
+      <span style={{ ...serif, fontSize: 14, color: COLORS.primary }}>◆ {label}</span>
+      <span style={{ fontSize: 11, color: COLORS.secondary, letterSpacing: 0.4, textTransform: 'uppercase' }}>
+        {meta}
+      </span>
     </div>
   );
 }
 
-const sage = '#D4E4D4';
-const peach = '#F1DCC9';
+function PhotoTile({ color }: { color: string }) {
+  return <div style={{ background: color, aspectRatio: '4 / 5', borderRadius: 8 }} />;
+}
 
 export default function Landing() {
+  const features: { icon: React.ReactNode; title: string; desc: string }[] = [
+    {
+      icon: <CalendarClock size={20} color={COLORS.primary} strokeWidth={1.7} />,
+      title: 'Línea de tiempo automática',
+      desc: 'Agrupa por meses y semanas desde el nacimiento, sin que hagas nada.',
+    },
+    {
+      icon: <Star size={20} color={COLORS.primary} strokeWidth={1.7} />,
+      title: 'Eventos y primeras veces',
+      desc: 'Marca momentos únicos: primer baño, primera palabra, primer cumpleaños.',
+    },
+    {
+      icon: <Users size={20} color={COLORS.primary} strokeWidth={1.7} />,
+      title: 'Comparte con tu familia',
+      desc: 'Invita por enlace. Abuelos, tíos, primos — cada uno con su rol.',
+    },
+    {
+      icon: <MessageCircle size={20} color={COLORS.primary} strokeWidth={1.7} />,
+      title: 'Fotos desde WhatsApp',
+      desc: 'Sube fotos recibidas por WhatsApp sin perder la fecha original.',
+    },
+    {
+      icon: <Copy size={20} color={COLORS.primary} strokeWidth={1.7} />,
+      title: 'Detección de duplicados',
+      desc: 'Encuentra y elimina fotos repetidas automáticamente.',
+    },
+    {
+      icon: <MoonStar size={20} color={COLORS.primary} strokeWidth={1.7} />,
+      title: 'Modo oscuro y claro',
+      desc: 'Se adapta al sistema de tu móvil.',
+    },
+    {
+      icon: <Smartphone size={20} color={COLORS.primary} strokeWidth={1.7} />,
+      title: 'Funciona como app',
+      desc: 'Instálala en tu móvil como una app nativa, sin pasar por ninguna tienda.',
+    },
+  ];
+
   return (
     <div style={{ background: COLORS.bg, color: COLORS.text, minHeight: '100vh', ...sans }}>
       {/* Nav */}
@@ -137,7 +182,7 @@ export default function Landing() {
           <p style={{ color: COLORS.muted, fontSize: 13, margin: 0 }}>Sin tarjeta. Sin compromiso.</p>
         </section>
 
-        {/* Preview card */}
+        {/* Timeline preview card */}
         <section
           style={{
             background: 'white',
@@ -155,7 +200,7 @@ export default function Landing() {
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              marginBottom: 14,
+              marginBottom: 18,
             }}
           >
             <div
@@ -179,57 +224,34 @@ export default function Landing() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-            <Tile bg={peach}>
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <circle cx="20" cy="15" r="6" fill={COLORS.primary} opacity="0.6" />
-                <path d="M8 32c0-6 5-10 12-10s12 4 12 10" fill={COLORS.primary} opacity="0.6" />
-              </svg>
-            </Tile>
-            <Tile bg={sage}>
-              <svg width="36" height="36" viewBox="0 0 36 36">
-                <rect x="6" y="6" width="24" height="24" rx="6" fill={COLORS.green} opacity="0.7" />
-              </svg>
-            </Tile>
-            <Tile bg={peach}>
-              <svg width="40" height="40" viewBox="0 0 40 40">
-                <polygon points="20,8 34,30 6,30" fill={COLORS.primary} opacity="0.55" />
-                <text x="30" y="14" fontSize="10" fill={COLORS.primary}>★</text>
-              </svg>
-            </Tile>
-            <Tile bg={peach}>
-              <svg width="40" height="30" viewBox="0 0 40 30">
-                <rect x="6" y="20" width="6" height="8" fill={COLORS.primary} opacity="0.6" />
-                <rect x="16" y="14" width="6" height="14" fill={COLORS.primary} opacity="0.6" />
-                <rect x="26" y="6" width="6" height="22" fill={COLORS.primary} opacity="0.6" />
-              </svg>
-            </Tile>
-            <Tile bg={sage}>
-              <svg width="36" height="36" viewBox="0 0 36 36">
-                <circle cx="18" cy="18" r="12" fill={COLORS.green} opacity="0.4" />
-                <circle cx="18" cy="18" r="5" fill={COLORS.green} />
-              </svg>
-            </Tile>
-            <Tile bg={peach}>
-              <svg width="40" height="32" viewBox="0 0 40 32">
-                <rect x="4" y="10" width="32" height="20" rx="3" fill={COLORS.primary} opacity="0.5" />
-                <rect x="14" y="6" width="12" height="6" rx="1" fill={COLORS.primary} opacity="0.7" />
-              </svg>
-            </Tile>
+          {/* Group 1 */}
+          <GroupHeader label="6 meses" meta="marzo · 12 fotos" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 18 }}>
+            <PhotoTile color={TONES[0]} />
+            <PhotoTile color={TONES[1]} />
+            <PhotoTile color={TONES[2]} />
+            <PhotoTile color={TONES[3]} />
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
+          {/* Group 2 */}
+          <GroupHeader label="7 meses" meta="abril · 8 fotos" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+            <PhotoTile color={TONES[1]} />
+            <PhotoTile color={TONES[0]} />
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
             {[
-              { label: 'primer baño', bg: peach, color: COLORS.text },
-              { label: 'parque', bg: sage, color: '#3d5d3d' },
-              { label: 'familia', bg: peach, color: COLORS.text },
-              { label: '+ 12 más', bg: peach, color: COLORS.secondary },
+              { label: 'primer baño' },
+              { label: 'parque' },
+              { label: 'familia' },
+              { label: '+ 12 más', muted: true },
             ].map(t => (
               <span
                 key={t.label}
                 style={{
-                  background: t.bg,
-                  color: t.color,
+                  background: '#EDE8DF',
+                  color: t.muted ? COLORS.secondary : COLORS.text,
                   fontSize: 12,
                   padding: '5px 12px',
                   borderRadius: 999,
@@ -246,42 +268,7 @@ export default function Landing() {
           <h2 style={{ ...serif, fontSize: 24, fontWeight: 500, margin: '0 0 20px', color: COLORS.text }}>
             Todo lo que necesitas
           </h2>
-          {[
-            {
-              title: 'Línea de tiempo automática',
-              desc: 'Agrupa por meses y semanas desde el nacimiento, sin que hagas nada.',
-              icon: (
-                <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
-                  <rect x="3" y="5" width="16" height="14" rx="2" stroke={COLORS.primary} strokeWidth="1.6" />
-                  <line x1="3" y1="9" x2="19" y2="9" stroke={COLORS.primary} strokeWidth="1.6" />
-                </svg>
-              ),
-            },
-            {
-              title: 'Comparte con tu familia',
-              desc: 'Invita por enlace. Abuelos, tíos — cada uno con su rol.',
-              icon: (
-                <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
-                  <circle cx="8" cy="11" r="4" stroke={COLORS.green} strokeWidth="1.6" />
-                  <circle cx="15" cy="11" r="4" stroke={COLORS.green} strokeWidth="1.6" />
-                </svg>
-              ),
-            },
-            {
-              title: 'Hitos y primeras veces',
-              desc: 'Etiqueta los momentos únicos. Primer paso, primera palabra, primera sonrisa.',
-              icon: (
-                <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
-                  <polygon
-                    points="11,3 13.5,8.5 19,9.3 15,13.2 16,19 11,16.3 6,19 7,13.2 3,9.3 8.5,8.5"
-                    stroke={COLORS.primary}
-                    strokeWidth="1.4"
-                    fill="none"
-                  />
-                </svg>
-              ),
-            },
-          ].map(f => (
+          {features.map(f => (
             <div key={f.title} style={{ display: 'flex', gap: 14, marginBottom: 20, alignItems: 'flex-start' }}>
               <div
                 style={{
@@ -307,41 +294,52 @@ export default function Landing() {
           ))}
         </section>
 
-        {/* Testimonio */}
+        {/* Privacy */}
         <section
           style={{
-            background: 'white',
-            borderRadius: 12,
-            padding: '20px 22px',
+            background: COLORS.privacy,
+            borderRadius: 16,
+            padding: '28px 24px',
             margin: '24px 0',
-            boxShadow: '0 1px 3px rgba(74,55,40,0.04)',
+            textAlign: 'center',
           }}
         >
-          <div style={{ ...serif, fontSize: 28, color: COLORS.primary, lineHeight: 1, marginBottom: 8 }}>
-            ”
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+            <Shield size={32} color={COLORS.primary} strokeWidth={1.7} />
           </div>
+          <h3 style={{ ...serif, fontSize: 22, fontWeight: 500, margin: '0 0 10px', color: COLORS.text }}>
+            Tus fotos, solo tuyas
+          </h3>
           <p
             style={{
-              ...serif,
-              fontStyle: 'italic',
+              color: COLORS.secondary,
               fontSize: 15,
               lineHeight: 1.55,
-              color: COLORS.text,
-              margin: '0 0 14px',
+              margin: '0 auto',
+              maxWidth: 420,
             }}
           >
-            Por fin tengo todas las fotos de Pablo organizadas. Antes era un caos total en el móvil y nunca encontraba nada.
+            Las fotos de tus hijos son tuyas y solo tuyas. Memorydrawer no vende tus datos, no usa tus imágenes para
+            publicidad ni para entrenar inteligencia artificial. Tu álbum familiar no es un producto.
           </p>
-          <div style={{ fontSize: 13, color: COLORS.secondary }}>— Ana, mamá de Pablo · 8 meses</div>
-          <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 12 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.primary }} />
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.card }} />
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS.card }} />
-          </div>
         </section>
 
+        {/* Beta line (replaces testimonial) */}
+        <p
+          style={{
+            ...serif,
+            fontStyle: 'italic',
+            fontSize: 15,
+            color: COLORS.secondary,
+            textAlign: 'center',
+            margin: '24px 0',
+          }}
+        >
+          Sé de los primeros en probarlo.
+        </p>
+
         {/* CTA final */}
-        <section style={{ padding: '16px 0 32px' }}>
+        <section style={{ padding: '8px 0 32px' }}>
           <Link
             to="/auth"
             style={{
