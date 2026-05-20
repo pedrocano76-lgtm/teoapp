@@ -312,6 +312,18 @@ export default function Landing() {
           </h3>
           <p
             style={{
+              color: COLORS.text,
+              fontSize: 15,
+              lineHeight: 1.55,
+              margin: '0 auto 14px',
+              maxWidth: 440,
+              fontWeight: 600,
+            }}
+          >
+            Tus fotos se guardan en tu espacio privado. Nosotros nunca las vemos, ni las tocamos, ni las compartimos. Jamás.
+          </p>
+          <p
+            style={{
               color: COLORS.secondary,
               fontSize: 15,
               lineHeight: 1.55,
@@ -323,6 +335,18 @@ export default function Landing() {
             publicidad ni para entrenar inteligencia artificial. Tu álbum familiar no es un producto.
           </p>
         </section>
+
+        {/* GitHub link */}
+        <p style={{ textAlign: 'center', margin: '4px 0 8px', fontSize: 13 }}>
+          <a
+            href="https://github.com/pedrocano76-lgtm/teoapp"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: COLORS.muted, textDecoration: 'underline' }}
+          >
+            Código abierto — léelo en GitHub →
+          </a>
+        </p>
 
         {/* Beta line (replaces testimonial) */}
         <p
