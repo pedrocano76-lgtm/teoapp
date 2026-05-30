@@ -423,10 +423,10 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                   {t('photoUpload.groupReady')} <span className="text-muted-foreground font-normal">({readyItems.length})</span>
                 </p>
               </div>
-              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              <div className="grid grid-cols-3 gap-2 max-h-[40vh] overflow-y-auto">
                 {readyItems.map(it => (
-                  <div key={it.id} className="flex flex-col items-center gap-1 shrink-0">
-                    {renderThumb(it)}
+                  <div key={it.id} className="flex flex-col items-center gap-1">
+                    {renderThumb(it, { className: 'aspect-square w-full' })}
                     <span className="text-[10px] text-muted-foreground leading-tight">
                       {format(it.exifDate!, 'd MMM yyyy', { locale: dateFnsLocale })}
                     </span>
