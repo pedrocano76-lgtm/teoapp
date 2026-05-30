@@ -163,7 +163,6 @@ export function FilterDropdown({
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   )}
                 >
-                  <span>{tag.icon}</span>
                   {tag.name}
                 </button>
               ))}

@@ -45,7 +45,6 @@ export function TagSelector({ selectedTagIds, onToggle }: TagSelectorProps) {
                 : 'bg-muted/50 text-muted-foreground border-transparent hover:bg-muted'
             )}
           >
-            <span>{tag.icon}</span>
             {tag.name}
           </button>
         ))}
