@@ -1,0 +1,1 @@
+UPDATE public.tags SET icon = '';
