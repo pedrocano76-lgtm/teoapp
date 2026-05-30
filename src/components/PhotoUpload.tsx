@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { TagSelector } from './TagSelector';
 import { AlertTriangle, Loader2, Check, X, Camera, CalendarClock } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
 async function supabaseUpdateEventDate(eventId: string, dateIso: string) {
@@ -302,10 +303,10 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
 
   const completedCount = Object.values(uploadProgress).filter(status => status === 'done' || status === 'error').length;
 
-  const renderThumb = (it: UploadItem, opts: { showWarning?: boolean } = {}) => {
+  const renderThumb = (it: UploadItem, opts: { showWarning?: boolean; className?: string } = {}) => {
     const status = uploadProgress[it.id];
     return (
-      <div key={it.id} className="relative h-20 w-20 shrink-0 rounded-lg overflow-hidden bg-muted">
+      <div key={it.id} className={cn("relative rounded-lg overflow-hidden bg-muted", opts.className || "h-20 w-20 shrink-0")}>
         <img src={it.previewUrl} alt="" className="w-full h-full object-cover" />
         {!uploading && (
           <button
@@ -422,10 +423,10 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                   {t('photoUpload.groupReady')} <span className="text-muted-foreground font-normal">({readyItems.length})</span>
                 </p>
               </div>
-              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              <div className="grid grid-cols-3 gap-2 max-h-[40vh] overflow-y-auto">
                 {readyItems.map(it => (
-                  <div key={it.id} className="flex flex-col items-center gap-1 shrink-0">
-                    {renderThumb(it)}
+                  <div key={it.id} className="flex flex-col items-center gap-1">
+                    {renderThumb(it, { className: 'aspect-square w-full' })}
                     <span className="text-[10px] text-muted-foreground leading-tight">
                       {format(it.exifDate!, 'd MMM yyyy', { locale: dateFnsLocale })}
                     </span>

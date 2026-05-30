@@ -105,7 +105,7 @@ export function PhotoCard({ photo, child, onClick, selectionMode, isSelected, on
                   <div className="flex flex-wrap gap-1 mt-1">
                     {photo.tags.map(tag => (
                       <span key={tag.id} className="text-[10px] bg-background/20 backdrop-blur-sm text-primary-foreground/90 px-1.5 py-0.5 rounded-full">
-                        {tag.icon} {tag.name}
+                        {tag.name}
                       </span>
                     ))}
                   </div>
