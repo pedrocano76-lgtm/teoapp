@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { TagSelector } from './TagSelector';
 import { AlertTriangle, Loader2, Check, X, Camera, CalendarClock } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
 async function supabaseUpdateEventDate(eventId: string, dateIso: string) {
