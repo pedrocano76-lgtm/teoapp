@@ -303,10 +303,10 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
 
   const completedCount = Object.values(uploadProgress).filter(status => status === 'done' || status === 'error').length;
 
-  const renderThumb = (it: UploadItem, opts: { showWarning?: boolean } = {}) => {
+  const renderThumb = (it: UploadItem, opts: { showWarning?: boolean; className?: string } = {}) => {
     const status = uploadProgress[it.id];
     return (
-      <div key={it.id} className="relative h-20 w-20 shrink-0 rounded-lg overflow-hidden bg-muted">
+      <div key={it.id} className={cn("relative rounded-lg overflow-hidden bg-muted", opts.className || "h-20 w-20 shrink-0")}>
         <img src={it.previewUrl} alt="" className="w-full h-full object-cover" />
         {!uploading && (
           <button
