@@ -26,6 +26,7 @@ function ChildEventsList({ childId, onSelectChild }: { childId: string; onSelect
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: eventsData = [] } = useEvents(childId);
+  const [showAll, setShowAll] = useState(false);
 
   const events = (eventsData as any[])
     .filter(e => e.date)
@@ -33,7 +34,7 @@ function ChildEventsList({ childId, onSelectChild }: { childId: string; onSelect
 
   if (events.length === 0) return null;
 
-  const preview = events.slice(0, 4);
+  const preview = showAll ? events : events.slice(0, 4);
 
   return (
     <div className="pl-4 pr-2 pb-1 space-y-0.5 group-data-[collapsible=icon]:hidden">
@@ -51,15 +52,13 @@ function ChildEventsList({ childId, onSelectChild }: { childId: string; onSelect
       {events.length > 4 && (
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelectChild(childId);
-            navigate(`/app?child=${childId}&view=events`);
-          }}
+          onClick={(e) => { e.stopPropagation(); setShowAll(v => !v); }}
           className="w-full text-left px-2 py-2 text-xs hover:underline"
           style={{ color: '#7A6A5A' }}
         >
-          {t('events.viewAll', { defaultValue: 'ver todos' })} ({events.length})
+          {showAll
+            ? t('events.showLess', { defaultValue: 'ver menos' })
+            : `${t('events.viewAll', { defaultValue: 'ver todos' })} (${events.length})`}
         </button>
       )}
     </div>

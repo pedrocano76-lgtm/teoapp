@@ -398,15 +398,15 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full border-2 border-[#D4793A] text-[#D4793A] bg-transparent hover:bg-[#D4793A] hover:text-white"
                 onClick={() => fileInputRef.current?.click()}
               >
                 {items.length > 0 ? t('photoUpload.filesSelected', { count: items.length }) : t('photoUpload.chooseFiles')}
               </Button>
               {items.length === 0 && (
                 <Button
-                  variant="default"
-                  className="w-full sm:hidden gap-2"
+                  variant="outline"
+                  className="w-full sm:hidden gap-2 border-2 border-[#D4793A] text-[#D4793A] bg-transparent hover:bg-[#D4793A] hover:text-white"
                   onClick={() => cameraInputRef.current?.click()}
                 >
                   <Camera className="h-4 w-4" /> {t('photoUpload.camera')}
