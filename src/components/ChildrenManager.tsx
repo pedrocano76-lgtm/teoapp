@@ -22,7 +22,7 @@ const colorMap: Record<Child['color'], string> = {
   sky: 'bg-sky',
 };
 
-function ChildEventsList({ childId }: { childId: string }) {
+function ChildEventsList({ childId, onSelectChild }: { childId: string; onSelectChild: (id: string | null) => void }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: eventsData = [] } = useEvents(childId);
@@ -40,7 +40,8 @@ function ChildEventsList({ childId }: { childId: string }) {
       {preview.map(ev => (
         <button
           key={ev.id}
-          onClick={() => navigate(`/events/${ev.id}`)}
+          type="button"
+          onClick={(e) => { e.stopPropagation(); navigate(`/events/${ev.id}`); }}
           className="w-full flex items-center gap-1.5 px-2 py-2 rounded-md hover:bg-sidebar-accent transition-colors text-left"
         >
           <span style={{ color: '#D4793A', fontSize: 10, lineHeight: 1 }}>◆</span>
@@ -49,7 +50,12 @@ function ChildEventsList({ childId }: { childId: string }) {
       ))}
       {events.length > 4 && (
         <button
-          onClick={() => navigate(`/events/${preview[0].id}`)}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelectChild(childId);
+            navigate(`/app?child=${childId}&view=events`);
+          }}
           className="w-full text-left px-2 py-2 text-xs hover:underline"
           style={{ color: '#7A6A5A' }}
         >
