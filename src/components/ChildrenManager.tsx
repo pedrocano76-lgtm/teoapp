@@ -118,7 +118,7 @@ function ChildRow({
           {expanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
         </button>
       </div>
-      {expanded && <ChildEventsList childId={child.id} />}
+      {expanded && <ChildEventsList childId={child.id} onSelectChild={onSelectChild} />}
       <ChildProfile child={child} open={profileOpen} onOpenChange={setProfileOpen} />
     </>
   );
