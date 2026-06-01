@@ -57,7 +57,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
   const [selectedChild, setSelectedChild] = useState(defaultChildId || '');
   const [caption, setCaption] = useState('');
   const [isEvent, setIsEvent] = useState(false);
-  const [eventMode, setEventMode] = useState<'new' | 'existing'>('new');
+  const [eventMode, setEventMode] = useState<'new' | 'existing' | null>(null);
   const [newEventName, setNewEventName] = useState('');
   const [newEventDate, setNewEventDate] = useState<string>('');
   const [newEventDateTouched, setNewEventDateTouched] = useState(false);
@@ -550,7 +550,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                       {t('events.existingEvent')}
                     </Button>
                   </div>
-                  {eventMode === 'new' ? (
+                  {eventMode === 'new' && (
                     <div className="space-y-2">
                       <Input
                         placeholder={t('events.eventNamePlaceholder')}
@@ -571,7 +571,8 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                         />
                       </div>
                     </div>
-                  ) : (
+                  )}
+                  {eventMode === 'existing' && (
                     <Select value={selectedEventId} onValueChange={setSelectedEventId}>
                       <SelectTrigger>
                         <SelectValue placeholder={t('events.selectEvent')} />
