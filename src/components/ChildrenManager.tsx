@@ -41,16 +41,16 @@ function ChildEventsList({ childId }: { childId: string }) {
         <button
           key={ev.id}
           onClick={() => navigate(`/events/${ev.id}`)}
-          className="w-full flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-sidebar-accent transition-colors text-left"
+          className="w-full flex items-center gap-1.5 px-2 py-2 rounded-md hover:bg-sidebar-accent transition-colors text-left"
         >
           <span style={{ color: '#D4793A', fontSize: 10, lineHeight: 1 }}>◆</span>
-          <span className="text-xs text-muted-foreground truncate flex-1">{ev.name}</span>
+          <span className="text-sm text-muted-foreground truncate flex-1">{ev.name}</span>
         </button>
       ))}
       {events.length > 4 && (
         <button
           onClick={() => navigate(`/events/${preview[0].id}`)}
-          className="w-full text-left px-2 py-1 text-[11px] hover:underline"
+          className="w-full text-left px-2 py-2 text-xs hover:underline"
           style={{ color: '#7A6A5A' }}
         >
           {t('events.viewAll', { defaultValue: 'ver todos' })} ({events.length})
@@ -99,8 +99,8 @@ function ChildRow({
             )}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">{child.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{getAge(child.birthDate)}</p>
+            <p className="text-base font-medium text-sidebar-foreground truncate">{child.name}</p>
+            <p className="text-sm text-muted-foreground truncate">{getAge(child.birthDate)}</p>
           </div>
         </button>
         <button

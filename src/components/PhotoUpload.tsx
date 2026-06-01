@@ -522,18 +522,28 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                   <div className="flex gap-2">
                     <Button
                       type="button"
-                      variant={eventMode === 'new' ? 'default' : 'outline'}
+                      variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className={cn(
+                        "flex-1 border-2",
+                        eventMode === 'new'
+                          ? "bg-[#D4793A] text-white border-[#D4793A]"
+                          : "text-[#D4793A] border-[#D4793A]"
+                      )}
                       onClick={() => setEventMode('new')}
                     >
                       {t('events.newEvent')}
                     </Button>
                     <Button
                       type="button"
-                      variant={eventMode === 'existing' ? 'default' : 'outline'}
+                      variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className={cn(
+                        "flex-1 border-2",
+                        eventMode === 'existing'
+                          ? "bg-[#D4793A] text-white border-[#D4793A]"
+                          : "text-[#D4793A] border-[#D4793A]"
+                      )}
                       disabled={(eventsData || []).length === 0}
                       onClick={() => setEventMode('existing')}
                     >
