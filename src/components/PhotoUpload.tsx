@@ -550,7 +550,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                       {t('events.existingEvent')}
                     </Button>
                   </div>
-                  {eventMode === 'new' ? (
+                  {eventMode === 'new' && (
                     <div className="space-y-2">
                       <Input
                         placeholder={t('events.eventNamePlaceholder')}
@@ -571,7 +571,8 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                         />
                       </div>
                     </div>
-                  ) : (
+                  )}
+                  {eventMode === 'existing' && (
                     <Select value={selectedEventId} onValueChange={setSelectedEventId}>
                       <SelectTrigger>
                         <SelectValue placeholder={t('events.selectEvent')} />
