@@ -134,9 +134,14 @@ export default function Settings() {
               {themeOptions.map(opt => (
                 <Button
                   key={opt.value}
-                  variant={theme === opt.value ? 'default' : 'outline'}
+                  variant="outline"
                   size="sm"
-                  className={cn('flex-1 gap-1.5')}
+                  className={cn(
+                    'flex-1 gap-1.5 border-2',
+                    theme === opt.value
+                      ? 'bg-[#D4793A] text-white border-[#D4793A]'
+                      : 'text-[#D4793A] border-[#D4793A]'
+                  )}
                   onClick={() => setTheme(opt.value)}
                 >
                   <opt.icon className="h-3.5 w-3.5" />
@@ -196,9 +201,14 @@ export default function Settings() {
                   {freqOptions.map(d => (
                     <Button
                       key={d}
-                      variant={frequency === d ? 'default' : 'outline'}
+                      variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className={cn(
+                        "flex-1 border-2",
+                        frequency === d
+                          ? "bg-[#D4793A] text-white border-[#D4793A]"
+                          : "text-[#D4793A] border-[#D4793A]"
+                      )}
                       onClick={() => { setFrequency(d); persist({ frequency: d }); }}
                       disabled={loading}
                     >
