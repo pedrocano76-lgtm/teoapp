@@ -336,6 +336,7 @@ export function useTags() {
   return useQuery({
     queryKey: ['tags'],
     queryFn: async () => {
+      if (isDemoMode()) return [];
       const { data, error } = await supabase
         .from('tags')
         .select('*')
