@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
 import i18n from '@/i18n';
 import { clearAllSignedUrls } from '@/lib/signed-url-cache';
+import { isDemoMode, DEMO_USER_ID } from '@/lib/demo-data';
 
 interface AuthContextType {
   user: User | null;
@@ -27,6 +28,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isDemoMode()) {
+      const stubUser = { id: DEMO_USER_ID, email: 'demo@memorydrawer.app' } as unknown as User;
+      setUser(stubUser);
+      setSession({ user: stubUser } as unknown as Session);
+      setDisplayName('María García');
+      setLoading(false);
+      return;
+    }
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
@@ -81,6 +90,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     clearAllSignedUrls();
+    if (isDemoMode()) {
+      window.location.href = '/';
+      return;
+    }
     await supabase.auth.signOut();
   };
 
