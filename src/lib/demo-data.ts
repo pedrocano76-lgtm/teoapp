@@ -101,6 +101,7 @@ export function getDemoEventRows() {
       child_id: DEMO_CHILD_ID,
       date: '2025-06-10',
       description: eventTextFor('e1').comment,
+      created_at: '2025-06-10T00:00:00.000Z',
     },
     {
       id: E2,
@@ -110,6 +111,7 @@ export function getDemoEventRows() {
       child_id: DEMO_CHILD_ID,
       date: '2025-12-24',
       description: eventTextFor('e2').comment,
+      created_at: '2025-12-24T00:00:00.000Z',
     },
     {
       id: E3,
@@ -119,6 +121,7 @@ export function getDemoEventRows() {
       child_id: DEMO_CHILD_ID,
       date: '2026-03-15',
       description: eventTextFor('e3').comment,
+      created_at: '2026-03-15T00:00:00.000Z',
     },
   ];
 }
