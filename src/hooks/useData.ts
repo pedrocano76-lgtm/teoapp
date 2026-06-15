@@ -41,6 +41,7 @@ export function useChildren() {
   return useQuery({
     queryKey: ['children', user?.id],
     queryFn: async () => {
+      if (isDemoMode()) return getDemoChildRows();
       const { data, error } = await supabase
         .from('children')
         .select('*')
@@ -141,6 +142,19 @@ export function usePhotosInfinite(childId?: string, filters?: PhotoFilters) {
     queryKey: ['photos', 'infinite', childId ?? 'all', user?.id, { eventIds, tagIds, locationName, sortOrder }],
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
+      if (isDemoMode()) {
+        let rows = getDemoPhotoRows().slice();
+        if (childId) rows = rows.filter(r => r.child_id === childId);
+        if (eventIds) rows = rows.filter(r => r.event_id && eventIds.includes(r.event_id));
+        if (locationName) rows = rows.filter(r => r.location_name === locationName);
+        rows.sort((a, b) =>
+          sortOrder === 'asc'
+            ? a.taken_at.localeCompare(b.taken_at)
+            : b.taken_at.localeCompare(a.taken_at)
+        );
+        // single page — demo has <20 photos total
+        return { rows, page: pageParam as number };
+      }
       const from = (pageParam as number) * PHOTOS_PAGE_SIZE;
       const to = from + PHOTOS_PAGE_SIZE - 1;
       const tagJoin = tagIds ? 'photo_tags!inner(tag_id, tags(id, name, icon, color, is_predefined))' : 'photo_tags(tag_id, tags(id, name, icon, color, is_predefined))';
