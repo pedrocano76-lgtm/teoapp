@@ -190,6 +190,11 @@ export function useAllPhotos(enabled: boolean, childId?: string) {
   return useQuery({
     queryKey: ['photos', 'all', childId ?? 'all', user?.id],
     queryFn: async () => {
+      if (isDemoMode()) {
+        let rows = getDemoPhotoRows().slice();
+        if (childId) rows = rows.filter(r => r.child_id === childId);
+        return rows;
+      }
       const PAGE = 1000;
       let offset = 0;
       const all: any[] = [];
@@ -228,6 +233,7 @@ export function useDistinctLocations(childId?: string) {
   return useQuery({
     queryKey: ['photos', 'locations', childId ?? 'all', user?.id],
     queryFn: async () => {
+      if (isDemoMode()) return [] as string[];
       let query = supabase
         .from('photos')
         .select('location_name')
@@ -250,6 +256,11 @@ export function useEvents(childId?: string) {
   return useQuery({
     queryKey: ['events', childId],
     queryFn: async () => {
+      if (isDemoMode()) {
+        let rows = getDemoEventRows();
+        if (childId) rows = rows.filter(r => r.child_id === childId);
+        return rows;
+      }
       let query = supabase.from('events').select('*').order('date', { ascending: true });
       if (childId) query = query.eq('child_id', childId);
       const { data, error } = await query;
