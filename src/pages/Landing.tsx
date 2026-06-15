@@ -46,6 +46,7 @@ const STRINGS = {
     ctaPrimary: 'Empezar gratis →',
     ctaFinal: 'Crear mi cuenta gratis →',
     ctaNote: 'Sin tarjeta. Sin compromiso.',
+    ctaDemo: 'Ver demo sin registrarte →',
     ctaFinalNote: 'Solo 10 plazas disponibles en beta',
     timelineChild: 'Tu hijo',
     timelineSubtitle: 'línea de tiempo · todos los momentos',
@@ -79,6 +80,7 @@ const STRINGS = {
     ctaPrimary: 'Get started free →',
     ctaFinal: 'Create my free account →',
     ctaNote: 'No card. No commitment.',
+    ctaDemo: 'Try the demo without signing up →',
     ctaFinalNote: 'Only 10 beta spots available',
     timelineChild: 'Your child',
     timelineSubtitle: 'timeline · every moment',
@@ -230,6 +232,24 @@ export default function Landing() {
             }}
           >
             {t.ctaPrimary}
+          </Link>
+          <Link
+            to="/demo"
+            style={{
+              display: 'block',
+              background: 'transparent',
+              color: COLORS.primary,
+              border: `2px solid ${COLORS.primary}`,
+              textDecoration: 'none',
+              padding: '14px 24px',
+              borderRadius: 10,
+              fontSize: 15,
+              fontWeight: 600,
+              margin: '0 0 12px',
+              textAlign: 'center',
+            }}
+          >
+            {t.ctaDemo}
           </Link>
           <p style={{ color: COLORS.muted, fontSize: 13, margin: 0 }}>{t.ctaNote}</p>
         </section>
