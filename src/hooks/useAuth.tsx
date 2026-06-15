@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
 import i18n from '@/i18n';
 import { clearAllSignedUrls } from '@/lib/signed-url-cache';
-import { isDemoMode, DEMO_USER_ID } from '@/lib/demo-data';
+import { isDemoMode, DEMO_USER_ID, exitDemoMode } from '@/lib/demo-data';
 
 interface AuthContextType {
   user: User | null;
@@ -91,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     clearAllSignedUrls();
     if (isDemoMode()) {
+      exitDemoMode();
       window.location.href = '/';
       return;
     }

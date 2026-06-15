@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import Index from './Index';
-import { isDemoLang } from '@/lib/demo-data';
+import { isDemoLang, enterDemoMode } from '@/lib/demo-data';
 
 export default function Demo() {
+  useEffect(() => { enterDemoMode(); }, []);
   const lang = isDemoLang();
   const banner =
     lang === 'es'

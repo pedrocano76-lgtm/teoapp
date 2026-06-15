@@ -9,7 +9,20 @@ const DEMO_CHILD_ID = 'demo-child-lucas';
 
 export function isDemoMode(): boolean {
   if (typeof window === 'undefined') return false;
-  return window.location.pathname === '/demo' || window.location.pathname.startsWith('/demo/');
+  if (window.location.pathname === '/demo' || window.location.pathname.startsWith('/demo/')) return true;
+  try {
+    return window.sessionStorage.getItem('memorydrawer_demo') === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function enterDemoMode() {
+  try { window.sessionStorage.setItem('memorydrawer_demo', '1'); } catch {}
+}
+
+export function exitDemoMode() {
+  try { window.sessionStorage.removeItem('memorydrawer_demo'); } catch {}
 }
 
 export function isDemoLang(): 'es' | 'en' {
