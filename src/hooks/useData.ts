@@ -720,6 +720,7 @@ export function useActivities(childId?: string) {
   return useQuery({
     queryKey: ['activities', childId],
     queryFn: async () => {
+      if (isDemoMode()) return [];
       const { data, error } = await supabase
         .from('activities')
         .select('*')
