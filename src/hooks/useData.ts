@@ -4,6 +4,18 @@ import { useAuth } from './useAuth';
 import { getExifDate, getExifLocation, reverseGeocode } from '@/lib/exif-utils';
 import { processImageForUpload } from '@/lib/image-processing';
 import { signPhotoPaths, signPhotoPath } from '@/lib/sign-photos';
+import {
+  isDemoMode,
+  getDemoChildRows,
+  getDemoEventRows,
+  getDemoPhotoRows,
+  demoBlockedToast,
+} from '@/lib/demo-data';
+
+function demoBlock(): never {
+  demoBlockedToast();
+  throw new Error('demo-mode');
+}
 
 export const PHOTOS_PAGE_SIZE = 20;
 
