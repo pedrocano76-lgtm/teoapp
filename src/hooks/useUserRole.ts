@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { isDemoMode } from '@/lib/demo-data';
 
 export function useUserRole() {
   const { user } = useAuth();
@@ -8,6 +9,7 @@ export function useUserRole() {
   const { data, isLoading } = useQuery({
     queryKey: ['user_role', user?.id],
     queryFn: async () => {
+      if (isDemoMode()) return 'owner' as const;
       // Check if user owns any children
       const { data: ownChildren } = await supabase
         .from('children')

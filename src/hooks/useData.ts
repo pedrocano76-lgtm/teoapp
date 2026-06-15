@@ -4,6 +4,18 @@ import { useAuth } from './useAuth';
 import { getExifDate, getExifLocation, reverseGeocode } from '@/lib/exif-utils';
 import { processImageForUpload } from '@/lib/image-processing';
 import { signPhotoPaths, signPhotoPath } from '@/lib/sign-photos';
+import {
+  isDemoMode,
+  getDemoChildRows,
+  getDemoEventRows,
+  getDemoPhotoRows,
+  demoBlockedToast,
+} from '@/lib/demo-data';
+
+function demoBlock(): never {
+  demoBlockedToast();
+  throw new Error('demo-mode');
+}
 
 export const PHOTOS_PAGE_SIZE = 20;
 
@@ -29,6 +41,7 @@ export function useChildren() {
   return useQuery({
     queryKey: ['children', user?.id],
     queryFn: async () => {
+      if (isDemoMode()) return getDemoChildRows();
       const { data, error } = await supabase
         .from('children')
         .select('*')
@@ -45,6 +58,7 @@ export function useAddChild() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (child: { name: string; birth_date: string; color: string }) => {
+      if (isDemoMode()) demoBlock();
       const { error } = await supabase
         .from('children')
         .insert({ ...child, owner_id: user!.id });
@@ -129,6 +143,19 @@ export function usePhotosInfinite(childId?: string, filters?: PhotoFilters) {
     queryKey: ['photos', 'infinite', childId ?? 'all', user?.id, { eventIds, tagIds, locationName, sortOrder }],
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
+      if (isDemoMode()) {
+        let rows = getDemoPhotoRows().slice();
+        if (childId) rows = rows.filter(r => r.child_id === childId);
+        if (eventIds) rows = rows.filter(r => r.event_id && eventIds.includes(r.event_id));
+        if (locationName) rows = rows.filter(r => r.location_name === locationName);
+        rows.sort((a, b) =>
+          sortOrder === 'asc'
+            ? a.taken_at.localeCompare(b.taken_at)
+            : b.taken_at.localeCompare(a.taken_at)
+        );
+        // single page — demo has <20 photos total
+        return { rows, page: pageParam as number };
+      }
       const from = (pageParam as number) * PHOTOS_PAGE_SIZE;
       const to = from + PHOTOS_PAGE_SIZE - 1;
       const tagJoin = tagIds ? 'photo_tags!inner(tag_id, tags(id, name, icon, color, is_predefined))' : 'photo_tags(tag_id, tags(id, name, icon, color, is_predefined))';
@@ -164,6 +191,11 @@ export function useAllPhotos(enabled: boolean, childId?: string) {
   return useQuery({
     queryKey: ['photos', 'all', childId ?? 'all', user?.id],
     queryFn: async () => {
+      if (isDemoMode()) {
+        let rows = getDemoPhotoRows().slice();
+        if (childId) rows = rows.filter(r => r.child_id === childId);
+        return rows;
+      }
       const PAGE = 1000;
       let offset = 0;
       const all: any[] = [];
@@ -202,6 +234,7 @@ export function useDistinctLocations(childId?: string) {
   return useQuery({
     queryKey: ['photos', 'locations', childId ?? 'all', user?.id],
     queryFn: async () => {
+      if (isDemoMode()) return [] as string[];
       let query = supabase
         .from('photos')
         .select('location_name')
@@ -224,6 +257,11 @@ export function useEvents(childId?: string) {
   return useQuery({
     queryKey: ['events', childId],
     queryFn: async () => {
+      if (isDemoMode()) {
+        let rows = getDemoEventRows();
+        if (childId) rows = rows.filter(r => r.child_id === childId);
+        return rows;
+      }
       let query = supabase.from('events').select('*').order('date', { ascending: true });
       if (childId) query = query.eq('child_id', childId);
       const { data, error } = await query;
@@ -238,6 +276,7 @@ export function useAddEvent() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ childId, name, date, description }: { childId: string; name: string; date?: Date | null; description?: string | null }) => {
+      if (isDemoMode()) demoBlock();
       const insert: any = { child_id: childId, name, date: date ? date.toISOString().slice(0, 10) : null };
       if (description !== undefined && description !== null && description !== '') insert.description = description;
       const { data, error } = await supabase
@@ -258,6 +297,7 @@ export function useUpdateEvent() {
     mutationFn: async ({
       eventId, name, date, description,
     }: { eventId: string; name?: string; date?: Date | null; description?: string | null }) => {
+      if (isDemoMode()) demoBlock();
       const updates: any = {};
       if (name !== undefined) updates.name = name;
       if (date !== undefined) updates.date = date ? date.toISOString().slice(0, 10) : null;
@@ -276,6 +316,7 @@ export function useLinkPhotosToEvent() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ eventId, photoIds }: { eventId: string; photoIds: string[] }) => {
+      if (isDemoMode()) demoBlock();
       if (photoIds.length === 0) return;
       const { data, error } = await supabase
         .from('photos')
@@ -299,6 +340,7 @@ export function useTags() {
   return useQuery({
     queryKey: ['tags'],
     queryFn: async () => {
+      if (isDemoMode()) return [];
       const { data, error } = await supabase
         .from('tags')
         .select('*')
@@ -331,6 +373,7 @@ export function useAddTag() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (tag: { name: string; icon?: string; color?: string }) => {
+      if (isDemoMode()) demoBlock();
       const { data, error } = await supabase
         .from('tags')
         .insert({ ...tag, created_by: user!.id })
@@ -347,6 +390,7 @@ export function useTagPhoto() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ photoId, tagIds }: { photoId: string; tagIds: string[] }) => {
+      if (isDemoMode()) demoBlock();
       await supabase.from('photo_tags').delete().eq('photo_id', photoId);
       if (tagIds.length > 0) {
         const { error } = await supabase
@@ -375,6 +419,7 @@ export function useUpdatePhoto() {
       isShared?: boolean;
       takenAt?: string;
     }) => {
+      if (isDemoMode()) demoBlock();
       const updates: any = {};
       if (caption !== undefined) updates.caption = caption ?? null;
       if (eventId !== undefined) updates.event_id = eventId ?? null;
@@ -414,6 +459,7 @@ export function useBulkAddTagsToPhotos() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ photoIds, tagIds }: { photoIds: string[]; tagIds: string[] }) => {
+      if (isDemoMode()) demoBlock();
       if (photoIds.length === 0 || tagIds.length === 0) return;
       const rows: { photo_id: string; tag_id: string }[] = [];
       for (const pid of photoIds) {
@@ -440,6 +486,7 @@ export function useResolveOrCreateTag() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (name: string) => {
+      if (isDemoMode()) demoBlock();
       const trimmed = name.trim();
       if (!trimmed) throw new Error('empty');
       const { data: existing, error: findErr } = await supabase
@@ -474,6 +521,7 @@ export function useDeletePhoto() {
       storagePath: string;
       thumbnailPath?: string | null;
     }) => {
+      if (isDemoMode()) demoBlock();
       // Derive thumbnail path if missing — convention is `<user>/<child>/<file>` -> `<user>/<child>/thumbs/<file>`
       let effectiveThumb = thumbnailPath ?? null;
       if (!effectiveThumb && storagePath) {
@@ -528,6 +576,7 @@ export function useUploadPhoto() {
       tagIds?: string[];
       isShared?: boolean;
     }) => {
+      if (isDemoMode()) demoBlock();
       // Extract EXIF data
       let photoDate = takenAt;
       if (!photoDate) {
@@ -637,6 +686,7 @@ export function useUpdateChild() {
       birthDate?: string;
       profilePhotoPath?: string | null;
     }) => {
+      if (isDemoMode()) demoBlock();
       const updates: any = {};
       if (name !== undefined) updates.name = name;
       if (fullName !== undefined) updates.full_name = fullName;
@@ -653,6 +703,7 @@ export function useUploadChildProfilePhoto() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async ({ file, childId }: { file: File; childId: string }) => {
+      if (isDemoMode()) demoBlock();
       const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const path = `profiles/${user!.id}/${childId}_${Date.now()}.${ext}`;
       const { error } = await supabase.storage
@@ -682,6 +733,7 @@ export function useActivities(childId?: string) {
   return useQuery({
     queryKey: ['activities', childId],
     queryFn: async () => {
+      if (isDemoMode()) return [];
       const { data, error } = await supabase
         .from('activities')
         .select('*')
@@ -708,6 +760,7 @@ export function useAddActivity() {
       type: 'sport' | 'hobby' | 'other';
       icon?: string;
     }) => {
+      if (isDemoMode()) demoBlock();
       const { data, error } = await supabase
         .from('activities')
         .insert({ child_id: childId, name, type, icon: icon ?? null })
@@ -724,6 +777,7 @@ export function useDeleteActivity() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ activityId }: { activityId: string; childId: string }) => {
+      if (isDemoMode()) demoBlock();
       const { error } = await supabase.from('activities').delete().eq('id', activityId);
       if (error) throw error;
     },
@@ -764,6 +818,7 @@ export function useUpdateBirthdayNotificationSettings() {
       notifySameDay: boolean;
       notifyDayBefore: boolean;
     }) => {
+      if (isDemoMode()) demoBlock();
       const { error } = await supabase
         .from('birthday_notification_settings')
         .upsert(

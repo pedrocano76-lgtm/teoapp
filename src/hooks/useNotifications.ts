@@ -1,12 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { isDemoMode } from '@/lib/demo-data';
 
 export function useNotifications() {
   const { user } = useAuth();
   return useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
+      if (isDemoMode()) return [];
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
