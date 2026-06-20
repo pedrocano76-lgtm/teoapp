@@ -158,7 +158,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
           previewUrl,
           exifDate: date, // treat lastModified as ready
           inferredDate: null,
-          dateSource: 'mtime',
+          dateSource: 'lastModified',
           manualDate: null,
           kind: 'video',
           durationSeconds: meta.duration,
