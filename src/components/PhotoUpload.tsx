@@ -300,6 +300,9 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                 eventId: eventIdToUse,
                 tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
                 isShared,
+                mediaType: it.kind,
+                videoThumbnail: it.videoThumbnailBlob,
+                durationSeconds: it.durationSeconds,
               });
               if (created?.id) uploadedPhotoIds.push(created.id);
               setUploadProgress(prev => ({ ...prev, [it.id]: 'done' }));
