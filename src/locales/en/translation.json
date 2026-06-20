@@ -263,7 +263,7 @@
     "filesSelected_one": "{{count}} file selected",
     "filesSelected_other": "{{count}} files selected",
     "camera": "Camera",
-    "fileTypes": "JPG, PNG, HEIC or WEBP · Max 50MB per photo",
+    "fileTypes": "JPG, PNG, HEIC, WEBP · MP4, MOV, WEBM (max 60s, 50MB)",
     "ignoredTitle": "Files ignored",
     "ignoredDesc_one": "{{count}} file ignored: {{list}}",
     "ignoredDesc_other": "{{count}} files ignored: {{list}}",
