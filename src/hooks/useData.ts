@@ -674,9 +674,11 @@ export function useUploadPhoto() {
       }
 
       // Geocoding en segundo plano (después de insertar, no bloquea)
-      if (loc && data?.id) {
+      if (locationLat != null && locationLng != null && data?.id) {
+        const lat = locationLat;
+        const lng = locationLng;
         (async () => {
-          const name = await reverseGeocode(loc.lat, loc.lng);
+          const name = await reverseGeocode(lat, lng);
           if (name) {
             await supabase.from('photos')
               .update({ location_name: name })
