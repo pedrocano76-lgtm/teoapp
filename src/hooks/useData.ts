@@ -567,6 +567,7 @@ export function useUploadPhoto() {
   return useMutation({
     mutationFn: async ({
       file, childId, caption, takenAt, eventId, tagIds, isShared,
+      mediaType, videoThumbnail, durationSeconds,
     }: {
       file: File;
       childId: string;
@@ -575,47 +576,77 @@ export function useUploadPhoto() {
       eventId?: string;
       tagIds?: string[];
       isShared?: boolean;
+      mediaType?: 'photo' | 'video';
+      videoThumbnail?: Blob;
+      durationSeconds?: number;
     }) => {
       if (isDemoMode()) demoBlock();
-      // Extract EXIF data
+      const kind: 'photo' | 'video' = mediaType === 'video' ? 'video' : 'photo';
+
+      // Date: prefer explicit takenAt; for photos fall back to EXIF; for videos
+      // there's no reliable EXIF, so caller passes lastModified via takenAt.
       let photoDate = takenAt;
-      if (!photoDate) {
+      if (!photoDate && kind === 'photo') {
         photoDate = await getExifDate(file) || undefined;
       }
 
-      // Extract location
+      // Location (EXIF) — photos only
       let locationLat: number | null = null;
       let locationLng: number | null = null;
-      const loc = await getExifLocation(file);
-      if (loc) {
-        locationLat = loc.lat;
-        locationLng = loc.lng;
+      if (kind === 'photo') {
+        const loc = await getExifLocation(file);
+        if (loc) {
+          locationLat = loc.lat;
+          locationLng = loc.lng;
+        }
       }
 
-      const ext = 'jpg'; // we always re-encode to JPEG
       const baseName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      const fullPath = `${user!.id}/${childId}/${baseName}.${ext}`;
-      const thumbPath = `${user!.id}/${childId}/thumbs/${baseName}.${ext}`;
+      let fullPath: string;
+      let thumbPath: string;
+      let fullBlob: Blob;
+      let thumbBlob: Blob | null;
+      let fullContentType: string;
 
-      // Compress full + generate thumbnail in parallel
-      const { full, thumbnail } = await processImageForUpload(file);
-
-      // Upload both versions in parallel
-      const [fullUpload, thumbUpload] = await Promise.all([
-        supabase.storage.from('photos').upload(fullPath, full, {
-          contentType: 'image/jpeg',
-          cacheControl: '31536000',
-        }),
-        supabase.storage.from('photos').upload(thumbPath, thumbnail, {
-          contentType: 'image/jpeg',
-          cacheControl: '31536000',
-        }),
-      ]);
-      if (fullUpload.error) throw fullUpload.error;
-      if (thumbUpload.error) {
-        // Thumb is best-effort: log but don't fail upload
-        console.warn('Thumbnail upload failed, falling back to full image:', thumbUpload.error);
+      if (kind === 'video') {
+        const ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
+        fullPath = `${user!.id}/${childId}/${baseName}.${ext}`;
+        thumbPath = `${user!.id}/${childId}/thumbs/${baseName}.jpg`;
+        fullBlob = file;
+        thumbBlob = videoThumbnail ?? null;
+        fullContentType = file.type || 'video/mp4';
+      } else {
+        const ext = 'jpg'; // photos are re-encoded
+        fullPath = `${user!.id}/${childId}/${baseName}.${ext}`;
+        thumbPath = `${user!.id}/${childId}/thumbs/${baseName}.${ext}`;
+        const processed = await processImageForUpload(file);
+        fullBlob = processed.full;
+        thumbBlob = processed.thumbnail;
+        fullContentType = 'image/jpeg';
       }
+
+      const uploads: Promise<any>[] = [
+        supabase.storage.from('photos').upload(fullPath, fullBlob, {
+          contentType: fullContentType,
+          cacheControl: '31536000',
+        }),
+      ];
+      if (thumbBlob) {
+        uploads.push(
+          supabase.storage.from('photos').upload(thumbPath, thumbBlob, {
+            contentType: 'image/jpeg',
+            cacheControl: '31536000',
+          })
+        );
+      }
+      const results = await Promise.all(uploads);
+      const fullUpload = results[0];
+      const thumbUpload = thumbBlob ? results[1] : { error: new Error('no-thumb') };
+      if (fullUpload.error) throw fullUpload.error;
+      if (thumbBlob && thumbUpload.error) {
+        console.warn('Thumbnail upload failed, falling back to full media:', thumbUpload.error);
+      }
+      const thumbStored = !!thumbBlob && !thumbUpload.error;
 
       const { data, error } = await supabase
         .from('photos')
@@ -623,20 +654,21 @@ export function useUploadPhoto() {
           child_id: childId,
           uploaded_by: user!.id,
           storage_path: fullPath,
-          thumbnail_path: thumbUpload.error ? null : thumbPath,
+          thumbnail_path: thumbStored ? thumbPath : null,
           caption,
           taken_at: (photoDate || new Date()).toISOString(),
           event_id: eventId || null,
           location_lat: locationLat,
           location_lng: locationLng,
           is_shared: isShared ?? true,
-        })
+          media_type: kind,
+          duration_seconds: kind === 'video' && durationSeconds ? Math.round(durationSeconds) : null,
+        } as any)
         .select()
         .single();
       if (error) {
-        // Clean up orphaned files from Storage before throwing
         const toRemove = [fullPath];
-        if (!thumbUpload.error) toRemove.push(thumbPath);
+        if (thumbStored) toRemove.push(thumbPath);
         await supabase.storage.from('photos').remove(toRemove).catch(() => {});
         throw error;
       }
