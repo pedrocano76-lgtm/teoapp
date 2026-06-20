@@ -370,6 +370,16 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
     return (
       <div key={it.id} className={cn("relative rounded-lg overflow-hidden bg-muted", opts.className || "h-20 w-20 shrink-0")}>
         <img src={it.previewUrl} alt="" className="w-full h-full object-cover" />
+        {it.kind === 'video' && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div
+              className="flex items-center justify-center rounded-full shadow"
+              style={{ backgroundColor: '#D4793A', width: 28, height: 28 }}
+            >
+              <Play size={14} color="#FFFFFF" fill="#FFFFFF" strokeWidth={0} />
+            </div>
+          </div>
+        )}
         {!uploading && (
           <button
             type="button"
@@ -444,7 +454,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/mp4,video/quicktime,video/webm"
               multiple
               className="hidden"
               onChange={(e) => handleFilesSelected(Array.from(e.target.files || []))}
@@ -452,7 +462,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             <input
               ref={cameraInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/mp4,video/quicktime,video/webm"
               capture="environment"
               className="hidden"
               onChange={(e) => handleFilesSelected(Array.from(e.target.files || []))}
