@@ -13,9 +13,17 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { TagSelector } from './TagSelector';
-import { AlertTriangle, Loader2, Check, X, Camera, CalendarClock } from 'lucide-react';
+import { AlertTriangle, Loader2, Check, X, Camera, CalendarClock, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  isVideoFile,
+  getVideoMetadata,
+  generateVideoThumbnail,
+  MAX_VIDEO_DURATION_SECONDS,
+  MAX_VIDEO_SIZE_MB,
+  ALLOWED_VIDEO_TYPES,
+} from '@/lib/video-processing';
 
 async function supabaseUpdateEventDate(eventId: string, dateIso: string) {
   await supabase.from('events').update({ date: dateIso }).eq('id', eventId);
@@ -35,6 +43,9 @@ interface UploadItem {
   inferredDate: Date | null;
   dateSource: PhotoDateSource;
   manualDate: Date | null;
+  kind: 'photo' | 'video';
+  durationSeconds?: number;
+  videoThumbnailBlob?: Blob;
 }
 
 function toDateInputValue(d: Date | null): string {
