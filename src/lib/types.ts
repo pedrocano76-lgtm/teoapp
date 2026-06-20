@@ -28,6 +28,8 @@ export interface BirthdayNotificationSettings {
   notifyDayBefore: boolean;
 }
 
+export type MediaType = 'photo' | 'video';
+
 export interface Photo {
   id: string;
   url: string;
@@ -47,6 +49,8 @@ export interface Photo {
   eventColor?: string;
   uploadedBy?: string;
   uploadedAt?: Date;
+  mediaType?: MediaType;
+  durationSeconds?: number;
 }
 
 export interface Event {

@@ -13,9 +13,17 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { TagSelector } from './TagSelector';
-import { AlertTriangle, Loader2, Check, X, Camera, CalendarClock } from 'lucide-react';
+import { AlertTriangle, Loader2, Check, X, Camera, CalendarClock, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  isVideoFile,
+  getVideoMetadata,
+  generateVideoThumbnail,
+  MAX_VIDEO_DURATION_SECONDS,
+  MAX_VIDEO_SIZE_MB,
+  ALLOWED_VIDEO_TYPES,
+} from '@/lib/video-processing';
 
 async function supabaseUpdateEventDate(eventId: string, dateIso: string) {
   await supabase.from('events').update({ date: dateIso }).eq('id', eventId);
@@ -35,6 +43,9 @@ interface UploadItem {
   inferredDate: Date | null;
   dateSource: PhotoDateSource;
   manualDate: Date | null;
+  kind: 'photo' | 'video';
+  durationSeconds?: number;
+  videoThumbnailBlob?: Blob;
 }
 
 function toDateInputValue(d: Date | null): string {
@@ -96,19 +107,65 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
   };
 
   const handleFilesSelected = async (selectedFiles: File[]) => {
-    const MAX_FILE_SIZE_MB = 50;
-    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'];
+    const MAX_PHOTO_SIZE_MB = 50;
+    const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'];
 
-    const validFiles: File[] = [];
+    const validPhotos: File[] = [];
+    const validVideos: File[] = [];
     const rejected: { name: string; reason: string }[] = [];
 
     for (const file of selectedFiles) {
-      if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-        rejected.push({ name: file.name, reason: t('photoUpload.reasonSize') });
-      } else if (!ALLOWED_TYPES.includes(file.type)) {
-        rejected.push({ name: file.name, reason: t('photoUpload.reasonType') });
+      const isVideo = isVideoFile(file);
+      if (isVideo) {
+        if (file.size > MAX_VIDEO_SIZE_MB * 1024 * 1024) {
+          rejected.push({ name: file.name, reason: t('photoUpload.reasonVideoSize', `Vídeo supera ${MAX_VIDEO_SIZE_MB}MB`) });
+          continue;
+        }
+        if (file.type && !ALLOWED_VIDEO_TYPES.includes(file.type)) {
+          rejected.push({ name: file.name, reason: t('photoUpload.reasonType') });
+          continue;
+        }
+        validVideos.push(file);
       } else {
-        validFiles.push(file);
+        if (file.size > MAX_PHOTO_SIZE_MB * 1024 * 1024) {
+          rejected.push({ name: file.name, reason: t('photoUpload.reasonSize') });
+        } else if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+          rejected.push({ name: file.name, reason: t('photoUpload.reasonType') });
+        } else {
+          validPhotos.push(file);
+        }
+      }
+    }
+
+    // Validate video durations (and generate thumbnails) before accepting
+    const acceptedVideoItems: UploadItem[] = [];
+    for (const file of validVideos) {
+      try {
+        const meta = await getVideoMetadata(file);
+        if (!meta.duration || meta.duration > MAX_VIDEO_DURATION_SECONDS + 0.5) {
+          rejected.push({
+            name: file.name,
+            reason: t('photoUpload.reasonVideoDuration', `Vídeo supera ${MAX_VIDEO_DURATION_SECONDS}s`),
+          });
+          continue;
+        }
+        const thumb = await generateVideoThumbnail(file).catch(() => null);
+        const previewUrl = thumb ? URL.createObjectURL(thumb.blob) : URL.createObjectURL(file);
+        const date = new Date(file.lastModified || Date.now());
+        acceptedVideoItems.push({
+          id: `${file.name}_${file.size}_${Math.random().toString(36).slice(2, 8)}`,
+          file,
+          previewUrl,
+          exifDate: date, // treat lastModified as ready
+          inferredDate: null,
+          dateSource: 'lastModified',
+          manualDate: null,
+          kind: 'video',
+          durationSeconds: meta.duration,
+          videoThumbnailBlob: thumb?.blob,
+        });
+      } catch {
+        rejected.push({ name: file.name, reason: t('photoUpload.reasonType') });
       }
     }
 
@@ -120,13 +177,13 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
       });
     }
 
-    if (validFiles.length === 0) return;
+    if (validPhotos.length === 0 && acceptedVideoItems.length === 0) return;
 
     // Revoke previous URLs
     items.forEach(it => URL.revokeObjectURL(it.previewUrl));
 
-    const newItems: UploadItem[] = await Promise.all(
-      validFiles.map(async (file) => {
+    const photoItems: UploadItem[] = await Promise.all(
+      validPhotos.map(async (file) => {
         const resolved = await resolvePhotoDate(file);
         const isExif = resolved.source === 'exif';
         return {
@@ -137,10 +194,12 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
           inferredDate: isExif ? null : resolved.date,
           dateSource: resolved.source,
           manualDate: null,
+          kind: 'photo' as const,
         };
       })
     );
 
+    const newItems = [...photoItems, ...acceptedVideoItems];
     setItems(newItems);
     setBulkDateValue('');
     setUploadProgress(Object.fromEntries(newItems.map(it => [it.id, 'pending'])));
@@ -241,6 +300,9 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                 eventId: eventIdToUse,
                 tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
                 isShared,
+                mediaType: it.kind,
+                videoThumbnail: it.videoThumbnailBlob,
+                durationSeconds: it.durationSeconds,
               });
               if (created?.id) uploadedPhotoIds.push(created.id);
               setUploadProgress(prev => ({ ...prev, [it.id]: 'done' }));
@@ -308,6 +370,16 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
     return (
       <div key={it.id} className={cn("relative rounded-lg overflow-hidden bg-muted", opts.className || "h-20 w-20 shrink-0")}>
         <img src={it.previewUrl} alt="" className="w-full h-full object-cover" />
+        {it.kind === 'video' && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div
+              className="flex items-center justify-center rounded-full shadow"
+              style={{ backgroundColor: '#D4793A', width: 28, height: 28 }}
+            >
+              <Play size={14} color="#FFFFFF" fill="#FFFFFF" strokeWidth={0} />
+            </div>
+          </div>
+        )}
         {!uploading && (
           <button
             type="button"
@@ -382,7 +454,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/mp4,video/quicktime,video/webm"
               multiple
               className="hidden"
               onChange={(e) => handleFilesSelected(Array.from(e.target.files || []))}
@@ -390,7 +462,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             <input
               ref={cameraInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/mp4,video/quicktime,video/webm"
               capture="environment"
               className="hidden"
               onChange={(e) => handleFilesSelected(Array.from(e.target.files || []))}
