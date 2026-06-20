@@ -65,6 +65,8 @@ function mapPhoto(row: any): Photo {
     eventColor: row.events?.color ?? undefined,
     uploadedBy: row.uploaded_by ?? undefined,
     uploadedAt: row.created_at ? new Date(row.created_at) : undefined,
+    mediaType: (row.media_type === 'video' ? 'video' : 'photo'),
+    durationSeconds: row.duration_seconds ?? undefined,
     tags,
   };
 }
