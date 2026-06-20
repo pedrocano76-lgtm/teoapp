@@ -72,6 +72,8 @@ export default function EventView() {
         storagePath: row.storage_path,
         thumbnailPath: row.thumbnail_path ?? null,
         isShared: row.is_shared ?? true,
+        mediaType: (row.media_type === 'video' ? 'video' : 'photo'),
+        durationSeconds: row.duration_seconds ?? undefined,
         tags: Array.isArray(row.photo_tags)
           ? row.photo_tags.map((pt: any) => pt.tags).filter(Boolean).map((tg: any) => ({
               id: tg.id, name: tg.name, icon: tg.icon, color: tg.color, isPredefined: tg.is_predefined,
