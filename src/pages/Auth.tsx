@@ -40,6 +40,22 @@ export default function Auth() {
     }
   }, [inviteCode, inviteEmail]);
 
+  const handleGoogle = async () => {
+    setLoading(true);
+    try {
+      if (inviteCode) {
+        sessionStorage.setItem('pending_invite_code', inviteCode);
+      }
+      const result = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) throw result.error;
+    } catch (error: any) {
+      toast({ title: t('common.error'), description: error.message, variant: 'destructive' });
+      setLoading(false);
+    }
+  };
+
   const handleForgotPassword = async () => {
     if (!email) {
       toast({ title: t('common.error'), description: t('auth.enterEmailFirst', 'Please enter your email first'), variant: 'destructive' });
