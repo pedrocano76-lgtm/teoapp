@@ -3,7 +3,7 @@ import { Photo, Child } from '@/lib/types';
 import { getAgeLabel } from '@/lib/age-utils';
 import { useLocale } from '@/hooks/useLocale';
 import { cn } from '@/lib/utils';
-import { MapPin, Pencil, Check, Bookmark } from 'lucide-react';
+import { MapPin, Pencil, Check, Bookmark, Play } from 'lucide-react';
 import { PhotoEditDialog } from '@/components/PhotoEditDialog';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useLongPress } from '@/hooks/useLongPress';
@@ -78,7 +78,7 @@ export function PhotoCard({ photo, child, onClick, selectionMode, isSelected, on
           {...longPressHandlers}
           className="w-full border-0 p-0 text-left cursor-pointer bg-transparent select-none"
         >
-          <div className="aspect-square overflow-hidden">
+          <div className="aspect-square overflow-hidden relative">
             <img
               src={photo.thumbnailUrl || photo.url}
               alt={photo.caption || `Foto de ${child.name}`}
@@ -86,6 +86,17 @@ export function PhotoCard({ photo, child, onClick, selectionMode, isSelected, on
               decoding="async"
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
+            {photo.mediaType === 'video' && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div
+                  className="flex items-center justify-center rounded-full shadow-md"
+                  style={{ backgroundColor: '#D4793A', width: 40, height: 40 }}
+                  aria-label="Video"
+                >
+                  <Play size={20} color="#FFFFFF" fill="#FFFFFF" strokeWidth={0} />
+                </div>
+              </div>
+            )}
           </div>
           {!selectionMode && (
             <>

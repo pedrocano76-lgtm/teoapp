@@ -143,13 +143,24 @@ export function PhotoLightbox({ photos, children, initialIndex, open, onOpenChan
               </>
             )}
 
-            {/* Image */}
-            <img
-              src={photo.url}
-              alt={photo.caption || t('lightbox.photo')}
-              className="max-w-full max-h-[80vh] object-contain select-none"
-              draggable={false}
-            />
+            {/* Media */}
+            {photo.mediaType === 'video' ? (
+              <video
+                key={photo.id}
+                src={photo.url}
+                controls
+                playsInline
+                autoPlay
+                className="max-w-full max-h-[80vh] object-contain select-none bg-black"
+              />
+            ) : (
+              <img
+                src={photo.url}
+                alt={photo.caption || t('lightbox.photo')}
+                className="max-w-full max-h-[80vh] object-contain select-none"
+                draggable={false}
+              />
+            )}
 
             {/* Info bar */}
             <div className="absolute bottom-0 left-0 right-0 bg-gray-50 dark:bg-zinc-900 text-gray-900 dark:text-white p-4 border-t border-gray-200 dark:border-zinc-800">
