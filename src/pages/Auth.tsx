@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { BrandLogo } from '@/components/Brand';
 import { Eye, EyeOff } from 'lucide-react';
+import { lovable } from '@/integrations/lovable';
 
 
 const RELATIONSHIP_KEYS = [
