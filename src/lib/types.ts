@@ -49,7 +49,7 @@ export interface Photo {
   eventColor?: string;
   uploadedBy?: string;
   uploadedAt?: Date;
-  mediaType: MediaType;
+  mediaType?: MediaType;
   durationSeconds?: number;
 }
 
