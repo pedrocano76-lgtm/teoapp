@@ -280,12 +280,14 @@ export type Database = {
           caption: string | null
           child_id: string
           created_at: string
+          duration_seconds: number | null
           event_id: string | null
           id: string
           is_shared: boolean
           location_lat: number | null
           location_lng: number | null
           location_name: string | null
+          media_type: string
           storage_path: string
           taken_at: string
           thumbnail_path: string | null
@@ -295,12 +297,14 @@ export type Database = {
           caption?: string | null
           child_id: string
           created_at?: string
+          duration_seconds?: number | null
           event_id?: string | null
           id?: string
           is_shared?: boolean
           location_lat?: number | null
           location_lng?: number | null
           location_name?: string | null
+          media_type?: string
           storage_path: string
           taken_at?: string
           thumbnail_path?: string | null
@@ -310,12 +314,14 @@ export type Database = {
           caption?: string | null
           child_id?: string
           created_at?: string
+          duration_seconds?: number | null
           event_id?: string | null
           id?: string
           is_shared?: boolean
           location_lat?: number | null
           location_lng?: number | null
           location_name?: string | null
+          media_type?: string
           storage_path?: string
           taken_at?: string
           thumbnail_path?: string | null
