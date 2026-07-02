@@ -269,7 +269,7 @@ export function BulkAddToEventDialog({ open, onOpenChange, selectedPhotos, onDon
               <Button
                 className="w-full"
                 onClick={handleCreate}
-                disabled={!newName.trim() || addEvent.isPending || link.isPending}
+                disabled={!newName.trim() || addEvent.isPending || link.isPending || endBeforeStart}
               >
                 {t('bulk.createAndAssign', {
                   count: selectedPhotos.length,
