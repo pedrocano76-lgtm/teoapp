@@ -88,7 +88,7 @@ export function SettingsPanel({ toolsSlot }: SettingsPanelProps) {
 
   const sendTest = async () => {
     setSending(true);
-    const { error } = await supabase.functions.invoke('send-photo-reminders', { body: { force: true } });
+    const { error } = await supabase.functions.invoke('trigger-my-reminder', { body: {} });
     setSending(false);
     if (error) toast.error(t('settings.remindersError'));
     else toast.success(t('settings.remindersOk'));
