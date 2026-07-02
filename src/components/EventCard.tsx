@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Photo, Event } from '@/lib/types';
 import { useLocale } from '@/hooks/useLocale';
 import { useTranslation } from 'react-i18next';
+import { formatEventDateRange, isMultiDayEvent } from '@/lib/date-range';
 
 interface EventCardProps {
   event: Event;
@@ -13,9 +14,8 @@ export function EventCard({ event, photos }: EventCardProps) {
   const { intlLocale } = useLocale();
   const { t } = useTranslation();
   const thumbs = photos.slice(0, 4);
-  const dateLabel = event.date
-    ? event.date.toLocaleDateString(intlLocale, { day: 'numeric', month: 'long', year: 'numeric' })
-    : '';
+  const dateLabel = formatEventDateRange(event.date, event.endDate, intlLocale);
+  const multiDay = isMultiDayEvent(event.date, event.endDate);
 
   return (
     <button
@@ -28,6 +28,16 @@ export function EventCard({ event, photos }: EventCardProps) {
         <h3 style={{ fontFamily: 'Georgia, serif', color: '#4A3728' }} className="text-lg font-medium">
           {event.name}
         </h3>
+        {multiDay && (
+          <span
+            title={t('event.multiDay', 'Evento de varios días')}
+            aria-label={t('event.multiDay', 'Evento de varios días')}
+            style={{ color: '#D4793A' }}
+            className="text-xs leading-none ml-1"
+          >
+            ◆◆
+          </span>
+        )}
       </div>
       <p className="text-xs mb-3" style={{ color: '#7A6450' }}>
         {dateLabel}
@@ -51,3 +61,4 @@ export function EventCard({ event, photos }: EventCardProps) {
     </button>
   );
 }
+

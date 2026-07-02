@@ -43,7 +43,7 @@ export function BulkAddToEventDialog({ open, onOpenChange, selectedPhotos, onDon
     if (!singleChildId || !eventsData) return [];
     return (eventsData as any[])
       .filter(e => e.child_id === singleChildId)
-      .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      .sort((a, b) => (b.start_date || '').localeCompare(a.start_date || ''));
   }, [eventsData, singleChildId]);
 
   const [newName, setNewName] = useState('');

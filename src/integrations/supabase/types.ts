@@ -131,31 +131,34 @@ export type Database = {
           child_id: string
           color: string
           created_at: string
-          date: string | null
           description: string | null
+          end_date: string | null
           icon: string
           id: string
           name: string
+          start_date: string | null
         }
         Insert: {
           child_id: string
           color?: string
           created_at?: string
-          date?: string | null
           description?: string | null
+          end_date?: string | null
           icon?: string
           id?: string
           name: string
+          start_date?: string | null
         }
         Update: {
           child_id?: string
           color?: string
           created_at?: string
-          date?: string | null
           description?: string | null
+          end_date?: string | null
           icon?: string
           id?: string
           name?: string
+          start_date?: string | null
         }
         Relationships: [
           {

@@ -262,7 +262,7 @@ export function useEvents(childId?: string) {
         if (childId) rows = rows.filter(r => r.child_id === childId);
         return rows;
       }
-      let query = supabase.from('events').select('*').order('date', { ascending: true });
+      let query = supabase.from('events').select('*').order('start_date', { ascending: true });
       if (childId) query = query.eq('child_id', childId);
       const { data, error } = await query;
       if (error) throw error;
@@ -275,9 +275,14 @@ export function useEvents(childId?: string) {
 export function useAddEvent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ childId, name, date, description }: { childId: string; name: string; date?: Date | null; description?: string | null }) => {
+    mutationFn: async ({ childId, name, date, endDate, description }: { childId: string; name: string; date?: Date | null; endDate?: Date | null; description?: string | null }) => {
       if (isDemoMode()) demoBlock();
-      const insert: any = { child_id: childId, name, date: date ? date.toISOString().slice(0, 10) : null };
+      const insert: any = {
+        child_id: childId,
+        name,
+        start_date: date ? date.toISOString().slice(0, 10) : null,
+        end_date: endDate ? endDate.toISOString().slice(0, 10) : null,
+      };
       if (description !== undefined && description !== null && description !== '') insert.description = description;
       const { data, error } = await supabase
         .from('events')
@@ -295,12 +300,13 @@ export function useUpdateEvent() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
-      eventId, name, date, description,
-    }: { eventId: string; name?: string; date?: Date | null; description?: string | null }) => {
+      eventId, name, date, endDate, description,
+    }: { eventId: string; name?: string; date?: Date | null; endDate?: Date | null; description?: string | null }) => {
       if (isDemoMode()) demoBlock();
       const updates: any = {};
       if (name !== undefined) updates.name = name;
-      if (date !== undefined) updates.date = date ? date.toISOString().slice(0, 10) : null;
+      if (date !== undefined) updates.start_date = date ? date.toISOString().slice(0, 10) : null;
+      if (endDate !== undefined) updates.end_date = endDate ? endDate.toISOString().slice(0, 10) : null;
       if (description !== undefined) updates.description = description;
       const { error } = await supabase.from('events').update(updates).eq('id', eventId);
       if (error) throw error;

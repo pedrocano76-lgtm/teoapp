@@ -13,6 +13,7 @@ import { PhotoLightbox } from '@/components/PhotoLightbox';
 import { EventEditDialog } from '@/components/EventEditDialog';
 import { AddPhotosToEventDialog } from '@/components/AddPhotosToEventDialog';
 import { useLocale } from '@/hooks/useLocale';
+import { formatEventDateRange, isMultiDayEvent } from '@/lib/date-range';
 import type { Photo, Child } from '@/lib/types';
 
 function mapChild(row: any): Child {
@@ -88,9 +89,10 @@ export default function EventView() {
   const event = useMemo(() => (eventsData || []).find((e: any) => e.id === eventId), [eventsData, eventId]);
   const photos = photosData ?? [];
 
-  const dateLabel = event?.date
-    ? new Date(event.date).toLocaleDateString(intlLocale, { day: 'numeric', month: 'long', year: 'numeric' })
-    : '';
+  const startDate = event ? new Date((event as any).start_date) : null;
+  const endDate = event && (event as any).end_date ? new Date((event as any).end_date) : null;
+  const dateLabel = startDate ? formatEventDateRange(startDate, endDate, intlLocale) : '';
+  const multiDay = isMultiDayEvent(startDate, endDate);
 
   return (
     <div className="min-h-screen bg-background">
@@ -120,6 +122,7 @@ export default function EventView() {
       <main className="container mx-auto px-3 pt-4 pb-20">
         {dateLabel && (
           <p className="text-center text-sm text-muted-foreground mb-1">
+            {multiDay && <span style={{ color: '#D4793A' }} className="mr-1">◆◆</span>}
             {dateLabel} · {t('photos.count', { count: photos.length })}
           </p>
         )}
@@ -169,7 +172,7 @@ export default function EventView() {
           <EventEditDialog
             open={editOpen}
             onOpenChange={setEditOpen}
-            event={{ id: event.id, name: event.name, date: event.date, description: (event as any).description }}
+            event={{ id: event.id, name: event.name, date: (event as any).start_date, endDate: (event as any).end_date, description: (event as any).description }}
           />
           <AddPhotosToEventDialog
             open={addPhotosOpen}
