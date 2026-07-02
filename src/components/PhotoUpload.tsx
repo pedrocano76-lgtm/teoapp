@@ -656,6 +656,47 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                           className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
                         />
                       </div>
+                      {!showNewEventEndDate ? (
+                        <button
+                          type="button"
+                          onClick={() => setShowNewEventEndDate(true)}
+                          className="inline-flex items-center gap-1 text-xs"
+                          style={{ color: '#D4793A' }}
+                        >
+                          <Plus className="h-3 w-3" />
+                          {t('eventEdit.addEndDate', 'Añadir fecha de fin')}
+                        </button>
+                      ) : (
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="new-event-end-date" className="text-xs text-muted-foreground">
+                              {t('eventEdit.endDate', 'Fecha de fin')}
+                            </Label>
+                            <button
+                              type="button"
+                              onClick={() => { setShowNewEventEndDate(false); setNewEventEndDate(''); }}
+                              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                            >
+                              <X className="h-3 w-3" />
+                              {t('common.remove', 'Quitar')}
+                            </button>
+                          </div>
+                          <input
+                            id="new-event-end-date"
+                            type="date"
+                            value={newEventEndDate}
+                            min={newEventDate || undefined}
+                            max={toDateInputValue(new Date())}
+                            onChange={(e) => setNewEventEndDate(e.target.value)}
+                            className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                          />
+                          {newEventEndBeforeStart && (
+                            <p className="text-xs text-destructive">
+                              {t('eventEdit.endBeforeStart', 'La fecha de fin debe ser igual o posterior a la de inicio')}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                   {eventMode === 'existing' && (
