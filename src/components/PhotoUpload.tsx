@@ -261,13 +261,24 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
     }
   }, [isEvent, eventMode, oldestSelectedDate, newEventDateTouched]);
 
+  const newEventEndDateObj = showNewEventEndDate && newEventEndDate ? fromDateInputValue(newEventEndDate) : null;
+  const newEventStartDateObj = newEventDate ? fromDateInputValue(newEventDate) : null;
+  const newEventEndBeforeStart = !!(newEventEndDateObj && newEventStartDateObj && newEventEndDateObj.getTime() < newEventStartDateObj.getTime());
+
   const handleUpload = async () => {
     if (!selectedChild || uploadableItems.length === 0) return;
+    if (isEvent && eventMode === 'new' && newEventEndBeforeStart) {
+      toast({
+        title: t('eventEdit.endBeforeStart', 'La fecha de fin debe ser igual o posterior a la de inicio'),
+        variant: 'destructive',
+      });
+      return;
+    }
     setUploading(true);
 
     try {
       let eventIdToUse: string | undefined = undefined;
-      const newEventDateObj = newEventDate ? fromDateInputValue(newEventDate) : null;
+      const newEventDateObj = newEventStartDateObj;
       const fallbackEventDate = newEventDateObj || oldestSelectedDate;
       if (isEvent) {
         if (eventMode === 'new' && newEventName.trim()) {
@@ -275,6 +286,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             childId: selectedChild,
             name: newEventName.trim(),
             date: fallbackEventDate,
+            endDate: newEventEndDateObj,
           });
           eventIdToUse = created.id;
         } else if (eventMode === 'existing' && selectedEventId) {
