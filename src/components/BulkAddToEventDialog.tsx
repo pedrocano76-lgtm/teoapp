@@ -50,6 +50,11 @@ export function BulkAddToEventDialog({ open, onOpenChange, selectedPhotos, onDon
   const [newDate, setNewDate] = useState<Date>(oldestDate);
   const [newDesc, setNewDesc] = useState('');
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [showEndDate, setShowEndDate] = useState(false);
+  const [newEndDate, setNewEndDate] = useState<Date | undefined>(undefined);
+  const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
+
+  const endBeforeStart = !!(showEndDate && newEndDate && newEndDate.getTime() < newDate.getTime());
 
   // Reset new-event form whenever the dialog opens with a fresh selection
   const handleOpenChange = (o: boolean) => {
@@ -57,6 +62,8 @@ export function BulkAddToEventDialog({ open, onOpenChange, selectedPhotos, onDon
       setNewName('');
       setNewDate(oldestDate);
       setNewDesc('');
+      setShowEndDate(false);
+      setNewEndDate(undefined);
     }
     onOpenChange(o);
   };
@@ -80,11 +87,16 @@ export function BulkAddToEventDialog({ open, onOpenChange, selectedPhotos, onDon
 
   const handleCreate = async () => {
     if (!singleChildId || !newName.trim()) return;
+    if (endBeforeStart) {
+      toast.error(t('eventEdit.endBeforeStart', 'La fecha de fin debe ser igual o posterior a la de inicio'));
+      return;
+    }
     try {
       const created = await addEvent.mutateAsync({
         childId: singleChildId,
         name: newName.trim(),
         date: newDate,
+        endDate: showEndDate ? (newEndDate ?? null) : null,
         description: newDesc.trim() || null,
       });
       await assignTo(created.id, created.name);
