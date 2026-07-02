@@ -13,6 +13,7 @@ import { PhotoLightbox } from '@/components/PhotoLightbox';
 import { EventEditDialog } from '@/components/EventEditDialog';
 import { AddPhotosToEventDialog } from '@/components/AddPhotosToEventDialog';
 import { useLocale } from '@/hooks/useLocale';
+import { formatEventDateRange, isMultiDayEvent } from '@/lib/date-range';
 import type { Photo, Child } from '@/lib/types';
 
 function mapChild(row: any): Child {
