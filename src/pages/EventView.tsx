@@ -88,9 +88,11 @@ export default function EventView() {
   const event = useMemo(() => (eventsData || []).find((e: any) => e.id === eventId), [eventsData, eventId]);
   const photos = photosData ?? [];
 
-  const dateLabel = event?.date
-    ? new Date(event.date).toLocaleDateString(intlLocale, { day: 'numeric', month: 'long', year: 'numeric' })
-    : '';
+  const startDate = event ? new Date((event as any).start_date) : null;
+  const endDate = event && (event as any).end_date ? new Date((event as any).end_date) : null;
+  const { formatEventDateRange, isMultiDayEvent } = require('@/lib/date-range');
+  const dateLabel = startDate ? formatEventDateRange(startDate, endDate, intlLocale) : '';
+  const multiDay = isMultiDayEvent(startDate, endDate);
 
   return (
     <div className="min-h-screen bg-background">
