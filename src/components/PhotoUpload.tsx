@@ -26,7 +26,7 @@ import {
 } from '@/lib/video-processing';
 
 async function supabaseUpdateEventDate(eventId: string, dateIso: string) {
-  await supabase.from('events').update({ date: dateIso }).eq('id', eventId);
+  await supabase.from('events').update({ start_date: dateIso }).eq('id', eventId);
 }
 
 interface PhotoUploadProps {
