@@ -29,8 +29,8 @@ function ChildEventsList({ childId, onSelectChild }: { childId: string; onSelect
   const [showAll, setShowAll] = useState(false);
 
   const events = (eventsData as any[])
-    .filter(e => e.date)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    .filter(e => e.start_date)
+    .sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
 
   if (events.length === 0) return null;
 
