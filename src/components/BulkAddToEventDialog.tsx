@@ -203,6 +203,57 @@ export function BulkAddToEventDialog({ open, onOpenChange, selectedPhotos, onDon
                   })}
                 </p>
               </div>
+              {!showEndDate ? (
+                <button
+                  type="button"
+                  onClick={() => setShowEndDate(true)}
+                  className="inline-flex items-center gap-1 text-sm"
+                  style={{ color: '#D4793A' }}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {t('eventEdit.addEndDate', 'Añadir fecha de fin')}
+                </button>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label>{t('eventEdit.endDate', 'Fecha de fin')}</Label>
+                    <button
+                      type="button"
+                      onClick={() => { setShowEndDate(false); setNewEndDate(undefined); }}
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3 w-3" />
+                      {t('common.remove', 'Quitar')}
+                    </button>
+                  </div>
+                  <Popover open={endDatePickerOpen} onOpenChange={setEndDatePickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn('w-full justify-start text-left font-normal', !newEndDate && 'text-muted-foreground')}
+                      >
+                        <CalendarIcon className="h-4 w-4 mr-2" />
+                        {newEndDate ? format(newEndDate, 'PPP', { locale: dateFnsLocale }) : t('eventEdit.selectDate', 'Selecciona una fecha')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={newEndDate}
+                        onSelect={(d) => { if (d) { setNewEndDate(d); setEndDatePickerOpen(false); } }}
+                        disabled={(d) => (newDate ? d < newDate : false)}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {endBeforeStart && (
+                    <p className="text-xs text-destructive">
+                      {t('eventEdit.endBeforeStart', 'La fecha de fin debe ser igual o posterior a la de inicio')}
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="space-y-1.5">
                 <Label htmlFor="event-desc">
                   {t('event.description', { defaultValue: 'Comentario' })}{' '}
