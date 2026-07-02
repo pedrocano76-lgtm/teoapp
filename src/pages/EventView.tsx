@@ -122,6 +122,7 @@ export default function EventView() {
       <main className="container mx-auto px-3 pt-4 pb-20">
         {dateLabel && (
           <p className="text-center text-sm text-muted-foreground mb-1">
+            {multiDay && <span style={{ color: '#D4793A' }} className="mr-1">◆◆</span>}
             {dateLabel} · {t('photos.count', { count: photos.length })}
           </p>
         )}
