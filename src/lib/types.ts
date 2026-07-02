@@ -59,6 +59,7 @@ export interface Event {
   icon: string;
   childId: string;
   date: Date;
+  endDate?: Date;
   color: string;
   description?: string;
 }
