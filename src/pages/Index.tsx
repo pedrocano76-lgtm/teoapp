@@ -77,7 +77,8 @@ function mapEvent(row: any): Event {
     name: row.name,
     icon: row.icon,
     childId: row.child_id,
-    date: new Date(row.date),
+    date: new Date(row.start_date),
+    endDate: row.end_date ? new Date(row.end_date) : undefined,
     color: row.color,
   };
 }
