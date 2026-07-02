@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { CalendarIcon, Plus, Sparkles } from 'lucide-react';
+import { CalendarIcon, Plus, Sparkles, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -50,6 +50,11 @@ export function BulkAddToEventDialog({ open, onOpenChange, selectedPhotos, onDon
   const [newDate, setNewDate] = useState<Date>(oldestDate);
   const [newDesc, setNewDesc] = useState('');
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [showEndDate, setShowEndDate] = useState(false);
+  const [newEndDate, setNewEndDate] = useState<Date | undefined>(undefined);
+  const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
+
+  const endBeforeStart = !!(showEndDate && newEndDate && newEndDate.getTime() < newDate.getTime());
 
   // Reset new-event form whenever the dialog opens with a fresh selection
   const handleOpenChange = (o: boolean) => {
@@ -57,6 +62,8 @@ export function BulkAddToEventDialog({ open, onOpenChange, selectedPhotos, onDon
       setNewName('');
       setNewDate(oldestDate);
       setNewDesc('');
+      setShowEndDate(false);
+      setNewEndDate(undefined);
     }
     onOpenChange(o);
   };
@@ -80,11 +87,16 @@ export function BulkAddToEventDialog({ open, onOpenChange, selectedPhotos, onDon
 
   const handleCreate = async () => {
     if (!singleChildId || !newName.trim()) return;
+    if (endBeforeStart) {
+      toast.error(t('eventEdit.endBeforeStart', 'La fecha de fin debe ser igual o posterior a la de inicio'));
+      return;
+    }
     try {
       const created = await addEvent.mutateAsync({
         childId: singleChildId,
         name: newName.trim(),
         date: newDate,
+        endDate: showEndDate ? (newEndDate ?? null) : null,
         description: newDesc.trim() || null,
       });
       await assignTo(created.id, created.name);
@@ -191,6 +203,57 @@ export function BulkAddToEventDialog({ open, onOpenChange, selectedPhotos, onDon
                   })}
                 </p>
               </div>
+              {!showEndDate ? (
+                <button
+                  type="button"
+                  onClick={() => setShowEndDate(true)}
+                  className="inline-flex items-center gap-1 text-sm"
+                  style={{ color: '#D4793A' }}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {t('eventEdit.addEndDate', 'Añadir fecha de fin')}
+                </button>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label>{t('eventEdit.endDate', 'Fecha de fin')}</Label>
+                    <button
+                      type="button"
+                      onClick={() => { setShowEndDate(false); setNewEndDate(undefined); }}
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3 w-3" />
+                      {t('common.remove', 'Quitar')}
+                    </button>
+                  </div>
+                  <Popover open={endDatePickerOpen} onOpenChange={setEndDatePickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn('w-full justify-start text-left font-normal', !newEndDate && 'text-muted-foreground')}
+                      >
+                        <CalendarIcon className="h-4 w-4 mr-2" />
+                        {newEndDate ? format(newEndDate, 'PPP', { locale: dateFnsLocale }) : t('eventEdit.selectDate', 'Selecciona una fecha')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={newEndDate}
+                        onSelect={(d) => { if (d) { setNewEndDate(d); setEndDatePickerOpen(false); } }}
+                        disabled={(d) => (newDate ? d < newDate : false)}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {endBeforeStart && (
+                    <p className="text-xs text-destructive">
+                      {t('eventEdit.endBeforeStart', 'La fecha de fin debe ser igual o posterior a la de inicio')}
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="space-y-1.5">
                 <Label htmlFor="event-desc">
                   {t('event.description', { defaultValue: 'Comentario' })}{' '}
@@ -206,7 +269,7 @@ export function BulkAddToEventDialog({ open, onOpenChange, selectedPhotos, onDon
               <Button
                 className="w-full"
                 onClick={handleCreate}
-                disabled={!newName.trim() || addEvent.isPending || link.isPending}
+                disabled={!newName.trim() || addEvent.isPending || link.isPending || endBeforeStart}
               >
                 {t('bulk.createAndAssign', {
                   count: selectedPhotos.length,

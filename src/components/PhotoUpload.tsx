@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { TagSelector } from './TagSelector';
-import { AlertTriangle, Loader2, Check, X, Camera, CalendarClock, Play } from 'lucide-react';
+import { AlertTriangle, Loader2, Check, X, Camera, CalendarClock, Play, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -72,6 +72,8 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
   const [newEventName, setNewEventName] = useState('');
   const [newEventDate, setNewEventDate] = useState<string>('');
   const [newEventDateTouched, setNewEventDateTouched] = useState(false);
+  const [newEventEndDate, setNewEventEndDate] = useState<string>('');
+  const [showNewEventEndDate, setShowNewEventEndDate] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [items, setItems] = useState<UploadItem[]>([]);
@@ -259,13 +261,24 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
     }
   }, [isEvent, eventMode, oldestSelectedDate, newEventDateTouched]);
 
+  const newEventEndDateObj = showNewEventEndDate && newEventEndDate ? fromDateInputValue(newEventEndDate) : null;
+  const newEventStartDateObj = newEventDate ? fromDateInputValue(newEventDate) : null;
+  const newEventEndBeforeStart = !!(newEventEndDateObj && newEventStartDateObj && newEventEndDateObj.getTime() < newEventStartDateObj.getTime());
+
   const handleUpload = async () => {
     if (!selectedChild || uploadableItems.length === 0) return;
+    if (isEvent && eventMode === 'new' && newEventEndBeforeStart) {
+      toast({
+        title: t('eventEdit.endBeforeStart', 'La fecha de fin debe ser igual o posterior a la de inicio'),
+        variant: 'destructive',
+      });
+      return;
+    }
     setUploading(true);
 
     try {
       let eventIdToUse: string | undefined = undefined;
-      const newEventDateObj = newEventDate ? fromDateInputValue(newEventDate) : null;
+      const newEventDateObj = newEventStartDateObj;
       const fallbackEventDate = newEventDateObj || oldestSelectedDate;
       if (isEvent) {
         if (eventMode === 'new' && newEventName.trim()) {
@@ -273,6 +286,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
             childId: selectedChild,
             name: newEventName.trim(),
             date: fallbackEventDate,
+            endDate: newEventEndDateObj,
           });
           eventIdToUse = created.id;
         } else if (eventMode === 'existing' && selectedEventId) {
@@ -642,6 +656,47 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
                           className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
                         />
                       </div>
+                      {!showNewEventEndDate ? (
+                        <button
+                          type="button"
+                          onClick={() => setShowNewEventEndDate(true)}
+                          className="inline-flex items-center gap-1 text-xs"
+                          style={{ color: '#D4793A' }}
+                        >
+                          <Plus className="h-3 w-3" />
+                          {t('eventEdit.addEndDate', 'Añadir fecha de fin')}
+                        </button>
+                      ) : (
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="new-event-end-date" className="text-xs text-muted-foreground">
+                              {t('eventEdit.endDate', 'Fecha de fin')}
+                            </Label>
+                            <button
+                              type="button"
+                              onClick={() => { setShowNewEventEndDate(false); setNewEventEndDate(''); }}
+                              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                            >
+                              <X className="h-3 w-3" />
+                              {t('common.remove', 'Quitar')}
+                            </button>
+                          </div>
+                          <input
+                            id="new-event-end-date"
+                            type="date"
+                            value={newEventEndDate}
+                            min={newEventDate || undefined}
+                            max={toDateInputValue(new Date())}
+                            onChange={(e) => setNewEventEndDate(e.target.value)}
+                            className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                          />
+                          {newEventEndBeforeStart && (
+                            <p className="text-xs text-destructive">
+                              {t('eventEdit.endBeforeStart', 'La fecha de fin debe ser igual o posterior a la de inicio')}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                   {eventMode === 'existing' && (
@@ -681,7 +736,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
 
           <Button
             onClick={handleUpload}
-            disabled={!selectedChild || uploadableItems.length === 0 || uploading}
+            disabled={!selectedChild || uploadableItems.length === 0 || uploading || newEventEndBeforeStart}
             className="w-full"
           >
             {uploading
