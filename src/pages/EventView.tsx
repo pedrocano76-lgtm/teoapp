@@ -172,7 +172,7 @@ export default function EventView() {
           <EventEditDialog
             open={editOpen}
             onOpenChange={setEditOpen}
-            event={{ id: event.id, name: event.name, date: event.date, description: (event as any).description }}
+            event={{ id: event.id, name: event.name, date: (event as any).start_date, endDate: (event as any).end_date, description: (event as any).description }}
           />
           <AddPhotosToEventDialog
             open={addPhotosOpen}
