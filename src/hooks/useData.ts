@@ -262,7 +262,7 @@ export function useEvents(childId?: string) {
         if (childId) rows = rows.filter(r => r.child_id === childId);
         return rows;
       }
-      let query = supabase.from('events').select('*').order('date', { ascending: true });
+      let query = supabase.from('events').select('*').order('start_date', { ascending: true });
       if (childId) query = query.eq('child_id', childId);
       const { data, error } = await query;
       if (error) throw error;
