@@ -736,7 +736,7 @@ export function PhotoUpload({ children, defaultChildId, asFab }: PhotoUploadProp
 
           <Button
             onClick={handleUpload}
-            disabled={!selectedChild || uploadableItems.length === 0 || uploading}
+            disabled={!selectedChild || uploadableItems.length === 0 || uploading || newEventEndBeforeStart}
             className="w-full"
           >
             {uploading
