@@ -91,7 +91,6 @@ export default function EventView() {
 
   const startDate = event ? new Date((event as any).start_date) : null;
   const endDate = event && (event as any).end_date ? new Date((event as any).end_date) : null;
-  const { formatEventDateRange, isMultiDayEvent } = require('@/lib/date-range');
   const dateLabel = startDate ? formatEventDateRange(startDate, endDate, intlLocale) : '';
   const multiDay = isMultiDayEvent(startDate, endDate);
 
