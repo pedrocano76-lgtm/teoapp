@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const inviteUrl = `https://memorydrawer.app/auth?invite=${encodeURIComponent(inviteCode)}&email=${encodeURIComponent(recipients[0])}`;
+      const inviteUrl = `${PUBLIC_APP_URL}/auth?invite=${encodeURIComponent(inviteCode)}&email=${encodeURIComponent(recipients[0])}`;
       finalSubject = "¡Tienes una invitación! 📸 Memorydrawer";
       finalHtml = `<div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
         <h2 style="color: #1a1a1a;">¡Tienes una invitación! 📸</h2>
