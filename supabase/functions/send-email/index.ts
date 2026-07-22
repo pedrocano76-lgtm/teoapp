@@ -2,6 +2,7 @@
 // Acepta POST { to, subject, html } y opcionalmente { text, reply_to }
 // `from` está hardcodeado para evitar spoofing.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { PUBLIC_APP_URL } from "../_shared/app-url.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
