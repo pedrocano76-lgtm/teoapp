@@ -1,5 +1,6 @@
 // Daily birthday notifications. Triggered by pg_cron.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { PUBLIC_APP_URL } from "../_shared/app-url.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,7 +8,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
 };
 
-const APP_URL = "https://memorydrawer.app";
+const APP_URL = PUBLIC_APP_URL;
 
 function isSameMonthDay(d1: Date, d2: Date) {
   return d1.getUTCMonth() === d2.getUTCMonth() && d1.getUTCDate() === d2.getUTCDate();

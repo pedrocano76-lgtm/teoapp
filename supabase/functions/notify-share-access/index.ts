@@ -10,7 +10,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const APP_URL = "https://memorydrawer.app";
+import { PUBLIC_APP_URL } from "../_shared/app-url.ts";
+const APP_URL = PUBLIC_APP_URL;
 
 type Lang = 'es' | 'en';
 
