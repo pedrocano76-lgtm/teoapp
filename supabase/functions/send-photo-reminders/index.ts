@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
       <p style="font-size:17px;line-height:1.6;color:#3a3a3a;margin:0 0 32px;">
         ¿Qué ha pasado esta semana? Una pequeña foto cualquiera ya cuenta una historia.
       </p>
-      <a href="https://teoapp.lovable.app"
+      <a href="${PUBLIC_APP_URL}"
          style="display:inline-block;background:#FF7A6E;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:12px;font-size:15px;font-weight:500;">
         Añadir una foto
       </a>
