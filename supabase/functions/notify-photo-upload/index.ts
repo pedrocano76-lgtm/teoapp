@@ -14,7 +14,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const APP_URL = "https://memorydrawer.app";
+import { PUBLIC_APP_URL } from "../_shared/app-url.ts";
+const APP_URL = PUBLIC_APP_URL;
 const BATCH_WINDOW_MS = 5 * 60 * 1000;
 
 function escapeHtml(s: string): string {
