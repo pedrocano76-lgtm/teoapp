@@ -22,6 +22,11 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const inviteCode = searchParams.get('invite') || '';
   const inviteEmail = searchParams.get('email') || '';
+  const rawNext = searchParams.get('next') || '';
+  const nextParam = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '';
+  const postAuthUrl = nextParam
+    ? `${window.location.origin}/auth?next=${encodeURIComponent(nextParam)}`
+    : window.location.origin;
 
   const [isLogin, setIsLogin] = useState(!inviteCode);
   const [email, setEmail] = useState(inviteEmail);
@@ -47,7 +52,7 @@ export default function Auth() {
         sessionStorage.setItem('pending_invite_code', inviteCode);
       }
       const result = await lovable.auth.signInWithOAuth('google', {
-        redirect_uri: window.location.origin,
+        redirect_uri: postAuthUrl,
       });
       if (result.error) throw result.error;
     } catch (error: any) {
@@ -91,7 +96,7 @@ export default function Auth() {
           password,
           options: {
             data: { full_name: fullName, relationship, invite_code: inviteCode || undefined },
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: postAuthUrl,
           },
         });
         if (error) throw error;
