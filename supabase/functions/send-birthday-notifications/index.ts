@@ -8,7 +8,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
 };
 
-const APP_URL = PUBLIC_APP_URL;
+const APP_URL = `${PUBLIC_APP_URL}/app`;
 
 function isSameMonthDay(d1: Date, d2: Date) {
   return d1.getUTCMonth() === d2.getUTCMonth() && d1.getUTCDate() === d2.getUTCDate();
