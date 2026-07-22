@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "sdk_version": "0.24.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://ccqmucxgsrgpgpsiwiqc.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "memory-drawer-mcp",
+      "version": "0.1.0",
+      "title": "Memory Drawer"
+    },
+    "tools": [
+      {
+        "name": "list_children",
+        "title": "List children",
+        "description": "List every child the signed-in user can access in Memory Drawer (owned or shared with them). Returns id, name, birth date, and role.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_events",
+        "title": "List events",
+        "description": "List events for a child (birthdays, trips, milestones). Ordered by start date descending. Requires child_id.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "child_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The child's id (from list_children)."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50,
+              "description": "Max events to return."
+            }
+          },
+          "required": [
+            "child_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_recent_photos",
+        "title": "List recent photos",
+        "description": "List recent photos/videos for a child, most recent first. Returns metadata (caption, taken_at, event, location) plus a 1-hour signed URL for the file and thumbnail.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "child_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The child's id (from list_children)."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          "required": [
+            "child_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_event",
+        "title": "Create event",
+        "description": "Create an event for a child (e.g. birthday, trip, milestone). RLS enforces that only owners/parents of the child can create events.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "child_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "start_date": {
+              "type": "string",
+              "description": "ISO date, e.g. 2026-07-22."
+            },
+            "end_date": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null,
+              "description": "Optional ISO end date for multi-day events."
+            },
+            "icon": {
+              "type": "string",
+              "default": "◆"
+            },
+            "color": {
+              "type": "string",
+              "default": "#D4793A"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "child_id",
+            "name",
+            "start_date"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
