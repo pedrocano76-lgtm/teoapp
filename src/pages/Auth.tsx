@@ -22,11 +22,7 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const inviteCode = searchParams.get('invite') || '';
   const inviteEmail = searchParams.get('email') || '';
-  const rawNext = searchParams.get('next') || '';
-  const nextParam = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '';
-  const postAuthUrl = nextParam
-    ? `${window.location.origin}/auth?next=${encodeURIComponent(nextParam)}`
-    : window.location.origin;
+  const postAuthUrl = window.location.origin;
 
   const [isLogin, setIsLogin] = useState(!inviteCode);
   const [email, setEmail] = useState(inviteEmail);

@@ -12,7 +12,7 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import Settings from "./pages/Settings.tsx";
 import EventView from "./pages/EventView.tsx";
 import Demo from "./pages/Demo.tsx";
-import OAuthConsent from "./pages/OAuthConsent.tsx";
+
 import NotFound from "./pages/NotFound.tsx";
 import { pruneExpiredSignedUrls } from "@/lib/signed-url-cache";
 
@@ -20,13 +20,6 @@ import { pruneExpiredSignedUrls } from "@/lib/signed-url-cache";
 pruneExpiredSignedUrls();
 
 const queryClient = new QueryClient();
-
-// Only allow same-origin relative paths as post-auth redirect targets.
-function safeNext(raw: string | null): string | null {
-  if (!raw) return null;
-  if (!raw.startsWith("/") || raw.startsWith("//")) return null;
-  return raw;
-}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -38,10 +31,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AuthRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return null;
-  if (user) {
-    const next = safeNext(new URLSearchParams(window.location.search).get("next"));
-    return <Navigate to={next ?? "/app"} replace />;
-  }
+  if (user) return <Navigate to="/app" replace />;
   return <>{children}</>;
 }
 
@@ -61,7 +51,7 @@ const App = () => (
               <Route path="/app" element={<ProtectedRoute><Index /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/events/:eventId" element={<ProtectedRoute><EventView /></ProtectedRoute>} />
-              <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
