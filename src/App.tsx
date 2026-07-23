@@ -21,13 +21,6 @@ pruneExpiredSignedUrls();
 
 const queryClient = new QueryClient();
 
-// Only allow same-origin relative paths as post-auth redirect targets.
-function safeNext(raw: string | null): string | null {
-  if (!raw) return null;
-  if (!raw.startsWith("/") || raw.startsWith("//")) return null;
-  return raw;
-}
-
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">Loading...</div>;
@@ -38,10 +31,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AuthRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return null;
-  if (user) {
-    const next = safeNext(new URLSearchParams(window.location.search).get("next"));
-    return <Navigate to={next ?? "/app"} replace />;
-  }
+  if (user) return <Navigate to="/app" replace />;
   return <>{children}</>;
 }
 
