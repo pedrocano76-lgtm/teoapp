@@ -12,7 +12,7 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import Settings from "./pages/Settings.tsx";
 import EventView from "./pages/EventView.tsx";
 import Demo from "./pages/Demo.tsx";
-import OAuthConsent from "./pages/OAuthConsent.tsx";
+
 import NotFound from "./pages/NotFound.tsx";
 import { pruneExpiredSignedUrls } from "@/lib/signed-url-cache";
 
