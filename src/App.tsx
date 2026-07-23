@@ -51,7 +51,7 @@ const App = () => (
               <Route path="/app" element={<ProtectedRoute><Index /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/events/:eventId" element={<ProtectedRoute><EventView /></ProtectedRoute>} />
-              <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
