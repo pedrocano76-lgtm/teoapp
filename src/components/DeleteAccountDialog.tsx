@@ -40,9 +40,9 @@ export function DeleteAccountDialog({ trigger }: { trigger?: ReactNode }) {
         }
         throw new Error(detail || invokeError?.message || t('deleteAccount.error'));
       }
-    } catch (err) {
-      const detail = err instanceof Error ? err.message : '';
-      setError(t('deleteAccount.error') + (detail ? ` ${detail}` : ''));
+    } catch {
+      // Keep user-facing errors localized; server diagnostics remain in the response.
+      setError(t('deleteAccount.error'));
       setBusy(false);
       return; // Do not sign out or clear caches on a failed deletion.
     }
