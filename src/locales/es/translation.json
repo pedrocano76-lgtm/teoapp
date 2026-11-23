@@ -346,6 +346,15 @@
     "groupYears": "🎂 {{value}}",
     "preBirthGroup": "⏳ Antes de nacer"
   },
+  "deleteAccount": {
+    "title": "Eliminar cuenta",
+    "description": "Esto elimina permanentemente tu cuenta y todas las fotos, perfiles de hijos y datos de los que eres propietario. Esta acción no se puede deshacer.",
+    "typeConfirmation": "Escribe DELETE para confirmar",
+    "confirm": "Eliminar cuenta permanentemente",
+    "deleting": "Eliminando cuenta…",
+    "success": "Tu cuenta ha sido eliminada",
+    "error": "No se pudo completar la eliminación de la cuenta. Sigues conectado. Es posible que algunos datos ya se hayan eliminado."
+  },
   "profile": {
     "title": "Tu cuenta",
     "description": "Edita la información de tu perfil.",

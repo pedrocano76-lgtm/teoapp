@@ -346,6 +346,15 @@
     "groupYears": "🎂 {{value}}",
     "preBirthGroup": "⏳ Before birth"
   },
+  "deleteAccount": {
+    "title": "Delete account",
+    "description": "This permanently deletes your account and all photos, children profiles and data you own. This cannot be undone.",
+    "typeConfirmation": "Type DELETE to confirm",
+    "confirm": "Permanently delete account",
+    "deleting": "Deleting account…",
+    "success": "Your account has been deleted",
+    "error": "Account deletion could not be completed. You are still signed in. Some data may already have been deleted."
+  },
   "profile": {
     "title": "Your account",
     "description": "Edit your profile information.",

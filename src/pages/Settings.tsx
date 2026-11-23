@@ -16,6 +16,7 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { FamilySection } from '@/components/FamilySection';
 import { DuplicateFinder } from '@/components/DuplicateFinder';
 import { Navigate } from 'react-router-dom';
+import { DeleteAccountDialog } from '@/components/DeleteAccountDialog';
 
 type Frequency = 3 | 5 | 7;
 
@@ -246,6 +247,9 @@ export default function Settings() {
             </div>
           </Section>
         )}
+        <div className="border-t border-border pt-4">
+          <DeleteAccountDialog />
+        </div>
       </main>
     </div>
   );

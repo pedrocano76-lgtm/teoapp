@@ -294,7 +294,7 @@ export type Database = {
           storage_path: string
           taken_at: string
           thumbnail_path: string | null
-          uploaded_by: string
+          uploaded_by: string | null
         }
         Insert: {
           caption?: string | null
@@ -311,7 +311,7 @@ export type Database = {
           storage_path: string
           taken_at?: string
           thumbnail_path?: string | null
-          uploaded_by: string
+          uploaded_by?: string | null
         }
         Update: {
           caption?: string | null
@@ -328,7 +328,7 @@ export type Database = {
           storage_path?: string
           taken_at?: string
           thumbnail_path?: string | null
-          uploaded_by?: string
+          uploaded_by?: string | null
         }
         Relationships: [
           {
@@ -486,8 +486,16 @@ export type Database = {
       }
     }
     Functions: {
+      account_deletion_files: {
+        Args: { target_user: string }
+        Returns: {
+          bucket: string
+          path: string
+        }[]
+      }
       can_access_child: { Args: { child_uuid: string }; Returns: boolean }
       can_edit_child: { Args: { child_uuid: string }; Returns: boolean }
+      delete_account_data: { Args: { target_user: string }; Returns: undefined }
       get_display_name: { Args: { _user_id: string }; Returns: string }
       is_guest_of_child: { Args: { child_uuid: string }; Returns: boolean }
       is_parent_of_child: { Args: { child_uuid: string }; Returns: boolean }

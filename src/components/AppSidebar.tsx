@@ -16,6 +16,9 @@ import { ChildrenManager } from './ChildrenManager';
 import { UserProfileModal } from './UserProfileModal';
 import { Child } from '@/lib/types';
 import { BrandLogo, BrandWordmark } from './Brand';
+import { DeleteAccountDialog } from './DeleteAccountDialog';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
 
 interface AppSidebarProps {
   children: Child[];
@@ -112,6 +115,13 @@ export function AppSidebar({ children: childrenList, onSelectChild, selectedChil
             <LogOut className="h-4 w-4" />
           </button>
         </div>
+        <DeleteAccountDialog trigger={
+          <Button variant="ghost" className="min-h-11 justify-start px-1.5 text-xs text-destructive hover:text-destructive group-data-[collapsible=icon]:justify-center"
+            aria-label={t('deleteAccount.title')} title={t('deleteAccount.title')}>
+            <Trash2 className="h-4 w-4" />
+            <span className="group-data-[collapsible=icon]:hidden">{t('deleteAccount.title')}</span>
+          </Button>
+        } />
       </SidebarFooter>
 
       <UserProfileModal open={profileOpen} onOpenChange={setProfileOpen} />
