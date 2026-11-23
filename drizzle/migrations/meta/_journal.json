@@ -8,6 +8,13 @@
       "when": 1795422460854,
       "tag": "0000_safe_account_deletion",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795423782908,
+      "tag": "0001_security_hardening_ownership_invites_tags",
+      "breakpoints": true
     }
   ]
 }

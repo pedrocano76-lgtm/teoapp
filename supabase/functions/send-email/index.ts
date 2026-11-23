@@ -85,6 +85,12 @@ Deno.serve(async (req) => {
       // End-user callers MAY NOT supply arbitrary HTML/subject. Only server-built
       // templates are allowed to prevent the function from being abused as a
       // phishing relay using the app's verified sender identity.
+      if (recipients.length !== 1) {
+        return new Response(JSON.stringify({ error: "Invites go to exactly one recipient" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       if (template !== "invite") {
         return new Response(JSON.stringify({ error: "Only 'invite' template is allowed" }), {
           status: 403,

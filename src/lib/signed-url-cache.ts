@@ -4,12 +4,12 @@
  * Storage key:   surl_<storage_path>
  * Storage value: { url: string, expires_at: number (ms epoch) }
  *
- * Signed URLs are issued with a 1h TTL by Supabase. We refresh 5 min before
+ * Signed URLs are issued with a short (10 min) TTL. We refresh 2 min before
  * the actual expiry to avoid handing out URLs that are about to die.
  */
 
 const KEY_PREFIX = 'surl_';
-const SAFETY_MARGIN_MS = 5 * 60 * 1000;
+const SAFETY_MARGIN_MS = 2 * 60 * 1000;
 
 interface CachedEntry {
   url: string;
@@ -111,7 +111,7 @@ export function clearAllSignedUrls() {
   }
 }
 
-const SIGNED_URL_TTL_SECONDS = 3600; // 1h, matches Supabase default
+const SIGNED_URL_TTL_SECONDS = 600; // 10 min: limits how long a link works after access is removed
 
 /**
  * Sign a list of storage paths, reusing cached URLs where possible.
