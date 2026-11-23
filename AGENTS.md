@@ -1,0 +1,2 @@
+# Architecture rules
+- Account deletion runs only in an authenticated edge function; service-only transactional database cleanup follows verified Storage removal, and auth deletion is last, to protect shared families and stop on errors.
